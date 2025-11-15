@@ -21,7 +21,7 @@
         @AdditionalFilters
     }
 
-    <FluentButton IconStart="@(new Size20.Settings())" OnClick="@(() => _isSettingsPanelOpen = true)" />
+    <FluentButton IconStart="@(new Size20.Settings())" OnClick="@OpenSettingsPanelAsync" />
 </FluentStack>
 
 <RadzenDataGrid @ref="_dataGrid"
@@ -33,6 +33,10 @@
                 AllowSorting="@AllowSorting"
                 AllowPaging="@AllowPaging"
                 PageSize="@PageSize"
+                SettingsChanged="SettingsChanged"
+                AllowColumnPicking="true"
+                Settings="@DataGridSettings"
+                LoadSettings="LoadSettings"
                 FilterPopupRenderMode="PopupRenderMode.OnDemand"
                 SelectionMode="@SelectionMode"
                 Value="@SelectedRows"
@@ -41,7 +45,3 @@
         @Columns
     </Columns>
 </RadzenDataGrid>
-
-<DataGridSettings @bind-IsOpen="@_isSettingsPanelOpen"
-                  Columns="@_columnStates"
-                  OnSettingsChanged="HandleSettingsChanged" />

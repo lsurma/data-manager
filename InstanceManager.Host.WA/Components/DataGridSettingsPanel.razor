@@ -1,0 +1,40 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<DataGridSettingsPanelParameters>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+
+        <div>
+            <h5>Columns</h5>
+            <p style="font-size: 12px; color: #666; margin-bottom: 12px;">Drag to reorder, check to show/hide</p>
+            <FluentSortableList @bind-Items="Content.Columns" OnUpdate="@HandleColumnOrderUpdate">
+                <ItemTemplate>
+                    <div style="padding: 8px 12px; border: 1px solid #ddd; margin: 4px 0; background: white; cursor: move; display: flex; align-items: center; gap: 8px;">
+                        <FluentCheckbox @bind-Value="@context.Visible" />
+                        <span>@context.Title</span>
+                    </div>
+                </ItemTemplate>
+            </FluentSortableList>
+        </div>
+
+    </FluentStack>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Neutral" OnClick="HandleCancelAsync">
+        Close
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Accent" OnClick="HandleSaveAsync" Disabled="@IsSaving">
+        @if (IsSaving)
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size16.ArrowSync())" Color="Color.Neutral" />
+            <span>Saving...</span>
+        }
+        else
+        {
+            <span>Save</span>
+        }
+    </FluentButton>
+</FluentDialogFooter>
