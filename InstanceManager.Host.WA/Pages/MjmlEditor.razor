@@ -22,8 +22,19 @@
               <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("375px")'>Small</button>
               <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("768px")'>Medium</button>
               <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("100%")'>Large</button>
+              <button type="button" class="btn @(_showHtmlOutput ? "btn-primary" : "btn-secondary")" @onclick="ToggleHtmlOutput">
+                  @(_showHtmlOutput ? "Hide" : "Show") HTML
+              </button>
             </div>
-            <iframe srcdoc="@htmlOutput" style="width: @previewWidth; height: calc(100vh - 150px); border: 1px solid #ccc;" />
+            @if (_showHtmlOutput)
+            {
+                <label>HTML Output</label>
+                <StandaloneCodeEditor Id="html-output-editor" @ref="_htmlOutputEditor" ConstructionOptions="HtmlOutputEditorConstructionOptions" />
+            }
+            else
+            {
+                <iframe srcdoc="@htmlOutput" style="width: @previewWidth; height: calc(100vh - 150px); border: 1px solid #ccc;" />
+            }
     </FluentGridItem>
 </FluentGrid>
 
@@ -35,17 +46,47 @@
     #my-code-editor2 {
         min-height: 400px;
     }
+
+    #html-output-editor {
+        min-height: calc(100vh - 200px);
+    }
 </style>
 
 @code {
     private StandaloneCodeEditor? _mjmlEditor = null!;
     private StandaloneCodeEditor? _variablesEditor = null!;
+    private StandaloneCodeEditor? _htmlOutputEditor = null!;
 
     private string previewWidth = "100%";
+    private bool _showHtmlOutput = false;
 
     private void SetPreviewSize(string width)
     {
         previewWidth = width;
+        _showHtmlOutput = false;
+    }
+
+    private async Task ToggleHtmlOutput()
+    {
+        _showHtmlOutput = !_showHtmlOutput;
+
+        if (_showHtmlOutput && _htmlOutputEditor != null)
+        {
+            await Task.Delay(100); // Give the editor time to render
+            await _htmlOutputEditor.SetValue(htmlOutput);
+        }
+    }
+
+    private StandaloneEditorConstructionOptions HtmlOutputEditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "html",
+            Value = htmlOutput,
+            ReadOnly = true,
+            AutomaticLayout = true,
+            WordWrap = "on"
+        };
     }
 
     private StandaloneEditorConstructionOptions MjmlEditorConstructionOptions(StandaloneCodeEditor editor)
@@ -139,7 +180,7 @@
             }
             else
             {
-                var response = await Http.PostAsJsonAsync("http://localhost:7071/api/mjml/render", new { html = mjmlResult.Html, variables });
+                var response = await Http.PostAsJsonAsync("http://localhost:7233/api/mjml/render", new { html = mjmlResult.Html, variables });
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -155,6 +196,12 @@
         catch (Exception ex)
         {
             htmlOutput = $"<p>Error converting MJML: {ex.Message}</p>";
+        }
+
+        // Update HTML output editor if visible
+        if (_showHtmlOutput && _htmlOutputEditor != null)
+        {
+            await _htmlOutputEditor.SetValue(htmlOutput);
         }
 
         await InvokeAsync(StateHasChanged);

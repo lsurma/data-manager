@@ -17,7 +17,7 @@ public class MjmlController
         _mediator = mediator;
     }
 
-    [Function("Mjml/Render")]
+    [Function("MjmlRender")]
     public async Task<IActionResult> Render(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mjml/render")]
         HttpRequest req)
