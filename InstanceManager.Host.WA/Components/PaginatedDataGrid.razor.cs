@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Radzen;
 using Radzen.Blazor;
 using System.Collections.Generic;
@@ -10,9 +11,11 @@ namespace InstanceManager.Host.WA.Components
     public partial class PaginatedDataGrid<TItem> : ComponentBase
     {
         private RadzenDataGrid<TItem> _dataGrid;
-        private bool _isSettingsPanelOpen;
         private List<ColumnState> _columnStates = new();
         private bool _columnsInitialized;
+
+        [Inject]
+        private IDialogService DialogService { get; set; } = null!;
 
         [Parameter]
         public List<TItem> Items { get; set; } = new();
@@ -124,6 +127,53 @@ namespace InstanceManager.Host.WA.Components
             }
         }
 
+        private async Task OpenSettingsPanelAsync()
+        {
+            // Create a copy of column states to allow canceling changes
+            var columnStatesCopy = _columnStates.Select(cs => new ColumnState
+            {
+                Title = cs.Title,
+                PropertyName = cs.PropertyName,
+                Visible = cs.Visible,
+                Order = cs.Order
+            }).ToList();
+
+            var parameters = new DataGridSettingsPanelParameters
+            {
+                Columns = columnStatesCopy,
+                OnSettingsChanged = HandleSettingsChanged
+            };
+
+            var dialog = await DialogService.ShowPanelAsync<DataGridSettingsPanel>(parameters, new DialogParameters
+            {
+                Title = "Grid Settings",
+                Width = "400px",
+                TrapFocus = false,
+                Modal = false,
+                Id = $"settings-panel-{Guid.NewGuid()}"
+            });
+
+            var result = await dialog.Result;
+
+            // Only apply changes if saved (not cancelled)
+            if (!result.Cancelled && result.Data is List<ColumnState> updatedColumns)
+            {
+                _columnStates = updatedColumns;
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+        
+        protected DataGridSettings DataGridSettings { get; set; } = new DataGridSettings();
+        
+        private Task SettingsChanged(DataGridSettings arg)
+        {
+            DataGridSettings = arg;
+            
+            return Task.CompletedTask;
+        }
+        
+        
         private async Task HandleSettingsChanged()
         {
             foreach (var columnState in _columnStates)
@@ -136,6 +186,13 @@ namespace InstanceManager.Host.WA.Components
                 }
             }
             await _dataGrid.Reload();
+        }
+
+        private void LoadSettings(DataGridLoadSettingsEventArgs obj)
+        {
+            _ = 1;
+            
+            // load and fill settings
         }
     }
 }
