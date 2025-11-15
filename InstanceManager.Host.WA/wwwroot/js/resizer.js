@@ -9,7 +9,7 @@ window.interactJs = {
 
         interactjs(targetElement)
             .resizable({
-                edges: { left: false, right: true, bottom: false, top: false },
+                edges: { left: true, right: false, bottom: false, top: true },
 
                 listeners: {
                     move: function (event) {
@@ -36,3 +36,5 @@ window.interactJs = {
             });
     }
 };
+
+export default {};

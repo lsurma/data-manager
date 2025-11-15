@@ -11,13 +11,13 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-6">
+        <div class="col-6" style="border: 1px solid #ccc; padding: 10px;">
             <label>MJML</label>
-            <StandaloneCodeEditor @ref="mjmlEditor" ConstructionOptions="MjmlEditorConstructionOptions" OnDidChangeContent="OnMjmlContentChanged" />
+            <StandaloneCodeEditor  Id="my-code-editor" @ref="mjmlEditor" ConstructionOptions="MjmlEditorConstructionOptions" OnDidChangeModelContent="OnMjmlContentChanged" />
             <label>Variables</label>
-            <StandaloneCodeEditor @ref="variablesEditor" ConstructionOptions="VariablesEditorConstructionOptions" OnDidChangeContent="OnVariablesContentChanged" />
+            <StandaloneCodeEditor  Id="my-code-editor2" @ref="variablesEditor" ConstructionOptions="VariablesEditorConstructionOptions" OnDidChangeModelContent="OnVariablesContentChanged" />
         </div>
-        <div class="col-6">
+        <div class="col-6" style="border: 1px solid #ccc; padding: 10px;">
             <div class="btn-group" role="group" aria-label="Preview size">
               <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("375px")'>Small</button>
               <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("768px")'>Medium</button>
@@ -95,9 +95,9 @@
 
     private async Task OnTimerCallback()
     {
-        var mjml = await mjmlEditor.GetValue();
-        var variables = await variablesEditor.GetValue();
-        await ConvertMjmlToHtml(mjml, variables);
+        // var mjml = await mjmlEditor.GetValue();
+        // var variables = await variablesEditor.GetValue();
+        // await ConvertMjmlToHtml(mjml, variables);
     }
 
     private Task OnMjmlContentChanged()
