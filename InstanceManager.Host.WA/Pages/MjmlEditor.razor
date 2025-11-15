@@ -8,29 +8,38 @@
 @implements IDisposable
 
 <h3>MJML Editor</h3>
+<FluentGrid>
+    
+    <FluentGridItem md="6">
+        <label>MJML</label>
+        <StandaloneCodeEditor Id="my-code-editor" @ref="_mjmlEditor" ConstructionOptions="MjmlEditorConstructionOptions" OnDidChangeModelContent="OnMjmlContentChanged" />
+        <label>Variables</label>
+        <StandaloneCodeEditor Id="my-code-editor2" @ref="_variablesEditor" ConstructionOptions="VariablesEditorConstructionOptions" OnDidChangeModelContent="OnVariablesContentChanged" />
+    </FluentGridItem>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-6" style="border: 1px solid #ccc; padding: 10px;">
-            <label>MJML</label>
-            <StandaloneCodeEditor  Id="my-code-editor" @ref="mjmlEditor" ConstructionOptions="MjmlEditorConstructionOptions" OnDidChangeModelContent="OnMjmlContentChanged" />
-            <label>Variables</label>
-            <StandaloneCodeEditor  Id="my-code-editor2" @ref="variablesEditor" ConstructionOptions="VariablesEditorConstructionOptions" OnDidChangeModelContent="OnVariablesContentChanged" />
-        </div>
-        <div class="col-6" style="border: 1px solid #ccc; padding: 10px;">
-            <div class="btn-group" role="group" aria-label="Preview size">
+    <FluentGridItem md="6">
+        <div class="btn-group" role="group" aria-label="Preview size">
               <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("375px")'>Small</button>
               <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("768px")'>Medium</button>
               <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("100%")'>Large</button>
             </div>
             <iframe srcdoc="@htmlOutput" style="width: @previewWidth; height: calc(100vh - 150px); border: 1px solid #ccc;" />
-        </div>
-    </div>
-</div>
+    </FluentGridItem>
+</FluentGrid>
+
+<style>
+    #my-code-editor {
+        min-height: 400px;
+    }
+    
+    #my-code-editor2 {
+        min-height: 400px;
+    }
+</style>
 
 @code {
-    private StandaloneCodeEditor mjmlEditor = null!;
-    private StandaloneCodeEditor variablesEditor = null!;
+    private StandaloneCodeEditor? _mjmlEditor = null!;
+    private StandaloneCodeEditor? _variablesEditor = null!;
 
     private string previewWidth = "100%";
 
@@ -84,7 +93,7 @@
     {
         if (firstRender)
         {
-            await OnTimerCallback();
+            // await OnTimerCallback();
         }
     }
 
@@ -95,9 +104,14 @@
 
     private async Task OnTimerCallback()
     {
-        // var mjml = await mjmlEditor.GetValue();
-        // var variables = await variablesEditor.GetValue();
-        // await ConvertMjmlToHtml(mjml, variables);
+        if (_mjmlEditor is null || _variablesEditor is null)
+        {
+            return;
+        }        
+        
+        var mjml = await _mjmlEditor.GetValue();
+        var variables = await _variablesEditor.GetValue();
+        await ConvertMjmlToHtml(mjml, variables);
     }
 
     private Task OnMjmlContentChanged()
