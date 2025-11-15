@@ -9,13 +9,18 @@ namespace InstanceManager.Host.WA.DAL;
 public class HttpRequestSender : IRequestSender
 {
     private readonly InstanceManagerHttpClient _httpClient;
+    private readonly IConfiguration _configuration;
 
-    public HttpRequestSender(InstanceManagerHttpClient httpClient)
+    public HttpRequestSender(
+        InstanceManagerHttpClient httpClient,
+        IConfiguration configuration
+    )
     {
         // HttpClient wrapper that uses the named 'InstanceManager.API' client
         // which is configured with BaseAddressAuthorizationMessageHandler
         // that automatically attaches access tokens to API requests
         _httpClient = httpClient;
+        _configuration = configuration;
     }
 
     public async Task<TResponse> SendAsync<TResponse>(object request, CancellationToken cancellationToken = default)
@@ -31,9 +36,16 @@ public class HttpRequestSender : IRequestSender
         }
         catch (AccessTokenNotAvailableException exception)
         {
-            // Redirect to login if access token is not available
-            exception.Redirect();
-            throw;
+            if(_configuration.GetValue<bool>("Authentication:RequireAuthentication") == false)
+            {
+                throw;
+            }
+            else
+            {
+                // Redirect to login if access token is not available
+                exception.Redirect();
+                throw;
+            }
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {

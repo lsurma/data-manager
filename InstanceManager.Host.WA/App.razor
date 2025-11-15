@@ -27,12 +27,18 @@
 
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IConfiguration Configuration
 
 @code {
     private bool isRedirecting = true;
 
     protected override async Task OnInitializedAsync()
-    {
+    {   if(Configuration.GetValue<bool>("Authentication:RequireAuthentication") == false)
+        {
+            isRedirecting = false;
+            return;
+        }
+        
         var currentUri = Navigation.Uri;
         var isAuthenticationPage = currentUri.Contains("authentication");
 
