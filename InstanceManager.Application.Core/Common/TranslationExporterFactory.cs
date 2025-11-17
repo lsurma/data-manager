@@ -1,22 +1,21 @@
-namespace InstanceManager.Application.Core.Common
+namespace InstanceManager.Application.Core.Common;
+
+public class TranslationExporterFactory
 {
-    public class TranslationExporterFactory
+    private readonly IEnumerable<ITranslationExporter> _exporters;
+
+    public TranslationExporterFactory(IEnumerable<ITranslationExporter> exporters)
     {
-        private readonly IEnumerable<ITranslationExporter> _exporters;
+        _exporters = exporters;
+    }
 
-        public TranslationExporterFactory(IEnumerable<ITranslationExporter> exporters)
+    public ITranslationExporter GetExporter(string format)
+    {
+        var exporter = _exporters.FirstOrDefault(e => e.Format.Equals(format, StringComparison.OrdinalIgnoreCase));
+        if (exporter == null)
         {
-            _exporters = exporters;
+            throw new NotSupportedException($"Export format '{format}' is not supported.");
         }
-
-        public ITranslationExporter GetExporter(string format)
-        {
-            var exporter = _exporters.FirstOrDefault(e => e.Format.Equals(format, StringComparison.OrdinalIgnoreCase));
-            if (exporter == null)
-            {
-                throw new NotSupportedException($"Export format '{format}' is not supported.");
-            }
-            return exporter;
-        }
+        return exporter;
     }
 }

@@ -32,7 +32,8 @@
                           OnSearchChanged="@OnSearchChanged"
                           LoadData="@OnLoadData"
                           SelectedRows="@_selectedRows"
-                          SelectedRowsChanged="@OnDataGridSelectionChanged">
+                          SelectedRowsChanged="@OnDataGridSelectionChanged"
+                          SettingsStorageKey="grid-settings-datasets">
             <Columns>
                 <RadzenDataGridColumn TItem="DataSetDto" Property="Name" Title="Name" />
                 <RadzenDataGridColumn TItem="DataSetDto" Property="Description" Title="Description" />

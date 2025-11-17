@@ -58,7 +58,8 @@
                               OnSearchChanged="@OnSearchChanged"
                               LoadData="@OnLoadData"
                               SelectedRows="@_selectedRows"
-                              SelectedRowsChanged="@OnDataGridSelectionChanged">
+                              SelectedRowsChanged="@OnDataGridSelectionChanged"
+                              SettingsStorageKey="grid-settings-instances">
                 <Columns>
                     <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="Name" Title="Name" />
                     <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="Description" Title="Description" />

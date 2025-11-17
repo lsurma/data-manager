@@ -21,7 +21,7 @@ public partial class DataGridSettingsPanel : IDialogContentComponent<DataGridSet
 
         for (int i = 0; i < Content.Columns.Count; i++)
         {
-            Content.Columns[i].Order = i;
+            Content.Columns[i].OrderIndex = i;
         }
 
         await InvokeAsync(StateHasChanged);
@@ -32,11 +32,6 @@ public partial class DataGridSettingsPanel : IDialogContentComponent<DataGridSet
         try
         {
             IsSaving = true;
-
-            if (Content.OnSettingsChanged != null)
-            {
-                await Content.OnSettingsChanged.Invoke();
-            }
 
             await Dialog!.CloseAsync(DialogResult.Ok(Content.Columns));
         }
@@ -54,6 +49,5 @@ public partial class DataGridSettingsPanel : IDialogContentComponent<DataGridSet
 
 public class DataGridSettingsPanelParameters
 {
-    public List<ColumnState> Columns { get; set; } = new();
-    public Func<Task>? OnSettingsChanged { get; set; }
+    public List<ColumnSettings> Columns { get; set; } = new();
 }

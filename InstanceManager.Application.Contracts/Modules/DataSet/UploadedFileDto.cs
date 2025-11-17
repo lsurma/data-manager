@@ -1,7 +1,6 @@
-namespace InstanceManager.Application.Contracts.Modules.DataSets
+namespace InstanceManager.Application.Contracts.Modules.DataSets;
+
+public class UploadedFileDto
 {
-    public class UploadedFileDto
-    {
-        public string? FileName { get; set; }
-    }
+    public string? FileName { get; set; }
 }

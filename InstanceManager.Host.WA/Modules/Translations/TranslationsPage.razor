@@ -30,7 +30,8 @@
                           OnSearchChanged="@OnSearchChanged"
                           LoadData="@OnLoadData"
                           SelectedRows="@_selectedRows"
-                          SelectedRowsChanged="@OnDataGridSelectionChanged">
+                          SelectedRowsChanged="@OnDataGridSelectionChanged"
+                          SettingsStorageKey="grid-settings-translations">
             <AdditionalFilters>
                 <FluentTextField Placeholder="Filter by culture (e.g., en-US)..."
                                 @bind-Value="@_cultureNameFilter"
