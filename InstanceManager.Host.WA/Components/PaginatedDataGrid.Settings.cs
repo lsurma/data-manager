@@ -27,8 +27,22 @@ public partial class PaginatedDataGrid<TItem>
         var settings = GridSettings ?? new AppDataGridSettings();
         settings = settings with
         {
-            Columns = settings.Columns.Select(c => c with {}).ToList()
+            Columns = []
         };
+
+        foreach (var column in _dataGrid.ColumnsCollection)
+        {
+            var existingColumnState = GridSettings?.Columns.FirstOrDefault(c => c.UniqueID == column.UniqueID);
+
+            settings.Columns.Add(new ColumnSettings
+            {
+                Title = column.Title,
+                UniqueID = column.UniqueID,
+                Visible = existingColumnState?.Visible ?? column.Visible,
+                OrderIndex = existingColumnState?.OrderIndex ?? column.OrderIndex ?? 0,
+                Width = existingColumnState?.Width ?? column.Width
+            });
+        }
         
 
         var parameters = new DataGridSettingsPanelParameters
