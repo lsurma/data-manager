@@ -1,0 +1,7 @@
+﻿[*.cs]
+# Place each attribute on its own line
+dotnet_style_allow_multiple_blank_lines_experimental = false
+dotnet_style_allow_statement_immediately_after_block_experimental = false
+csharp_preserve_single_line_statements = false
+csharp_keep_blank_lines_in_declarations = 1
+csharp_place_attribute_on_same_line = false

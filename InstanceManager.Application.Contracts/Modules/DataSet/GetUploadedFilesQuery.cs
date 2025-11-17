@@ -1,9 +1,8 @@
 using MediatR;
 
-namespace InstanceManager.Application.Contracts.Modules.DataSets
+namespace InstanceManager.Application.Contracts.Modules.DataSets;
+
+public class GetUploadedFilesQuery : IRequest<List<UploadedFileDto>>
 {
-    public class GetUploadedFilesQuery : IRequest<List<UploadedFileDto>>
-    {
-        public Guid DataSetId { get; set; }
-    }
+    public Guid DataSetId { get; set; }
 }
