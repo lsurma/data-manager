@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <AzureFunctionsVersion>V4</AzureFunctionsVersion>
         <OutputType>Exe</OutputType>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -11,11 +11,11 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
-        <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.1.0" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.0" />
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -37,14 +37,14 @@
     <!-- Local build target: Build Blazor WebAssembly and copy to wwwroot -->
     <PropertyGroup>
         <BlazorWAProjectPath>$(MSBuildThisFileDirectory)..\InstanceManager.Host.WA\InstanceManager.Host.WA.csproj</BlazorWAProjectPath>
-        <BlazorWAPublishDir>$(MSBuildThisFileDirectory)..\InstanceManager.Host.WA\bin\$(Configuration)\net9.0\publish\wwwroot</BlazorWAPublishDir>
+        <BlazorWAPublishDir>$(MSBuildThisFileDirectory)..\InstanceManager.Host.WA\bin\$(Configuration)\net10.0\publish\wwwroot</BlazorWAPublishDir>
         <WwwrootSourceDir>$(MSBuildThisFileDirectory)wwwroot</WwwrootSourceDir>
     </PropertyGroup>
 
     <!-- Target to build and publish Blazor WebAssembly project -->
     <Target Name="BuildBlazorWA" BeforeTargets="Build" Condition="'$(BuildBlazorUI)' == 'true'">
         <Message Importance="high" Text="Building Blazor WebAssembly UI..." />
-        <Exec Command="dotnet publish &quot;$(BlazorWAProjectPath)&quot; -c $(Configuration) -o &quot;$(MSBuildThisFileDirectory)..\InstanceManager.Host.WA\bin\$(Configuration)\net9.0\publish&quot;" />
+        <Exec Command="dotnet publish &quot;$(BlazorWAProjectPath)&quot; -c $(Configuration) -o &quot;$(MSBuildThisFileDirectory)..\InstanceManager.Host.WA\bin\$(Configuration)\net10.0\publish&quot;" />
     </Target>
 
     <!-- Target to copy Blazor output to Azure Functions wwwroot source folder -->
