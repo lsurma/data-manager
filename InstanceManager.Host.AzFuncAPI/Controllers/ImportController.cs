@@ -21,7 +21,7 @@ public class ImportController
 
     [Function("UploadTranslationFile")]
     public async Task<IActionResult> UploadTranslationFile(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "import/translations")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/import/translations")] HttpRequest req)
     {
         try
         {
@@ -54,7 +54,7 @@ public class ImportController
 
     [Function("ProcessTranslationFile")]
     public async Task<IActionResult> ProcessTranslationFile(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "import/translations/process")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/import/translations/process")] HttpRequest req)
     {
         try
         {
@@ -74,7 +74,7 @@ public class ImportController
 
     [Function("GetUploadedFiles")]
     public async Task<IActionResult> GetUploadedFiles(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "import/translations/{dataSetId}")] HttpRequest req, Guid dataSetId)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/import/translations/{dataSetId}")] HttpRequest req, Guid dataSetId)
     {
         try
         {

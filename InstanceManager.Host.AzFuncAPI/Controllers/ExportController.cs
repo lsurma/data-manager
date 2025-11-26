@@ -24,7 +24,7 @@ public class ExportController
 
     [Function("ExportTranslations")]
     public async Task<IActionResult> ExportTranslations(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "export/translations")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/export/translations")] HttpRequest req)
     {
         _logger.LogInformation("Processing export translations request.");
 
