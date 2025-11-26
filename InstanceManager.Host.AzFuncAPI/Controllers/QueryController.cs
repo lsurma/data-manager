@@ -31,7 +31,7 @@ public class QueryController
     /// </summary>
     [Function("Query")]
     public async Task<IActionResult> Query(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "query/{requestName}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/query/{requestName}")] HttpRequest req,
         string requestName
     )
     {

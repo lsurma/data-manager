@@ -1,6 +1,7 @@
 using InstanceManager.Application.Core.Common;
 using InstanceManager.Application.Core.Extensions;
 using InstanceManager.Authentication.Core;
+using InstanceManager.Host.AzFuncAPI.Middleware;
 using InstanceManager.Host.AzFuncAPI.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
@@ -11,6 +12,7 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 // Configure Functions Web Application with middleware pipeline
 var functionsApp = builder.ConfigureFunctionsWebApplication()
+    .UseMiddleware<StaticFilesMiddleware>()
     .UseInstanceManagerAuthentication();
 
 // Add HTTP context accessor for user identity tracking

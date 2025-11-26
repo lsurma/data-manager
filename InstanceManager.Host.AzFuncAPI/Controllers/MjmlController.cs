@@ -19,7 +19,7 @@ public class MjmlController
 
     [Function("MjmlRender")]
     public async Task<IActionResult> Render(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "mjml/render")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/mjml/render")]
         HttpRequest req)
     {
         var mjmlRequest = await JsonSerializer.DeserializeAsync<RenderMjmlRequest>(req.Body);
