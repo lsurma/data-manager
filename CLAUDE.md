@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-InstanceManager is a .NET 9.0 application for managing project instances with hierarchical relationships. It uses a **CQRS-like architecture** with MediatR, Azure Functions for the API backend, and Blazor WebAssembly for the frontend.
+InstanceManager is a .NET 10.0 application for managing project instances with hierarchical relationships. It uses a **CQRS-like architecture** with MediatR, Azure Functions for the API backend, and Blazor WebAssembly for the frontend.
 
 ## Architecture
 
