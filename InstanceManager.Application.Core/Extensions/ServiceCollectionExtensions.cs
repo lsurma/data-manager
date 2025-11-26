@@ -5,6 +5,7 @@ using InstanceManager.Application.Core.Modules.DataSet;
 using InstanceManager.Application.Core.Modules.ProjectInstance;
 using InstanceManager.Application.Core.Modules.Translations;
 using InstanceManager.Authentication.Core;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -84,7 +85,29 @@ public static class ServiceCollectionExtensions
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<InstanceManagerDbContext>();
 
+        // Ensure the database directory exists before EF Core tries to create the file
+        EnsureDatabaseDirectoryExists(context);
+
         await context.Database.MigrateAsync();
         await DatabaseSeeder.SeedAsync(context);
+    }
+
+    private static void EnsureDatabaseDirectoryExists(InstanceManagerDbContext context)
+    {
+        var connectionString = context.Database.GetConnectionString();
+        if (string.IsNullOrEmpty(connectionString))
+            return;
+
+        var builder = new SqliteConnectionStringBuilder(connectionString);
+        var dataSource = builder.DataSource;
+
+        if (string.IsNullOrEmpty(dataSource))
+            return;
+
+        var directory = Path.GetDirectoryName(dataSource);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
     }
 }
