@@ -500,7 +500,7 @@ To start fresh:
 rm db/instanceManager.db
 
 # Clear logs (optional)
-rm -rf InstanceManager.Host.AzFuncAPI/bin/Debug/net9.0/*.log
+rm -rf InstanceManager.Host.AzFuncAPI/bin/Debug/net10.0/*.log
 
 # Restart API
 dotnet run
