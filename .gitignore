@@ -9,3 +9,6 @@ riderModule.iml
 *.db-shm
 *.db-wal
 db/
+
+# Generated Blazor output in Azure Functions (regenerated on build)
+InstanceManager.Host.AzFuncAPI/wwwroot/
