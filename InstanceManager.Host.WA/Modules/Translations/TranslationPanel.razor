@@ -5,10 +5,14 @@
     <EditForm Model="Content.Translation" OnSubmit="@(() => HandleSubmitAsync(false))">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
             
-            <FluentTextField @bind-Value="Content.Translation.InternalGroupName"
-                             Label="Internal Group Name"
+            <FluentTextField @bind-Value="Content.Translation.InternalGroupName1"
+                             Label="Internal Group Name 1 (optional)"
                              Immediate="true"
-                             Required
+                             Style="width: 100%;" />
+            
+            <FluentTextField @bind-Value="Content.Translation.InternalGroupName2"
+                             Label="Internal Group Name 2 (optional)"
+                             Immediate="true"
                              Style="width: 100%;" />
             
             <FluentTextField @bind-Value="Content.Translation.ResourceName"

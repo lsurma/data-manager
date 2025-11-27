@@ -4,7 +4,9 @@ public record TranslationDto : ITranslationDto
 {
     public Guid Id { get; set; }
 
-    public string InternalGroupName { get; set; } = string.Empty;
+    public string? InternalGroupName1 { get; set; }
+
+    public string? InternalGroupName2 { get; set; }
 
     public string ResourceName { get; set; } = string.Empty;
 

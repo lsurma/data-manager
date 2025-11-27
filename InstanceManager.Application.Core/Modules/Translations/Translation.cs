@@ -4,7 +4,9 @@ namespace InstanceManager.Application.Core.Modules.Translations;
 
 public class Translation : AuditableEntityBase
 {
-    public required string InternalGroupName { get; set; }
+    public string? InternalGroupName1 { get; set; }
+
+    public string? InternalGroupName2 { get; set; }
 
     public required string ResourceName { get; set; }
 

@@ -8,8 +8,12 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
 {
     protected override void ConfigureEntity(EntityTypeBuilder<Translation> builder)
     {
-        builder.Property(e => e.InternalGroupName)
-            .IsRequired()
+        builder.Property(e => e.InternalGroupName1)
+            .IsRequired(false)
+            .HasMaxLength(200);
+
+        builder.Property(e => e.InternalGroupName2)
+            .IsRequired(false)
             .HasMaxLength(200);
 
         builder.Property(e => e.ResourceName)
@@ -39,6 +43,6 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
         // Add indexes for common queries
         builder.HasIndex(e => e.DataSetId);
         builder.HasIndex(e => e.CultureName);
-        builder.HasIndex(e => new { e.InternalGroupName, e.ResourceName, e.CultureName });
+        builder.HasIndex(e => new { e.InternalGroupName1, e.InternalGroupName2, e.ResourceName, e.CultureName });
     }
 }

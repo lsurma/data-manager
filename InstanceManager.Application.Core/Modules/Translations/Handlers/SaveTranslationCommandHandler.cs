@@ -33,7 +33,8 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 throw new KeyNotFoundException($"Translation with Id {request.Id} not found or you don't have access to it.");
             }
 
-            translation.InternalGroupName = request.InternalGroupName;
+            translation.InternalGroupName1 = request.InternalGroupName1;
+            translation.InternalGroupName2 = request.InternalGroupName2;
             translation.ResourceName = request.ResourceName;
             translation.TranslationName = request.TranslationName;
             translation.CultureName = request.CultureName;
@@ -47,7 +48,8 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
             translation = new Translation
             {
                 Id = Guid.NewGuid(),
-                InternalGroupName = request.InternalGroupName,
+                InternalGroupName1 = request.InternalGroupName1,
+                InternalGroupName2 = request.InternalGroupName2,
                 ResourceName = request.ResourceName,
                 TranslationName = request.TranslationName,
                 CultureName = request.CultureName,

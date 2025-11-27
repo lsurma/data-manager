@@ -289,10 +289,11 @@ public partial class TranslationsPage : ComponentBase, IDisposable
                 : new TranslationDto
                 {
                     Id = Guid.NewGuid(),
-                    InternalGroupName = string.Empty,
+                    InternalGroupName1 = null,
+                    InternalGroupName2 = null,
                     ResourceName = string.Empty,
                     TranslationName = string.Empty,
-                    CultureName = string.Empty,
+                    CultureName = null,
                     Content = string.Empty,
                     CreatedAt = DateTimeOffset.UtcNow
                 },

@@ -9,7 +9,8 @@ public static class TranslationMappingExtensions
         return new TranslationDto
         {
             Id = translation.Id,
-            InternalGroupName = translation.InternalGroupName,
+            InternalGroupName1 = translation.InternalGroupName1,
+            InternalGroupName2 = translation.InternalGroupName2,
             ResourceName = translation.ResourceName,
             TranslationName = translation.TranslationName,
             CultureName = translation.CultureName,

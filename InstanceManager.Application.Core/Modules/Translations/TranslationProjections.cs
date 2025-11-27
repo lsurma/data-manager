@@ -17,7 +17,8 @@ public static class TranslationProjections
         return t => new TranslationDto
         {
             Id = t.Id,
-            InternalGroupName = t.InternalGroupName,
+            InternalGroupName1 = t.InternalGroupName1,
+            InternalGroupName2 = t.InternalGroupName2,
             ResourceName = t.ResourceName,
             TranslationName = t.TranslationName,
             CultureName = t.CultureName,

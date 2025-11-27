@@ -6,7 +6,9 @@ public class SaveTranslationCommand : IRequest<Guid>
 {
     public Guid? Id { get; set; }
 
-    public required string InternalGroupName { get; set; }
+    public string? InternalGroupName1 { get; set; }
+
+    public string? InternalGroupName2 { get; set; }
 
     public required string ResourceName { get; set; }
 

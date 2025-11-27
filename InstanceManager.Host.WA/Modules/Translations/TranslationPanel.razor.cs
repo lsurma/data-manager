@@ -71,7 +71,8 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
             await RequestSender.SendAsync(new SaveTranslationCommand
             {
                 Id = Content.IsEditMode ? Content.Translation.Id : null,
-                InternalGroupName = Content.Translation.InternalGroupName,
+                InternalGroupName1 = Content.Translation.InternalGroupName1,
+                InternalGroupName2 = Content.Translation.InternalGroupName2,
                 ResourceName = Content.Translation.ResourceName,
                 TranslationName = Content.Translation.TranslationName,
                 CultureName = Content.Translation.CultureName,
