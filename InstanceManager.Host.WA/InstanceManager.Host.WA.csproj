@@ -5,7 +5,9 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <PublishTrimmed>true</PublishTrimmed>
-        <TrimMode>link</TrimMode>
+        <TrimMode>full</TrimMode>
+        <WasmEnableOptimizations>true</WasmEnableOptimizations>
+        <RunAOTCompilation>false</RunAOTCompilation>
     </PropertyGroup>
 
     <ItemGroup>
