@@ -28,6 +28,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     
     private List<TranslationDto> AllTranslations { get; set; } = new();
     private List<DataSetDto> AllDataSets { get; set; } = new();
+    private List<TranslationDto> AllLayouts { get; set; } = new();
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
     private IList<TranslationDto> _selectedRows = new List<TranslationDto>();
@@ -49,6 +50,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     {
         NavigationManager.LocationChanged += OnLocationChanged;
         LoadDataSetsAsync();
+        LoadLayoutsAsync();
     }
     
     private async void LoadDataSetsAsync()
@@ -61,6 +63,20 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to load data sets: {ex.Message}");
+        }
+    }
+    
+    private async void LoadLayoutsAsync()
+    {
+        try
+        {
+            // Load all translations that can be used as layouts
+            var result = await RequestSender.SendAsync(GetTranslationsQuery.AllItems());
+            AllLayouts = result.Items;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load layouts: {ex.Message}");
         }
     }
     
@@ -300,10 +316,12 @@ public partial class TranslationsPage : ComponentBase, IDisposable
             
             IsEditMode = isEditMode,
             AvailableDataSets = AllDataSets,
+            AvailableLayouts = AllLayouts,
             
             OnDataChanged = async () =>
             {
                 _refreshToken = Guid.NewGuid().ToString();
+                LoadLayoutsAsync(); // Refresh layouts after data changes
                 await InvokeAsync(StateHasChanged);
             }
         };

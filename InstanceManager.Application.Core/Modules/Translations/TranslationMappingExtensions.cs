@@ -17,6 +17,7 @@ public static class TranslationMappingExtensions
             Content = translation.Content,
             ContentTemplate = translation.ContentTemplate,
             DataSetId = translation.DataSetId,
+            LayoutId = translation.LayoutId,
             CreatedAt = translation.CreatedAt,
             UpdatedAt = translation.UpdatedAt,
             CreatedBy = translation.CreatedBy

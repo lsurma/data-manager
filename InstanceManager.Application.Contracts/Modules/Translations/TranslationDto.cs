@@ -23,6 +23,11 @@ public record TranslationDto : ITranslationDto
 
     public Guid? DataSetId { get; set; }
 
+    /// <summary>
+    /// Optional reference to a layout Translation (used for email templates)
+    /// </summary>
+    public Guid? LayoutId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? UpdatedAt { get; set; }

@@ -60,6 +60,20 @@
                 </FluentSelect>
             }
             
+            @if (Content.AvailableLayouts.Any())
+            {
+                <FluentSelect Value="@(Content.Translation.LayoutId?.ToString() ?? string.Empty)"
+                              ValueChanged="@(val => Content.Translation.LayoutId = String.IsNullOrWhiteSpace(val) || !Guid.TryParse(val, out var layoutId) ? null : layoutId)"
+                              Label="Layout (Optional - for email templates)"
+                              Items="LayoutSelectItems"
+                              OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"
+                              Style="width: 100%;">
+                    <OptionTemplate Context="optionTemplateContext">
+                        @optionTemplateContext.Text
+                    </OptionTemplate>
+                </FluentSelect>
+            }
+            
             @if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 <FluentMessageBar Intent="MessageIntent.Error">

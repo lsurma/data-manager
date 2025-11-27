@@ -24,4 +24,14 @@ public class Translation : AuditableEntityBase
     public Guid? DataSetId { get; set; }
 
     public DataSet.DataSet? DataSet { get; set; }
+
+    /// <summary>
+    /// Optional reference to a layout Translation (used for email templates)
+    /// </summary>
+    public Guid? LayoutId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the layout Translation
+    /// </summary>
+    public Translation? Layout { get; set; }
 }

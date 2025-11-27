@@ -36,6 +36,7 @@ public class GetTranslationsQueryHandler : IRequestHandler<GetTranslationsQuery,
                 Content = t.Content,
                 ContentTemplate = t.ContentTemplate,
                 DataSetId = t.DataSetId,
+                LayoutId = t.LayoutId,
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt,
                 CreatedBy = t.CreatedBy
