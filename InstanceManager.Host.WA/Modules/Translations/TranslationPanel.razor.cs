@@ -50,6 +50,30 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
         }
     }
     
+    private List<Option<Guid?>> LayoutSelectItems
+    {
+        get
+        {
+            var items = new List<Option<Guid?>>
+            {
+                new Option<Guid?> { Value = null, Text = "-- None --" }
+            };
+            
+            if (Content?.AvailableLayouts != null)
+            {
+                items.AddRange(Content.AvailableLayouts
+                    .Where(t => t.Id != Content.Translation?.Id) // Exclude self
+                    .Select(t => new Option<Guid?> 
+                    { 
+                        Value = t.Id, 
+                        Text = $"{t.TranslationName} ({t.ResourceName})"
+                    }));
+            }
+            
+            return items;
+        }
+    }
+    
     private async Task HandleKeyDownAsync(FluentKeyCodeEventArgs args)
     {
         // Ctrl+S to save
@@ -71,12 +95,15 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
             await RequestSender.SendAsync(new SaveTranslationCommand
             {
                 Id = Content.IsEditMode ? Content.Translation.Id : null,
-                InternalGroupName = Content.Translation.InternalGroupName,
+                InternalGroupName1 = Content.Translation.InternalGroupName1,
+                InternalGroupName2 = Content.Translation.InternalGroupName2,
                 ResourceName = Content.Translation.ResourceName,
                 TranslationName = Content.Translation.TranslationName,
                 CultureName = Content.Translation.CultureName,
                 Content = Content.Translation.Content,
-                DataSetId = Content.Translation.DataSetId
+                ContentTemplate = Content.Translation.ContentTemplate,
+                DataSetId = Content.Translation.DataSetId,
+                LayoutId = Content.Translation.LayoutId
             });
             
             ToastService.ShowSuccess($"Translation '{Content.Translation.TranslationName}' {(Content.IsEditMode ? "updated" : "created")} successfully");
@@ -156,5 +183,6 @@ public class TranslationPanelParameters
     public TranslationDto Translation { get; set; } = null!;
     public bool IsEditMode { get; set; }
     public List<DataSetDto> AvailableDataSets { get; set; } = new();
+    public List<TranslationDto> AvailableLayouts { get; set; } = new();
     public Func<Task>? OnDataChanged { get; set; }
 }

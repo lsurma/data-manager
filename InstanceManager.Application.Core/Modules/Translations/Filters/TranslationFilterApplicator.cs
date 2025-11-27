@@ -31,7 +31,8 @@ public class TranslationSearchFilterHandler : IFilterHandler<Translation, Search
     {
         var searchTerm = filter.SearchTerm!.ToLower(); // We know it has value because IsActive() was checked
         Expression<Func<Translation, bool>> expression = t =>
-            t.InternalGroupName.ToLower().Contains(searchTerm) ||
+            (t.InternalGroupName1 != null && t.InternalGroupName1.ToLower().Contains(searchTerm)) ||
+            (t.InternalGroupName2 != null && t.InternalGroupName2.ToLower().Contains(searchTerm)) ||
             t.ResourceName.ToLower().Contains(searchTerm) ||
             t.TranslationName.ToLower().Contains(searchTerm) ||
             t.Content.ToLower().Contains(searchTerm);

@@ -8,8 +8,12 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
 {
     protected override void ConfigureEntity(EntityTypeBuilder<Translation> builder)
     {
-        builder.Property(e => e.InternalGroupName)
-            .IsRequired()
+        builder.Property(e => e.InternalGroupName1)
+            .IsRequired(false)
+            .HasMaxLength(200);
+
+        builder.Property(e => e.InternalGroupName2)
+            .IsRequired(false)
             .HasMaxLength(200);
 
         builder.Property(e => e.ResourceName)
@@ -21,11 +25,14 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
             .HasMaxLength(200);
 
         builder.Property(e => e.CultureName)
-            .IsRequired()
+            .IsRequired(false)
             .HasMaxLength(10);
 
         builder.Property(e => e.Content)
             .IsRequired();
+
+        builder.Property(e => e.ContentTemplate)
+            .IsRequired(false);
 
         // Configure relationship with DataSet
         builder.HasOne(e => e.DataSet)
@@ -33,9 +40,16 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
             .HasForeignKey(e => e.DataSetId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Configure self-referencing relationship for Layout
+        builder.HasOne(e => e.Layout)
+            .WithMany()
+            .HasForeignKey(e => e.LayoutId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Add indexes for common queries
         builder.HasIndex(e => e.DataSetId);
         builder.HasIndex(e => e.CultureName);
-        builder.HasIndex(e => new { e.InternalGroupName, e.ResourceName, e.CultureName });
+        builder.HasIndex(e => e.LayoutId);
+        builder.HasIndex(e => new { e.InternalGroupName1, e.InternalGroupName2, e.ResourceName, e.CultureName });
     }
 }

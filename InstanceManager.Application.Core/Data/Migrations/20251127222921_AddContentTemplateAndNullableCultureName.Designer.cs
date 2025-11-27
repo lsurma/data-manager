@@ -3,6 +3,7 @@ using System;
 using InstanceManager.Application.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InstanceManager.Application.Core.Data.Migrations
 {
     [DbContext(typeof(InstanceManagerDbContext))]
-    partial class InstanceManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251127222921_AddContentTemplateAndNullableCultureName")]
+    partial class AddContentTemplateAndNullableCultureName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -155,15 +158,9 @@ namespace InstanceManager.Application.Core.Data.Migrations
                     b.Property<Guid?>("DataSetId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("InternalGroupName1")
+                    b.Property<string>("InternalGroupName")
+                        .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("InternalGroupName2")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("LayoutId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ResourceName")
@@ -189,9 +186,7 @@ namespace InstanceManager.Application.Core.Data.Migrations
 
                     b.HasIndex("DataSetId");
 
-                    b.HasIndex("LayoutId");
-
-                    b.HasIndex("InternalGroupName1", "InternalGroupName2", "ResourceName", "CultureName");
+                    b.HasIndex("InternalGroupName", "ResourceName", "CultureName");
 
                     b.ToTable("Translations");
                 });
@@ -232,14 +227,7 @@ namespace InstanceManager.Application.Core.Data.Migrations
                         .HasForeignKey("DataSetId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("InstanceManager.Application.Core.Modules.Translations.Translation", "Layout")
-                        .WithMany()
-                        .HasForeignKey("LayoutId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("DataSet");
-
-                    b.Navigation("Layout");
                 });
 
             modelBuilder.Entity("InstanceManager.Application.Core.Modules.DataSet.DataSet", b =>
