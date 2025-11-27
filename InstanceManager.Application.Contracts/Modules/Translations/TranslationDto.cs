@@ -10,9 +10,14 @@ public record TranslationDto : ITranslationDto
 
     public string TranslationName { get; set; } = string.Empty;
 
-    public string CultureName { get; set; } = string.Empty;
+    public string? CultureName { get; set; }
 
     public string Content { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional MJML template content before processing
+    /// </summary>
+    public string? ContentTemplate { get; set; }
 
     public Guid? DataSetId { get; set; }
 

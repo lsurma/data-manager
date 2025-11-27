@@ -22,6 +22,7 @@ public static class TranslationProjections
             TranslationName = t.TranslationName,
             CultureName = t.CultureName,
             Content = t.Content,
+            ContentTemplate = t.ContentTemplate,
             DataSetId = t.DataSetId,
             CreatedAt = t.CreatedAt,
             UpdatedAt = t.UpdatedAt,

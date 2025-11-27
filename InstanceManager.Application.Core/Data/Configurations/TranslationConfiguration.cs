@@ -21,11 +21,14 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
             .HasMaxLength(200);
 
         builder.Property(e => e.CultureName)
-            .IsRequired()
+            .IsRequired(false)
             .HasMaxLength(10);
 
         builder.Property(e => e.Content)
             .IsRequired();
+
+        builder.Property(e => e.ContentTemplate)
+            .IsRequired(false);
 
         // Configure relationship with DataSet
         builder.HasOne(e => e.DataSet)

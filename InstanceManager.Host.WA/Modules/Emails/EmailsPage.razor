@@ -1,0 +1,32 @@
+@page "/emails"
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Emails</h3>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<FluentCard Style="padding: 24px;">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+        <FluentIcon Value="@(new Size48.Mail())" Color="Color.Accent" />
+        <h4>Email Templates Management</h4>
+        <p>
+            This page is for managing email templates. You can use the 
+            <FluentAnchor Href="/translations">Translations</FluentAnchor> 
+            page to create and manage MJML email templates using the <strong>Content Template</strong> field.
+        </p>
+        <p>
+            Email templates can be stored as translations with:
+        </p>
+        <ul>
+            <li><strong>Content</strong> - The processed/rendered HTML content</li>
+            <li><strong>Content Template</strong> - The original MJML template before processing</li>
+            <li><strong>Culture Name</strong> - Leave empty for templates that apply to all languages</li>
+        </ul>
+        <FluentAnchor Href="/translations?action=create" Appearance="Appearance.Accent">
+            Create New Email Template
+        </FluentAnchor>
+    </FluentStack>
+</FluentCard>

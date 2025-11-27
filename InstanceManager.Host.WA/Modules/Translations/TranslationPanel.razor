@@ -24,9 +24,8 @@
                              Style="width: 100%;" />
             
             <FluentTextField @bind-Value="Content.Translation.CultureName"
-                             Label="Culture Name"
+                             Label="Culture Name (optional - leave empty for all languages)"
                              Immediate="true"
-                             Required
                              Placeholder="e.g., en-US, pl-PL"
                              Style="width: 100%;" />
             
@@ -34,6 +33,12 @@
                             Label="Content"
                             Immediate="true"
                             Required
+                            Rows="6"
+                            Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.Translation.ContentTemplate"
+                            Label="Content Template (optional MJML template)"
+                            Immediate="true"
                             Rows="6"
                             Style="width: 100%;" />
             

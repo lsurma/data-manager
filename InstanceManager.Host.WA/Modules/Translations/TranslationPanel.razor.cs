@@ -76,6 +76,7 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
                 TranslationName = Content.Translation.TranslationName,
                 CultureName = Content.Translation.CultureName,
                 Content = Content.Translation.Content,
+                ContentTemplate = Content.Translation.ContentTemplate,
                 DataSetId = Content.Translation.DataSetId
             });
             

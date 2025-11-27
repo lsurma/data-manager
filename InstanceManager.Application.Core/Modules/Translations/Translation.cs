@@ -10,9 +10,14 @@ public class Translation : AuditableEntityBase
 
     public required string TranslationName { get; set; }
 
-    public required string CultureName { get; set; }
+    public string? CultureName { get; set; }
 
     public required string Content { get; set; }
+
+    /// <summary>
+    /// Optional MJML template content before processing
+    /// </summary>
+    public string? ContentTemplate { get; set; }
 
     public Guid? DataSetId { get; set; }
 

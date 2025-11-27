@@ -10,7 +10,7 @@ public record SimpleTranslationDto : ITranslationDto
 
     public string TranslationName { get; set; } = string.Empty;
 
-    public string CultureName { get; set; } = string.Empty;
+    public string? CultureName { get; set; }
 
     public string Content { get; set; } = string.Empty;
 }
