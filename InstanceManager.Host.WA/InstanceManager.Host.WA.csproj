@@ -4,9 +4,9 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <PublishTrimmed>true</PublishTrimmed>
-        <TrimMode>full</TrimMode>
-        <WasmEnableOptimizations>true</WasmEnableOptimizations>
+        <PublishTrimmed>false</PublishTrimmed>
+        <TrimMode>link</TrimMode>
+        <WasmEnableOptimizations>false</WasmEnableOptimizations>
         <RunAOTCompilation>false</RunAOTCompilation>
     </PropertyGroup>
 
