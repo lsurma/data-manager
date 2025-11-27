@@ -50,6 +50,7 @@ public static class ServiceCollectionExtensions
         // Also register specialized query services directly for injection when needed
         services.AddScoped<DataSetsQueryService>();
         services.AddScoped<TranslationsQueryService>();
+        services.AddScoped<ProjectInstancesQueryService>();
 
         services.AddSingleton<IFilterHandlerRegistry, FilterHandlerRegistry>();
 
