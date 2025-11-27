@@ -5,10 +5,14 @@
     <EditForm Model="Content.Translation" OnSubmit="@(() => HandleSubmitAsync(false))">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
             
-            <FluentTextField @bind-Value="Content.Translation.InternalGroupName"
-                             Label="Internal Group Name"
+            <FluentTextField @bind-Value="Content.Translation.InternalGroupName1"
+                             Label="Internal Group Name 1 (optional)"
                              Immediate="true"
-                             Required
+                             Style="width: 100%;" />
+            
+            <FluentTextField @bind-Value="Content.Translation.InternalGroupName2"
+                             Label="Internal Group Name 2 (optional)"
+                             Immediate="true"
                              Style="width: 100%;" />
             
             <FluentTextField @bind-Value="Content.Translation.ResourceName"
@@ -24,9 +28,8 @@
                              Style="width: 100%;" />
             
             <FluentTextField @bind-Value="Content.Translation.CultureName"
-                             Label="Culture Name"
+                             Label="Culture Name (optional - leave empty for all languages)"
                              Immediate="true"
-                             Required
                              Placeholder="e.g., en-US, pl-PL"
                              Style="width: 100%;" />
             
@@ -37,12 +40,32 @@
                             Rows="6"
                             Style="width: 100%;" />
             
+            <FluentTextArea @bind-Value="Content.Translation.ContentTemplate"
+                            Label="Content Template (optional MJML template)"
+                            Immediate="true"
+                            Rows="6"
+                            Style="width: 100%;" />
+            
             @if (Content.AvailableDataSets.Any())
             {
                 <FluentSelect Value="@(Content.Translation.DataSetId?.ToString() ?? string.Empty)"
                               ValueChanged="@(val => Content.Translation.DataSetId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
                               Label="Data Set (Optional)"
                               Items="DataSetSelectItems"
+                              OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"
+                              Style="width: 100%;">
+                    <OptionTemplate Context="optionTemplateContext">
+                        @optionTemplateContext.Text
+                    </OptionTemplate>
+                </FluentSelect>
+            }
+            
+            @if (Content.AvailableLayouts.Any())
+            {
+                <FluentSelect Value="@(Content.Translation.LayoutId?.ToString() ?? string.Empty)"
+                              ValueChanged="@(val => Content.Translation.LayoutId = String.IsNullOrWhiteSpace(val) || !Guid.TryParse(val, out var layoutId) ? null : layoutId)"
+                              Label="Layout (Optional - for email templates)"
+                              Items="LayoutSelectItems"
                               OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"
                               Style="width: 100%;">
                     <OptionTemplate Context="optionTemplateContext">

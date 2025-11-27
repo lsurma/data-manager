@@ -33,12 +33,15 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 throw new KeyNotFoundException($"Translation with Id {request.Id} not found or you don't have access to it.");
             }
 
-            translation.InternalGroupName = request.InternalGroupName;
+            translation.InternalGroupName1 = request.InternalGroupName1;
+            translation.InternalGroupName2 = request.InternalGroupName2;
             translation.ResourceName = request.ResourceName;
             translation.TranslationName = request.TranslationName;
             translation.CultureName = request.CultureName;
             translation.Content = request.Content;
+            translation.ContentTemplate = request.ContentTemplate;
             translation.DataSetId = request.DataSetId;
+            translation.LayoutId = request.LayoutId;
         }
         else
         {
@@ -46,12 +49,15 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
             translation = new Translation
             {
                 Id = Guid.NewGuid(),
-                InternalGroupName = request.InternalGroupName,
+                InternalGroupName1 = request.InternalGroupName1,
+                InternalGroupName2 = request.InternalGroupName2,
                 ResourceName = request.ResourceName,
                 TranslationName = request.TranslationName,
                 CultureName = request.CultureName,
                 Content = request.Content,
+                ContentTemplate = request.ContentTemplate,
                 DataSetId = request.DataSetId,
+                LayoutId = request.LayoutId,
                 CreatedBy = string.Empty // Will be set by DbContext
             };
 
