@@ -29,7 +29,6 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     private List<TranslationDto> AllTranslations { get; set; } = new();
     private List<DataSetDto> AllDataSets { get; set; } = new();
     private List<TranslationDto> AllLayouts { get; set; } = new();
-    private List<TranslationDto> AllSources { get; set; } = new();
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
     private IList<TranslationDto> _selectedRows = new List<TranslationDto>();
@@ -52,7 +51,6 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         NavigationManager.LocationChanged += OnLocationChanged;
         LoadDataSetsAsync();
         LoadLayoutsAsync();
-        LoadSourcesAsync();
     }
     
     private async void LoadDataSetsAsync()
@@ -82,17 +80,27 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         }
     }
     
-    private async void LoadSourcesAsync()
+    private async Task<List<TranslationDto>> LoadSourcesForCultureAsync(string? cultureName)
     {
         try
         {
-            // Load all translations that can be used as sources
-            var result = await RequestSender.SendAsync(GetTranslationsQuery.AllItems());
-            AllSources = result.Items;
+            // Load base translations (SourceId = null) that match the culture or have null culture
+            var query = GetTranslationsQuery.AllItems();
+            query.Filtering = new FilteringParameters
+            {
+                QueryFilters = new List<IQueryFilter>
+                {
+                    new BaseTranslationFilter { CultureName = cultureName }
+                }
+            };
+            
+            var result = await RequestSender.SendAsync(query);
+            return result.Items;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to load sources: {ex.Message}");
+            return new List<TranslationDto>();
         }
     }
     
@@ -313,6 +321,10 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     private async Task OpenTranslationPanelAsync(TranslationDto? translation = null)
     {
         var isEditMode = translation != null;
+        var cultureName = translation?.CultureName;
+        
+        // Load available sources filtered by the translation's culture (or null for new translations)
+        var availableSources = await LoadSourcesForCultureAsync(cultureName);
         
         var parameters = new TranslationPanelParameters
         {
@@ -333,13 +345,12 @@ public partial class TranslationsPage : ComponentBase, IDisposable
             IsEditMode = isEditMode,
             AvailableDataSets = AllDataSets,
             AvailableLayouts = AllLayouts,
-            AvailableSources = AllSources,
+            AvailableSources = availableSources,
             
             OnDataChanged = async () =>
             {
                 _refreshToken = Guid.NewGuid().ToString();
                 LoadLayoutsAsync(); // Refresh layouts after data changes
-                LoadSourcesAsync(); // Refresh sources after data changes
                 await InvokeAsync(StateHasChanged);
             }
         };

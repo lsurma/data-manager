@@ -19,3 +19,20 @@ public class CultureNameFilter : TranslationFilterBase<CultureNameFilter>
     
     public override bool IsActive() => !string.IsNullOrWhiteSpace(Value);
 }
+
+/// <summary>
+/// Filter for base translations (SourceId is null) that match the specified culture or have null culture.
+/// Used to find potential source translations for linking.
+/// </summary>
+public class BaseTranslationFilter : TranslationFilterBase<BaseTranslationFilter>
+{
+    /// <summary>
+    /// The culture to match. Translations with this culture OR null culture will be included.
+    /// </summary>
+    public string? CultureName { get; set; }
+    
+    /// <summary>
+    /// This filter is always active when present - it always filters for SourceId = null
+    /// </summary>
+    public override bool IsActive() => true;
+}
