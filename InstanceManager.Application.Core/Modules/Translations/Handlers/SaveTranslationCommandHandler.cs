@@ -42,6 +42,7 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
             translation.ContentTemplate = request.ContentTemplate;
             translation.DataSetId = request.DataSetId;
             translation.LayoutId = request.LayoutId;
+            translation.SourceId = request.SourceId;
         }
         else
         {
@@ -58,6 +59,7 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 ContentTemplate = request.ContentTemplate,
                 DataSetId = request.DataSetId,
                 LayoutId = request.LayoutId,
+                SourceId = request.SourceId,
                 CreatedBy = string.Empty // Will be set by DbContext
             };
 

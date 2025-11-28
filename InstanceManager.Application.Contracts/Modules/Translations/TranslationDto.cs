@@ -28,6 +28,11 @@ public record TranslationDto : ITranslationDto
     /// </summary>
     public Guid? LayoutId { get; set; }
 
+    /// <summary>
+    /// Optional reference to a source Translation (for linking similar/same translations)
+    /// </summary>
+    public Guid? SourceId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? UpdatedAt { get; set; }

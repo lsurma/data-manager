@@ -29,4 +29,9 @@ public class SaveTranslationCommand : IRequest<Guid>
     /// Optional reference to a layout Translation (used for email templates)
     /// </summary>
     public Guid? LayoutId { get; set; }
+
+    /// <summary>
+    /// Optional reference to a source Translation (for linking similar/same translations)
+    /// </summary>
+    public Guid? SourceId { get; set; }
 }

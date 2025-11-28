@@ -74,6 +74,20 @@
                 </FluentSelect>
             }
             
+            @if (Content.AvailableSources.Any())
+            {
+                <FluentSelect Value="@(Content.Translation.SourceId?.ToString() ?? string.Empty)"
+                              ValueChanged="@(val => Content.Translation.SourceId = String.IsNullOrWhiteSpace(val) || !Guid.TryParse(val, out var sourceId) ? null : sourceId)"
+                              Label="Source Translation (Optional - for linking similar/same translations)"
+                              Items="SourceSelectItems"
+                              OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"
+                              Style="width: 100%;">
+                    <OptionTemplate Context="optionTemplateContext">
+                        @optionTemplateContext.Text
+                    </OptionTemplate>
+                </FluentSelect>
+            }
+            
             @if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 <FluentMessageBar Intent="MessageIntent.Error">

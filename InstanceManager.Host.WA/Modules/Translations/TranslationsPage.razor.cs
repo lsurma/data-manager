@@ -29,6 +29,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     private List<TranslationDto> AllTranslations { get; set; } = new();
     private List<DataSetDto> AllDataSets { get; set; } = new();
     private List<TranslationDto> AllLayouts { get; set; } = new();
+    private List<TranslationDto> AllSources { get; set; } = new();
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
     private IList<TranslationDto> _selectedRows = new List<TranslationDto>();
@@ -51,6 +52,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         NavigationManager.LocationChanged += OnLocationChanged;
         LoadDataSetsAsync();
         LoadLayoutsAsync();
+        LoadSourcesAsync();
     }
     
     private async void LoadDataSetsAsync()
@@ -77,6 +79,20 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to load layouts: {ex.Message}");
+        }
+    }
+    
+    private async void LoadSourcesAsync()
+    {
+        try
+        {
+            // Load all translations that can be used as sources
+            var result = await RequestSender.SendAsync(GetTranslationsQuery.AllItems());
+            AllSources = result.Items;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load sources: {ex.Message}");
         }
     }
     
@@ -317,11 +333,13 @@ public partial class TranslationsPage : ComponentBase, IDisposable
             IsEditMode = isEditMode,
             AvailableDataSets = AllDataSets,
             AvailableLayouts = AllLayouts,
+            AvailableSources = AllSources,
             
             OnDataChanged = async () =>
             {
                 _refreshToken = Guid.NewGuid().ToString();
                 LoadLayoutsAsync(); // Refresh layouts after data changes
+                LoadSourcesAsync(); // Refresh sources after data changes
                 await InvokeAsync(StateHasChanged);
             }
         };
