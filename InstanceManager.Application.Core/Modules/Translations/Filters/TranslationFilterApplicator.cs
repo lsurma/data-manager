@@ -39,3 +39,18 @@ public class TranslationSearchFilterHandler : IFilterHandler<Translation, Search
         return Task.FromResult(expression);
     }
 }
+
+public class BaseTranslationFilterHandler : IFilterHandler<Translation, BaseTranslationFilter>
+{
+    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(BaseTranslationFilter filter, CancellationToken cancellationToken = default)
+    {
+        var cultureName = filter.CultureName;
+        
+        // Filter for base translations (SourceId is null) that match the specified culture or have null culture
+        Expression<Func<Translation, bool>> expression = t => 
+            t.SourceId == null && 
+            (t.CultureName == null || t.CultureName == cultureName);
+        
+        return Task.FromResult(expression);
+    }
+}

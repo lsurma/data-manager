@@ -3,6 +3,7 @@ using System;
 using InstanceManager.Application.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InstanceManager.Application.Core.Data.Migrations
 {
     [DbContext(typeof(InstanceManagerDbContext))]
-    partial class InstanceManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251128095321_AddTranslationSourceId")]
+    partial class AddTranslationSourceId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");

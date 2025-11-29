@@ -34,4 +34,14 @@ public class Translation : AuditableEntityBase
     /// Navigation property to the layout Translation
     /// </summary>
     public Translation? Layout { get; set; }
+
+    /// <summary>
+    /// Optional reference to a source Translation (for linking similar/same translations)
+    /// </summary>
+    public Guid? SourceId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the source Translation
+    /// </summary>
+    public Translation? Source { get; set; }
 }

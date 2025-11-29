@@ -80,6 +80,30 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         }
     }
     
+    private async Task<List<TranslationDto>> LoadSourcesForCultureAsync(string? cultureName)
+    {
+        try
+        {
+            // Load base translations (SourceId = null) that match the culture or have null culture
+            var query = GetTranslationsQuery.AllItems();
+            query.Filtering = new FilteringParameters
+            {
+                QueryFilters = new List<IQueryFilter>
+                {
+                    new BaseTranslationFilter { CultureName = cultureName }
+                }
+            };
+            
+            var result = await RequestSender.SendAsync(query);
+            return result.Items;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load sources: {ex.Message}");
+            return new List<TranslationDto>();
+        }
+    }
+    
     private void HandleDataFetched(DataFetchedEventArgs<PaginatedList<TranslationDto>> eventArgs)
     {
         AllTranslations = eventArgs.Data.Items;
@@ -297,6 +321,10 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     private async Task OpenTranslationPanelAsync(TranslationDto? translation = null)
     {
         var isEditMode = translation != null;
+        var cultureName = translation?.CultureName;
+        
+        // Load available sources filtered by the translation's culture (or null for new translations)
+        var availableSources = await LoadSourcesForCultureAsync(cultureName);
         
         var parameters = new TranslationPanelParameters
         {
@@ -317,6 +345,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
             IsEditMode = isEditMode,
             AvailableDataSets = AllDataSets,
             AvailableLayouts = AllLayouts,
+            AvailableSources = availableSources,
             
             OnDataChanged = async () =>
             {
