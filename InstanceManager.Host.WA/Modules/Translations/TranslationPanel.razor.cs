@@ -74,6 +74,30 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
         }
     }
     
+    private List<Option<Guid?>> SourceSelectItems
+    {
+        get
+        {
+            var items = new List<Option<Guid?>>
+            {
+                new Option<Guid?> { Value = null, Text = "-- None --" }
+            };
+            
+            if (Content?.AvailableSources != null)
+            {
+                items.AddRange(Content.AvailableSources
+                    .Where(t => t.Id != Content.Translation?.Id) // Exclude self
+                    .Select(t => new Option<Guid?> 
+                    { 
+                        Value = t.Id, 
+                        Text = $"{t.TranslationName} ({t.ResourceName})"
+                    }));
+            }
+            
+            return items;
+        }
+    }
+    
     private async Task HandleKeyDownAsync(FluentKeyCodeEventArgs args)
     {
         // Ctrl+S to save
@@ -103,7 +127,8 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
                 Content = Content.Translation.Content,
                 ContentTemplate = Content.Translation.ContentTemplate,
                 DataSetId = Content.Translation.DataSetId,
-                LayoutId = Content.Translation.LayoutId
+                LayoutId = Content.Translation.LayoutId,
+                SourceId = Content.Translation.SourceId
             });
             
             ToastService.ShowSuccess($"Translation '{Content.Translation.TranslationName}' {(Content.IsEditMode ? "updated" : "created")} successfully");
@@ -184,5 +209,6 @@ public class TranslationPanelParameters
     public bool IsEditMode { get; set; }
     public List<DataSetDto> AvailableDataSets { get; set; } = new();
     public List<TranslationDto> AvailableLayouts { get; set; } = new();
+    public List<TranslationDto> AvailableSources { get; set; } = new();
     public Func<Task>? OnDataChanged { get; set; }
 }
