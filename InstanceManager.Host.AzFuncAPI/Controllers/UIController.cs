@@ -29,7 +29,7 @@ public class UIController
     /// </summary>
     [Function("UI")]
     public async Task<IActionResult> ServeUI(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "ui/{*path}")] HttpRequest req,
         string? path)
     {
         path ??= string.Empty;
