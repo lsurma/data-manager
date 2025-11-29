@@ -21,7 +21,8 @@ public class CookieService : ICookieService
     {
         try
         {
-            var allCookies = await _jsRuntime.InvokeAsync<string>("eval", "document.cookie");
+            var allCookies = await _jsRuntime.InvokeAsync<string>("cookieUtils.getCookies");
+            
             if (string.IsNullOrEmpty(allCookies))
             {
                 return null;
@@ -31,7 +32,7 @@ public class CookieService : ICookieService
             foreach (var cookie in cookies)
             {
                 var parts = cookie.Trim().Split('=', 2);
-                if (parts.Length >= 1 && parts[0].Trim() == name)
+                if (parts[0].Trim() == name)
                 {
                     return parts.Length > 1 ? parts[1] : string.Empty;
                 }
@@ -39,8 +40,14 @@ public class CookieService : ICookieService
 
             return null;
         }
-        catch
+        catch (JSException)
         {
+            // JavaScript interop failed (e.g., during prerendering)
+            return null;
+        }
+        catch (InvalidOperationException)
+        {
+            // JSRuntime not available yet
             return null;
         }
     }
