@@ -1,8 +1,8 @@
 using System.Globalization;
+using ClosedXML.Excel;
 using CsvHelper;
 using InstanceManager.Application.Contracts.Modules.DataSets;
 using MediatR;
-using OfficeOpenXml;
 
 namespace InstanceManager.Application.Core.Modules.DataSet;
 
@@ -50,10 +50,9 @@ public class ProcessTranslationFileCommandHandler : IRequestHandler<ProcessTrans
 
     private void ProcessXlsx(string filePath)
     {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        using (var package = new ExcelPackage(new FileInfo(filePath)))
+        using (var workbook = new XLWorkbook(filePath))
         {
-            var worksheet = package.Workbook.Worksheets[0];
+            var worksheet = workbook.Worksheets.Worksheet(1);
             // TODO: Add logic to process the XLSX worksheet.
         }
     }
