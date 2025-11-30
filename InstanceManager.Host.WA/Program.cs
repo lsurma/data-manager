@@ -62,6 +62,7 @@ builder.Services.AddHttpClient<InstanceManagerHttpClient>(client =>
 
 builder.Services.AddScoped<IRequestSender, HttpRequestSender>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<ICookieService, CookieService>();
 builder.Services.AddScoped<NavigationHelper>();
 
 builder.Services.AddFluentUIComponents();
