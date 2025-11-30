@@ -35,6 +35,14 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore DataManager.Host.WA/DataManager.Host.WA.csproj
 
+      - name: Generate appsettings.Production.json
+        if: ${{ vars.API_BASE_URL != '' }}
+        run: |
+          echo '{"ApiBaseUrl": "${{ vars.API_BASE_URL }}"}' > DataManager.Host.WA/wwwroot/appsettings.Production.json
+          echo "Generated appsettings.Production.json with ApiBaseUrl: ${{ vars.API_BASE_URL }}"
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+
       - name: Build Blazor WebAssembly
         run: dotnet build DataManager.Host.WA/DataManager.Host.WA.csproj -c Release --no-restore
 
