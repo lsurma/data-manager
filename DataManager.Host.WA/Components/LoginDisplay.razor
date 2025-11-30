@@ -35,26 +35,13 @@
     [Inject]
     ILogger<LoginDisplay> Logger { get; set; } = null!;
 
-    [Inject]
-    AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
-
     private string? _photo;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // Only fetch user photo if the user is authenticated
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            if (authState.User.Identity?.IsAuthenticated == true)
-            {
-                await GetUserPhoto();
-            }
-        }
-        catch (AccessTokenNotAvailableException)
-        {
-            // Silently ignore - user is not logged in or token is unavailable
-            Logger.LogDebug("Access token not available for fetching user photo");
+            await GetUserPhoto();
         }
         catch (Exception e)
         {
