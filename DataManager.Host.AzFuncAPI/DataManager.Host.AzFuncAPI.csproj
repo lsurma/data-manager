@@ -44,7 +44,7 @@
     <!-- Target to build and publish Blazor WebAssembly project -->
     <Target Name="BuildBlazorWA" BeforeTargets="Build" Condition="'$(BuildBlazorUI)' == 'true'">
         <Message Importance="high" Text="Building Blazor WebAssembly UI..." />
-        <Exec Command="dotnet publish &quot;$(BlazorWAProjectPath)&quot; -c $(Configuration) -o &quot;$(MSBuildThisFileDirectory)..\DataManager.Host.WA\bin\$(Configuration)\net10.0\publish&quot;" />
+        <Exec Command="dotnet publish &quot;$(BlazorWAProjectPath)&quot; -c $(Configuration) -o &quot;$(MSBuildThisFileDirectory)..\DataManager.Host.WA\bin\$(Configuration)\net10.0\publish&quot; -p:BaseHref=/ui/" />
     </Target>
 
     <!-- Target to copy Blazor output to Azure Functions wwwroot source folder -->
