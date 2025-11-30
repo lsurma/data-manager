@@ -1,5 +1,4 @@
-﻿using System.Net;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.Extensions.Logging;
 
@@ -8,8 +7,8 @@ namespace DataManager.Host.WA.Services;
 /// <summary>
 /// A custom <see cref="AuthorizationMessageHandler"/> that attaches access tokens to outgoing HTTP requests
 /// for external API endpoints (not limited to the application's base URI).
-/// When no access token is available (user not logged in), the exception is caught and logged,
-/// and an empty unsuccessful response is returned instead of throwing.
+/// When no access token is available (user not logged in), the request is passed through without
+/// authentication, allowing API endpoints that don't require authorization to still work.
 /// </summary>
 public class ApiAuthorizationMessageHandler : AuthorizationMessageHandler
 {
@@ -47,14 +46,14 @@ public class ApiAuthorizationMessageHandler : AuthorizationMessageHandler
         }
         catch (AccessTokenNotAvailableException ex)
         {
-            // Log the error and return an unauthorized response when user is not logged in
-            _logger.LogDebug(ex, "Access token not available for {RequestUri}, returning Unauthorized response", request.RequestUri);
+            // Log the error and pass the request through without authentication
+            // This allows API endpoints that don't require authorization to still work
+            _logger.LogDebug(ex, "Access token not available for {RequestUri}, passing request without authentication", request.RequestUri);
             
-            return new HttpResponseMessage(HttpStatusCode.Unauthorized)
-            {
-                RequestMessage = request,
-                ReasonPhrase = "Access token not available"
-            };
+            // Send the request without the authorization header using the inner handler
+            // InnerHandler is always set when this handler is used in a pipeline (e.g., via AddHttpMessageHandler)
+            using var invoker = new HttpMessageInvoker(InnerHandler!, disposeHandler: false);
+            return await invoker.SendAsync(request, cancellationToken);
         }
     }
 }
