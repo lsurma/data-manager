@@ -1,6 +1,6 @@
 # User Identity Tracking and Auditing
 
-This document explains how user identity tracking and auditing works in InstanceManager across all authentication methods.
+This document explains how user identity tracking and auditing works in DataManager across all authentication methods.
 
 ## Overview
 
@@ -22,27 +22,27 @@ Additionally, every MediatR request is logged with full user context for auditin
 ### Key Components
 
 1. **`UserIdentity`** - Universal user identity model
-   - Location: `InstanceManager.Application.Contracts/Common/UserIdentity.cs`
+   - Location: `DataManager.Application.Contracts/Common/UserIdentity.cs`
    - Represents user across all auth methods
    - Includes UserId, DisplayName, Email, AuthenticationMethod
 
 2. **`ICurrentUserService`** - Service to access current user
-   - Location: `InstanceManager.Application.Contracts/Common/ICurrentUserService.cs`
+   - Location: `DataManager.Application.Contracts/Common/ICurrentUserService.cs`
    - Interface for getting current authenticated user
    - Implementation: `CurrentUserService` in Application.Core
 
 3. **`CurrentUserService`** - Extracts user from HTTP context
-   - Location: `InstanceManager.Application.Core/Common/CurrentUserService.cs`
+   - Location: `DataManager.Application.Core/Common/CurrentUserService.cs`
    - Parses claims from JWT, API Key, or APIM headers
    - Returns universal `UserIdentity` object
 
 4. **`LoggingBehavior`** - MediatR pipeline for request logging
-   - Location: `InstanceManager.Application.Core/Common/LoggingBehavior.cs`
+   - Location: `DataManager.Application.Core/Common/LoggingBehavior.cs`
    - Automatically logs all requests with user context
    - Logs: Request name, User ID, Auth method, Success/Failure
 
-5. **`InstanceManagerDbContext`** - Auto-sets audit fields
-   - Location: `InstanceManager.Application.Core/Data/InstanceManagerDbContext.cs`
+5. **`DataManagerDbContext`** - Auto-sets audit fields
+   - Location: `DataManager.Application.Core/Data/DataManagerDbContext.cs`
    - Automatically sets `CreatedBy`/`UpdatedBy` on SaveChanges
    - Uses `ICurrentUserService` to get current user
 
@@ -453,7 +453,7 @@ traces
 **Solution:**
 - Check authentication configuration in `local.settings.json`
 - Ensure `AddHttpContextAccessor()` is called in `Program.cs`
-- Verify `AddInstanceManagerCore()` is called (registers `ICurrentUserService`)
+- Verify `AddDataManagerCore()` is called (registers `ICurrentUserService`)
 
 ### APIM user ID shows as "apim-gateway"
 

@@ -1,6 +1,6 @@
 # Entra ID Authentication Setup
 
-This document explains how to configure Azure Entra ID (formerly Azure AD) authentication for the InstanceManager Blazor WebAssembly application.
+This document explains how to configure Azure Entra ID (formerly Azure AD) authentication for the DataManager Blazor WebAssembly application.
 
 ## Overview
 
@@ -13,7 +13,7 @@ The application now uses Microsoft Authentication Library (MSAL) to authenticate
 1. Go to the [Azure Portal](https://portal.azure.com)
 2. Navigate to **Azure Active Directory** > **App registrations** > **New registration**
 3. Configure the app registration:
-   - **Name**: `InstanceManager Web App` (or your preferred name)
+   - **Name**: `DataManager Web App` (or your preferred name)
    - **Supported account types**: Choose based on your requirements (typically "Accounts in this organizational directory only")
    - **Redirect URI**:
      - Platform: **Single-page application (SPA)**
@@ -40,18 +40,18 @@ The application now uses Microsoft Authentication Library (MSAL) to authenticate
 If your Azure Functions API also needs to validate tokens:
 
 1. Create another app registration for the API:
-   - **Name**: `InstanceManager API`
+   - **Name**: `DataManager API`
    - **Supported account types**: Same as the web app
    - **Redirect URI**: Leave blank (this is for the API)
 2. Go to **Expose an API**
 3. Click **Add a scope**
-   - **Application ID URI**: Accept the default or customize (e.g., `api://instancemanager-api`)
+   - **Application ID URI**: Accept the default or customize (e.g., `api://DataManager-api`)
    - **Scope name**: `access_as_user`
    - **Who can consent**: Admins and users
-   - **Admin consent display name**: `Access InstanceManager API`
-   - **Admin consent description**: `Allows the app to access InstanceManager API on behalf of the signed-in user`
-   - **User consent display name**: `Access InstanceManager API`
-   - **User consent description**: `Allows the app to access InstanceManager API on your behalf`
+   - **Admin consent display name**: `Access DataManager API`
+   - **Admin consent description**: `Allows the app to access DataManager API on behalf of the signed-in user`
+   - **User consent display name**: `Access DataManager API`
+   - **User consent description**: `Allows the app to access DataManager API on your behalf`
    - **State**: Enabled
 4. Click **Add scope**
 5. Note the **Application ID URI** (e.g., `api://abc123-def456...`)
@@ -61,7 +61,7 @@ If your Azure Functions API also needs to validate tokens:
 1. Go back to your **Web App** registration
 2. Navigate to **API permissions**
 3. Click **Add a permission** > **My APIs**
-4. Select your **InstanceManager API** app
+4. Select your **DataManager API** app
 5. Select **Delegated permissions**
 6. Check `access_as_user`
 7. Click **Add permissions**
@@ -71,7 +71,7 @@ If your Azure Functions API also needs to validate tokens:
 
 ### Update appsettings.json
 
-Edit `/mnt/c/Workspace/Projects/InstanceManager/InstanceManager.Host.WA/wwwroot/appsettings.json`:
+Edit `/mnt/c/Workspace/Projects/DataManager/DataManager.Host.WA/wwwroot/appsettings.json`:
 
 ```json
 {
@@ -154,7 +154,7 @@ The `HttpRequestSender` service automatically attaches access tokens to all API 
 1. Update `appsettings.json` with your Azure AD configuration
 2. Run the application:
    ```bash
-   dotnet run --project InstanceManager.Host.WA/InstanceManager.Host.WA.csproj
+   dotnet run --project DataManager.Host.WA/DataManager.Host.WA.csproj
    ```
 3. Navigate to `http://localhost:5070`
 4. Click **Log in** button
@@ -184,7 +184,7 @@ The `HttpRequestSender` service automatically attaches access tokens to all API 
 
 If you want the Azure Functions API to also validate JWT tokens:
 
-1. Add `Microsoft.Identity.Web` NuGet package to `InstanceManager.Host.AzFuncAPI`
+1. Add `Microsoft.Identity.Web` NuGet package to `DataManager.Host.AzFuncAPI`
 2. Configure JWT bearer authentication in the Azure Functions startup
 3. Update the API to validate tokens from your Azure AD tenant
 4. Ensure the API validates the audience matches your API's Application ID URI

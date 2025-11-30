@@ -1,0 +1,196 @@
+@typeparam TResponse
+@using System.Collections
+@using DataManager.Host.WA.Services
+@typeparam TQuery
+@inject IRequestSender RequestSender
+@inject ILocalStorageService LocalStorage
+
+@if (IsLoading && Data == null)
+{
+    @if (LoadingContent != null)
+    {
+        @LoadingContent
+    }
+    else
+    {
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px;">
+            <FluentProgressRing />
+            <p>Loading data...</p>
+        </div>
+    }
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    @if (ErrorContent != null)
+    {
+        @ErrorContent(ErrorMessage)
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            @ErrorMessage
+        </FluentMessageBar>
+    }
+}
+else if (Data != null)
+{
+    @if (IsEmpty(Data))
+    {
+        @if (NoDataContent != null)
+        {
+            @NoDataContent
+        }
+        else
+        {
+            <FluentMessageBar Intent="MessageIntent.Info">
+                No data available.
+            </FluentMessageBar>
+        }
+    }
+    else
+    {
+        @ChildContent(Data)
+    }
+}
+
+@code {
+    [Parameter]
+    public required TQuery Query { get; set; }
+
+    [Parameter]
+    public string? CacheKey { get; set; }
+    
+    [Parameter]
+    public string? RefreshToken { get; set; }
+    
+    [Parameter]
+    public Func<TQuery, Task<bool>>? ShouldCache { get; set; }
+    
+    [Parameter]
+    public RenderFragment? LoadingContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<string>? ErrorContent { get; set; }
+    
+    [Parameter]
+    public RenderFragment? NoDataContent { get; set; }
+
+    [Parameter]
+    public required RenderFragment<TResponse> ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback<DataFetchedEventArgs<TResponse>> OnDataFetched { get; set; }
+
+    private TResponse? Data { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+    private string? _previousRefreshToken;
+    private bool _hasLoadedOnce;
+    private bool _isFirstLiveFetch = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _previousRefreshToken = RefreshToken;
+        await LoadDataAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Refresh data when RefreshToken changes
+        if (RefreshToken != _previousRefreshToken)
+        {
+            _previousRefreshToken = RefreshToken;
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = null;
+
+            var cacheKey = CacheKey ?? $"query_{Query!.GetType().Name}";
+            var shouldUseCache = ShouldCache == null || await ShouldCache(Query);
+
+            // Try to load from cache ONLY on the very first load for this component instance
+            if (shouldUseCache && !_hasLoadedOnce)
+            {
+                var cachedData = await LocalStorage.GetItemAsync<TResponse>(cacheKey);
+                if (cachedData != null)
+                {
+                    Data = cachedData;
+                    IsLoading = false;
+
+                    // Notify that cached data is available
+                    if (OnDataFetched.HasDelegate)
+                    {
+                        var eventArgs = new DataFetchedEventArgs<TResponse>(
+                            cachedData,
+                            IsFromCache: true,
+                            IsFirstFetch: true
+                        );
+                        await OnDataFetched.InvokeAsync(eventArgs);
+                    }
+
+                    StateHasChanged();
+                }
+            }
+
+            // Mark that we've attempted to load at least once
+            _hasLoadedOnce = true;
+
+            // Fetch fresh data from API
+            var freshData = await RequestSender.SendAsync<TResponse>(Query!);
+
+            // Update cache if caching is enabled
+            if (shouldUseCache)
+            {
+                await LocalStorage.SetItemAsync(cacheKey, freshData);
+            }
+
+            // Update UI with fresh data
+            Data = freshData;
+            ErrorMessage = null;
+
+            // Notify that fresh data is available
+            if (OnDataFetched.HasDelegate)
+            {
+                var eventArgs = new DataFetchedEventArgs<TResponse>(
+                    freshData,
+                    IsFromCache: false,
+                    IsFirstFetch: _isFirstLiveFetch
+                );
+                _isFirstLiveFetch = false;
+                await OnDataFetched.InvokeAsync(eventArgs);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+    
+    private bool IsEmpty(TResponse data)
+    {
+        if (data == null) return true;
+        
+        // Check if it's a collection
+        if (data is IEnumerable enumerable)
+        {
+            return !enumerable.Cast<object>().Any();
+        }
+        
+        return false;
+    }
+}

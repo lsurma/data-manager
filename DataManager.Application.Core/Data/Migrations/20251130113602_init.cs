@@ -1,0 +1,185 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace DataManager.Application.Core.Data.Migrations
+{
+    /// <inheritdoc />
+    public partial class init : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "DataSets",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    AllowedIdentityIds = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "INTEGER", nullable: true),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    UpdatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DataSets", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProjectInstances",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    MainHost = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    ParentProjectId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "INTEGER", nullable: true),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    UpdatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectInstances", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectInstances_ProjectInstances_ParentProjectId",
+                        column: x => x.ParentProjectId,
+                        principalTable: "ProjectInstances",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DataSetInclude",
+                columns: table => new
+                {
+                    ParentDataSetId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    IncludedDataSetId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DataSetInclude", x => new { x.ParentDataSetId, x.IncludedDataSetId });
+                    table.ForeignKey(
+                        name: "FK_DataSetInclude_DataSets_IncludedDataSetId",
+                        column: x => x.IncludedDataSetId,
+                        principalTable: "DataSets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DataSetInclude_DataSets_ParentDataSetId",
+                        column: x => x.ParentDataSetId,
+                        principalTable: "DataSets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Translations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    InternalGroupName1 = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    InternalGroupName2 = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    ResourceName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    TranslationName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    CultureName = table.Column<string>(type: "TEXT", maxLength: 10, nullable: true),
+                    Content = table.Column<string>(type: "TEXT", nullable: false),
+                    ContentTemplate = table.Column<string>(type: "TEXT", nullable: true),
+                    DataSetId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    LayoutId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    SourceId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "INTEGER", nullable: true),
+                    CreatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    UpdatedBy = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Translations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Translations_DataSets_DataSetId",
+                        column: x => x.DataSetId,
+                        principalTable: "DataSets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Translations_Translations_LayoutId",
+                        column: x => x.LayoutId,
+                        principalTable: "Translations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Translations_Translations_SourceId",
+                        column: x => x.SourceId,
+                        principalTable: "Translations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DataSetInclude_IncludedDataSetId",
+                table: "DataSetInclude",
+                column: "IncludedDataSetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DataSetInclude_ParentDataSetId_IncludedDataSetId",
+                table: "DataSetInclude",
+                columns: new[] { "ParentDataSetId", "IncludedDataSetId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectInstances_ParentProjectId",
+                table: "ProjectInstances",
+                column: "ParentProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Translations_CultureName",
+                table: "Translations",
+                column: "CultureName");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Translations_DataSetId",
+                table: "Translations",
+                column: "DataSetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Translations_InternalGroupName1_InternalGroupName2_ResourceName_CultureName",
+                table: "Translations",
+                columns: new[] { "InternalGroupName1", "InternalGroupName2", "ResourceName", "CultureName" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Translations_LayoutId",
+                table: "Translations",
+                column: "LayoutId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Translations_SourceId",
+                table: "Translations",
+                column: "SourceId");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "DataSetInclude");
+
+            migrationBuilder.DropTable(
+                name: "ProjectInstances");
+
+            migrationBuilder.DropTable(
+                name: "Translations");
+
+            migrationBuilder.DropTable(
+                name: "DataSets");
+        }
+    }
+}

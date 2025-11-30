@@ -1,6 +1,6 @@
 # Azure API Management (APIM) Policy Templates
 
-This document contains policy templates for integrating your InstanceManager API with Azure API Management.
+This document contains policy templates for integrating your DataManager API with Azure API Management.
 
 ## Overview
 

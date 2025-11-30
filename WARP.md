@@ -4,16 +4,16 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Project Overview
 
-InstanceManager is a .NET 9.0 solution for managing project instances with hierarchical relationships. It uses a **CQRS-like architecture** with MediatR, Azure Functions for the API backend, and Blazor WebAssembly for the frontend.
+DataManager is a .NET 9.0 solution for managing project instances with hierarchical relationships. It uses a **CQRS-like architecture** with MediatR, Azure Functions for the API backend, and Blazor WebAssembly for the frontend.
 
 ## Architecture
 
 ### Project Structure
 
-- **InstanceManager.Application.Contracts**: Defines MediatR commands, queries, and DTOs shared between all layers
-- **InstanceManager.Application.Core**: Business logic, EF Core entities, handlers, database context, and migrations
-- **InstanceManager.Host.AzFuncAPI**: Azure Functions backend API (runs on port 7233)
-- **InstanceManager.Host.WA**: Blazor WebAssembly frontend (runs on port 5070)
+- **DataManager.Application.Contracts**: Defines MediatR commands, queries, and DTOs shared between all layers
+- **DataManager.Application.Core**: Business logic, EF Core entities, handlers, database context, and migrations
+- **DataManager.Host.AzFuncAPI**: Azure Functions backend API (runs on port 7233)
+- **DataManager.Host.WA**: Blazor WebAssembly frontend (runs on port 5070)
 
 ### Key Architectural Patterns
 
@@ -22,7 +22,7 @@ InstanceManager is a .NET 9.0 solution for managing project instances with hiera
 2. `HttpRequestSender` serializes and sends to Azure Functions endpoint `/api/query/{RequestName}`
 3. `QueryController` uses `RequestRegistry` to dynamically resolve request type by name
 4. MediatR dispatches to appropriate handler in `.Application.Core`
-5. Handler executes business logic using `InstanceManagerDbContext`
+5. Handler executes business logic using `DataManagerDbContext`
 6. Response returns through the stack as DTOs
 
 **Request Registry Pattern:**
@@ -30,27 +30,27 @@ The API uses reflection to automatically discover all `IRequest<>` types from th
 
 ### Database
 
-- SQLite database located at `db/instanceManager.db`
-- Connection string: `Data Source=db/instanceManager.db`
-- Entity Framework Core with migrations in `InstanceManager.Application.Core/Data/Migrations`
+- SQLite database located at `db/DataManager.db`
+- Connection string: `Data Source=db/DataManager.db`
+- Entity Framework Core with migrations in `DataManager.Application.Core/Data/Migrations`
 - Database is auto-migrated and seeded on application startup via `InitializeDatabaseAsync()`
 
 ## Common Commands
 
 ### Build
 ```powershell
-dotnet build InstanceManager.sln
+dotnet build DataManager.sln
 ```
 
 ### Run Azure Functions API (Backend)
 ```powershell
-dotnet run --project InstanceManager.Host.AzFuncAPI\InstanceManager.Host.AzFuncAPI.csproj
+dotnet run --project DataManager.Host.AzFuncAPI\DataManager.Host.AzFuncAPI.csproj
 ```
 API runs on `http://localhost:7233`
 
 ### Run Blazor WebAssembly (Frontend)
 ```powershell
-dotnet run --project InstanceManager.Host.WA\InstanceManager.Host.WA.csproj
+dotnet run --project DataManager.Host.WA\DataManager.Host.WA.csproj
 ```
 Frontend runs on `http://localhost:5070` (http) or `https://localhost:7023` (https)
 
@@ -61,12 +61,12 @@ No test projects currently exist in the solution.
 
 **Create new migration:**
 ```powershell
-dotnet ef migrations add <MigrationName> --project InstanceManager.Application.Core\InstanceManager.Application.Core.csproj --startup-project InstanceManager.Host.AzFuncAPI\InstanceManager.Host.AzFuncAPI.csproj
+dotnet ef migrations add <MigrationName> --project DataManager.Application.Core\DataManager.Application.Core.csproj --startup-project DataManager.Host.AzFuncAPI\DataManager.Host.AzFuncAPI.csproj
 ```
 
 **Apply migrations manually:**
 ```powershell
-dotnet ef database update --project InstanceManager.Application.Core\InstanceManager.Application.Core.csproj --startup-project InstanceManager.Host.AzFuncAPI\InstanceManager.Host.AzFuncAPI.csproj
+dotnet ef database update --project DataManager.Application.Core\DataManager.Application.Core.csproj --startup-project DataManager.Host.AzFuncAPI\DataManager.Host.AzFuncAPI.csproj
 ```
 
 **Note:** Migrations are automatically applied on API startup via `InitializeDatabaseAsync()` in `ServiceCollectionExtensions`.
@@ -75,11 +75,11 @@ dotnet ef database update --project InstanceManager.Application.Core\InstanceMan
 
 ### Adding New Features (CQRS Pattern)
 
-1. **Define Contract** in `InstanceManager.Application.Contracts`:
+1. **Define Contract** in `DataManager.Application.Contracts`:
    - Create Command/Query class implementing `IRequest<TResponse>`
    - Create DTO if needed
 
-2. **Implement Handler** in `InstanceManager.Application.Core`:
+2. **Implement Handler** in `DataManager.Application.Core`:
    - Create handler implementing `IRequestHandler<TRequest, TResponse>`
    - Place in appropriate feature folder (e.g., `ProjectInstance/Handlers/`)
 
@@ -91,7 +91,7 @@ The request will be automatically discoverable via `RequestRegistry` without mod
 
 ### Entity Changes
 
-When modifying entities in `InstanceManager.Application.Core`:
+When modifying entities in `DataManager.Application.Core`:
 1. Update entity class
 2. Update corresponding configuration in `Data/Configurations/` if needed
 3. Create and apply EF Core migration (see Database Migrations section)

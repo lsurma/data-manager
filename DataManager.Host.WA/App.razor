@@ -1,0 +1,55 @@
+﻿@using DataManager.Host.WA.Layout
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <RedirectToLogin />
+                    }
+                    else
+                    {
+                        <p role="alert">You are not authorized to access this resource.</p>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IConfiguration Configuration
+
+@code {
+    private bool isRedirecting = true;
+
+    protected override async Task OnInitializedAsync()
+    {   if(Configuration.GetValue<bool>("Authentication:RequireAuthentication") == false)
+        {
+            isRedirecting = false;
+            return;
+        }
+        
+        var currentUri = Navigation.Uri;
+        var isAuthenticationPage = currentUri.Contains("authentication");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState?.User?.Identity?.IsAuthenticated != true && !isAuthenticationPage)
+        {
+            Navigation.NavigateTo("authentication/login", replace: true);
+        }
+        else
+        {
+            isRedirecting = false;
+        }
+    }
+}

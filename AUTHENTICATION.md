@@ -1,6 +1,6 @@
 # Authentication Configuration
 
-This document describes how authentication is configured in the InstanceManager API.
+This document describes how authentication is configured in the DataManager API.
 
 ## Overview
 

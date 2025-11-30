@@ -1,19 +1,19 @@
 # Postman Testing Files
 
-This folder contains everything you need to test the InstanceManager API with Postman.
+This folder contains everything you need to test the DataManager API with Postman.
 
 ## Quick Start
 
 1. **Import these files into Postman:**
-   - `InstanceManager.postman_collection.json` - API request collection
-   - `InstanceManager-Local.postman_environment.json` - Environment variables
+   - `DataManager.postman_collection.json` - API request collection
+   - `DataManager-Local.postman_environment.json` - Environment variables
 
 2. **Select environment:**
-   - In Postman, select "InstanceManager - Local" from the environment dropdown (top-right)
+   - In Postman, select "DataManager - Local" from the environment dropdown (top-right)
 
 3. **Start the API:**
    ```bash
-   dotnet run --project ../InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+   dotnet run --project ../DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
    ```
 
 4. **Send your first request:**
@@ -27,8 +27,8 @@ This folder contains everything you need to test the InstanceManager API with Po
 
 | File | Purpose |
 |------|---------|
-| `InstanceManager.postman_collection.json` | Complete API request collection with all endpoints and authentication scenarios |
-| `InstanceManager-Local.postman_environment.json` | Environment variables for local testing (URLs, API keys, test data) |
+| `DataManager.postman_collection.json` | Complete API request collection with all endpoints and authentication scenarios |
+| `DataManager-Local.postman_environment.json` | Environment variables for local testing (URLs, API keys, test data) |
 
 ### Documentation (Read These)
 
@@ -51,7 +51,7 @@ This folder contains everything you need to test the InstanceManager API with Po
 The collection is organized into these folders:
 
 ```
-InstanceManager API/
+DataManager API/
 ├── ProjectInstances/          # CRUD operations for project instances
 ├── Translations/              # CRUD operations for translations
 ├── DataSets/                  # CRUD operations for data sets
@@ -139,7 +139,7 @@ Choose the scenario that matches your testing needs:
 
 ## Environment Variables
 
-Pre-configured in `InstanceManager-Local.postman_environment.json`:
+Pre-configured in `DataManager-Local.postman_environment.json`:
 
 ### API Configuration
 - `baseUrl` - API base URL (`http://localhost:7233/api`)
@@ -221,7 +221,7 @@ Pre-configured in `InstanceManager-Local.postman_environment.json`:
 
 **Fix:**
 ```bash
-dotnet run --project ../InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+dotnet run --project ../DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
 ```
 
 Check output for: `Now listening on: http://localhost:7233`
@@ -233,7 +233,7 @@ Check output for: `Now listening on: http://localhost:7233`
 
 **Fix:**
 - Click environment dropdown (top-right)
-- Select "InstanceManager - Local"
+- Select "DataManager - Local"
 
 ## Tips
 
