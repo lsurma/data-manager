@@ -7,7 +7,7 @@ This guide shows how to test all authentication methods locally, including simul
 ### 1. Start the Backend API
 
 ```bash
-cd InstanceManager.Host.AzFuncAPI
+cd DataManager.Host.AzFuncAPI
 dotnet run
 ```
 
@@ -112,7 +112,7 @@ curl -X GET "http://localhost:7233/api/query/SaveProjectInstanceCommand?body=%7B
 
 Or manually:
 ```bash
-sqlite3 db/instanceManager.db "SELECT Id, Name, CreatedBy, UpdatedBy FROM ProjectInstances;"
+sqlite3 db/DataManager.db "SELECT Id, Name, CreatedBy, UpdatedBy FROM ProjectInstances;"
 ```
 
 **Expected output:**
@@ -324,7 +324,7 @@ Look for logs like:
 ### 2. Check Database
 
 ```bash
-sqlite3 db/instanceManager.db
+sqlite3 db/DataManager.db
 ```
 
 ```sql
@@ -355,7 +355,7 @@ curl -X GET "http://localhost:7233/api/query/SaveProjectInstanceCommand?body=%7B
   -H "X-API-Key: bob-key-67890"
 
 # Check database
-sqlite3 db/instanceManager.db "SELECT Name, CreatedBy, UpdatedBy FROM ProjectInstances WHERE Name = 'Updated';"
+sqlite3 db/DataManager.db "SELECT Name, CreatedBy, UpdatedBy FROM ProjectInstances WHERE Name = 'Updated';"
 
 # Expected: Name=Updated, CreatedBy=Alice, UpdatedBy=Bob
 ```
@@ -389,7 +389,7 @@ curl -H "X-API-Key: dev-team-key-abcdef" \
   "http://localhost:7233/api/query/SaveProjectInstanceCommand?body=%7B%22id%22%3A%22GUID%22%2C%22description%22%3A%22Team%20update%22%7D"
 
 # Query: Who worked on this?
-sqlite3 db/instanceManager.db \
+sqlite3 db/DataManager.db \
   "SELECT CreatedBy, UpdatedBy FROM ProjectInstances WHERE Id = 'GUID';"
 # Result: CreatedBy=Alice, UpdatedBy=DevTeam
 ```
@@ -404,7 +404,7 @@ for user in "Alice" "Bob" "DevTeam"; do
 done
 
 # Generate audit report
-sqlite3 db/instanceManager.db <<EOF
+sqlite3 db/DataManager.db <<EOF
 SELECT
   Name,
   CreatedBy,
@@ -457,7 +457,7 @@ curl "http://localhost:7233/api/query/SaveProjectInstanceCommand?body=%7B%22name
 
 **Check:**
 1. `HttpContextAccessor` registered? (should be in `Program.cs`)
-2. `ICurrentUserService` registered? (auto-registered by `AddInstanceManagerCore()`)
+2. `ICurrentUserService` registered? (auto-registered by `AddDataManagerCore()`)
 3. Are you sending authentication credentials?
 4. Check logs for authentication errors
 
@@ -481,7 +481,7 @@ curl "http://localhost:7233/api/query/SaveProjectInstanceCommand?body=%7B%22name
 **Solution:**
 ```bash
 # Delete and recreate database
-rm db/instanceManager.db
+rm db/DataManager.db
 dotnet run
 
 # Database will be recreated with new schema on startup
@@ -497,10 +497,10 @@ To start fresh:
 # Stop API (Ctrl+C)
 
 # Delete database
-rm db/instanceManager.db
+rm db/DataManager.db
 
 # Clear logs (optional)
-rm -rf InstanceManager.Host.AzFuncAPI/bin/Debug/net10.0/*.log
+rm -rf DataManager.Host.AzFuncAPI/bin/Debug/net10.0/*.log
 
 # Restart API
 dotnet run

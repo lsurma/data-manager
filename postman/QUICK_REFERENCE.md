@@ -1,4 +1,4 @@
-# Postman Quick Reference - InstanceManager API
+# Postman Quick Reference - DataManager API
 
 ## Authentication Headers Cheat Sheet
 
@@ -223,10 +223,10 @@ GET {{baseUrl}}/query/DeleteProjectInstanceCommand?body={"id":"{{instanceId}}"}
 ## Testing Checklist
 
 ### Initial Setup
-- [ ] Import collection from `postman/InstanceManager.postman_collection.json`
-- [ ] Import environment from `postman/InstanceManager-Local.postman_environment.json`
-- [ ] Select "InstanceManager - Local" environment (top-right)
-- [ ] Start API: `dotnet run --project InstanceManager.Host.AzFuncAPI/...`
+- [ ] Import collection from `postman/DataManager.postman_collection.json`
+- [ ] Import environment from `postman/DataManager-Local.postman_environment.json`
+- [ ] Select "DataManager - Local" environment (top-right)
+- [ ] Start API: `dotnet run --project DataManager.Host.AzFuncAPI/...`
 - [ ] Test basic request: "Get All Project Instances"
 
 ### Testing CRUD Operations
@@ -274,13 +274,13 @@ GET {{baseUrl}}/query/DeleteProjectInstanceCommand?body={"id":"{{instanceId}}"}
 ### Problem: Connection Refused
 **Fix:** Start the API
 ```bash
-dotnet run --project InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+dotnet run --project DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
 ```
 
 ### Problem: Variables not working
 **Fix:** Select the environment
 - Click environment dropdown (top-right)
-- Select "InstanceManager - Local"
+- Select "DataManager - Local"
 
 ---
 

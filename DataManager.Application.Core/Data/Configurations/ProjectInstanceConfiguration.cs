@@ -1,0 +1,30 @@
+using DataManager.Application.Core.Modules.ProjectInstance;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace DataManager.Application.Core.Data.Configurations;
+
+public class ProjectInstanceConfiguration : AuditableEntityConfiguration<ProjectInstance>
+{
+    protected override void ConfigureEntity(EntityTypeBuilder<ProjectInstance> builder)
+    {
+        builder.Property(e => e.Name)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(e => e.Description)
+            .HasMaxLength(1000);
+
+        builder.Property(e => e.MainHost)
+            .HasMaxLength(500);
+
+        builder.Property(e => e.Notes);
+
+        builder.HasOne(e => e.ParentProject)
+            .WithMany(e => e.ChildProjects)
+            .HasForeignKey(e => e.ParentProjectId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.ParentProjectId);
+    }
+}

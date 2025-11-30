@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-InstanceManager is a .NET 10.0 application for managing project instances with hierarchical relationships. It uses a **CQRS-like architecture** with MediatR, Azure Functions for the API backend, and Blazor WebAssembly for the frontend.
+DataManager is a .NET 10.0 application for managing project instances with hierarchical relationships. It uses a **CQRS-like architecture** with MediatR, Azure Functions for the API backend, and Blazor WebAssembly for the frontend.
 
 ## Architecture
 
@@ -12,10 +12,10 @@ InstanceManager is a .NET 10.0 application for managing project instances with h
 
 The solution consists of 4 projects:
 
-- **InstanceManager.Application.Contracts**: MediatR commands, queries, and DTOs shared between all layers
-- **InstanceManager.Application.Core**: Business logic, EF Core entities, request handlers, database context, and migrations
-- **InstanceManager.Host.AzFuncAPI**: Azure Functions backend API (port 7233)
-- **InstanceManager.Host.WA**: Blazor WebAssembly frontend (port 5070)
+- **DataManager.Application.Contracts**: MediatR commands, queries, and DTOs shared between all layers
+- **DataManager.Application.Core**: Business logic, EF Core entities, request handlers, database context, and migrations
+- **DataManager.Host.AzFuncAPI**: Azure Functions backend API (port 7233)
+- **DataManager.Host.WA**: Blazor WebAssembly frontend (port 5070)
 
 ### Request/Response Flow (CQRS Pattern)
 
@@ -24,16 +24,16 @@ The solution consists of 4 projects:
 3. Azure Functions `QueryController` receives the request
 4. `RequestRegistry` uses reflection to resolve request type by name (scans all `IRequest<>` types in Contracts assembly)
 5. MediatR dispatches to appropriate handler in `.Application.Core`
-6. Handler executes business logic using `InstanceManagerDbContext` (EF Core)
+6. Handler executes business logic using `DataManagerDbContext` (EF Core)
 7. Response returns as DTOs
 
 **Key Insight:** No explicit endpoint registration is needed. The `RequestRegistry` auto-discovers all request types, enabling dynamic routing. To add a new endpoint, just create a request/query in Contracts and its handler in Core.
 
 ### Database
 
-- **SQLite** database at `db/instanceManager.db`
-- Connection string: `Data Source=db/instanceManager.db`
-- EF Core migrations in `InstanceManager.Application.Core/Data/Migrations`
+- **SQLite** database at `db/DataManager.db`
+- Connection string: `Data Source=db/DataManager.db`
+- EF Core migrations in `DataManager.Application.Core/Data/Migrations`
 - Database is **auto-migrated and seeded** on API startup via `InitializeDatabaseAsync()` in `ServiceCollectionExtensions`
 
 ### Pagination and Querying System
@@ -74,18 +74,18 @@ See `PAGINATION_IMPLEMENTATION.md` and `PAGINATION_QUICKSTART.md` for detailed e
 
 ### Build
 ```bash
-dotnet build InstanceManager.sln
+dotnet build DataManager.sln
 ```
 
 ### Run Backend (Azure Functions API)
 ```bash
-dotnet run --project InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+dotnet run --project DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
 ```
 API runs on `http://localhost:7233`
 
 ### Run Frontend (Blazor WebAssembly)
 ```bash
-dotnet run --project InstanceManager.Host.WA/InstanceManager.Host.WA.csproj
+dotnet run --project DataManager.Host.WA/DataManager.Host.WA.csproj
 ```
 Frontend runs on `http://localhost:5070` (http) or `https://localhost:7023` (https)
 
@@ -93,12 +93,12 @@ Frontend runs on `http://localhost:5070` (http) or `https://localhost:7023` (htt
 
 **Create new migration:**
 ```bash
-dotnet ef migrations add <MigrationName> --project InstanceManager.Application.Core/InstanceManager.Application.Core.csproj --startup-project InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+dotnet ef migrations add <MigrationName> --project DataManager.Application.Core/DataManager.Application.Core.csproj --startup-project DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
 ```
 
 **Apply migrations manually:**
 ```bash
-dotnet ef database update --project InstanceManager.Application.Core/InstanceManager.Application.Core.csproj --startup-project InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+dotnet ef database update --project DataManager.Application.Core/DataManager.Application.Core.csproj --startup-project DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
 ```
 
 Note: Migrations are automatically applied on API startup via `InitializeDatabaseAsync()`.
@@ -107,18 +107,18 @@ Note: Migrations are automatically applied on API startup via `InitializeDatabas
 
 ### Adding New Features (CQRS Pattern)
 
-**1. Define Contract** in `InstanceManager.Application.Contracts/Modules/{ModuleName}/`:
+**1. Define Contract** in `DataManager.Application.Contracts/Modules/{ModuleName}/`:
    - Create Query/Command class inheriting from `PaginatedQuery<TDto>` (for paginated) or implementing `IRequest<TResponse>`
    - Create DTO (prefer `record` over `class` for DTOs to enable `with` expressions)
    - For queries with filtering, define filter classes implementing `IQueryFilter`
 
-**2. Register Filter Handlers** (if using custom filters) in `InstanceManager.Application.Core/Modules/{ModuleName}/Filters/`:
+**2. Register Filter Handlers** (if using custom filters) in `DataManager.Application.Core/Modules/{ModuleName}/Filters/`:
    - Implement `IFilterHandler<TEntity, TFilter>` with `GetFilterExpressionAsync()` method
    - Method signature: `Task<Expression<Func<TEntity, bool>>> GetFilterExpressionAsync(TFilter filter, CancellationToken cancellationToken = default)`
    - For simple synchronous filters, return `Task.FromResult(expression)`
    - Handlers are auto-registered via reflection in `ServiceCollectionExtensions.RegisterFilterHandlers()`
 
-**3. Implement Handler** in `InstanceManager.Application.Core/Modules/{ModuleName}/Handlers/`:
+**3. Implement Handler** in `DataManager.Application.Core/Modules/{ModuleName}/Handlers/`:
    - Create handler implementing `IRequestHandler<TRequest, TResponse>`
    - Use `IQueryService` for paginated queries (see Pagination section above)
    - Create mapping extension methods in `{Module}MappingExtensions.cs`
@@ -131,7 +131,7 @@ The request will be automatically discoverable via `RequestRegistry` without mod
 
 ### Entity Changes
 
-When modifying entities in `InstanceManager.Application.Core/Modules/{ModuleName}/`:
+When modifying entities in `DataManager.Application.Core/Modules/{ModuleName}/`:
 1. Update entity class (inherits from `AuditableEntityBase` or `EntityBase`)
 2. Update corresponding configuration in `Data/Configurations/` (fluent API mappings)
 3. Create and apply EF Core migration (see Database Migrations section)
@@ -167,7 +167,7 @@ When modifying entities in `InstanceManager.Application.Core/Modules/{ModuleName
 
 Each module follows this pattern:
 ```
-InstanceManager.Application.Contracts/Modules/{ModuleName}/
+DataManager.Application.Contracts/Modules/{ModuleName}/
   ├── {Entity}Dto.cs              # Data transfer object (record)
   ├── Get{Entity}ByIdQuery.cs     # Single item retrieval
   ├── Get{Entities}Query.cs       # List/paginated query (inherits PaginatedQuery<TDto>)
@@ -175,7 +175,7 @@ InstanceManager.Application.Contracts/Modules/{ModuleName}/
   ├── Delete{Entity}Command.cs    # Delete
   └── {Entity}Filters.cs          # Custom filter classes (if needed)
 
-InstanceManager.Application.Core/Modules/{ModuleName}/
+DataManager.Application.Core/Modules/{ModuleName}/
   ├── {Entity}.cs                 # EF Core entity (inherits AuditableEntityBase)
   ├── {Entity}MappingExtensions.cs # Entity ↔ DTO mappings
   ├── Handlers/

@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "instancemanager-api-001",
-		"name": "InstanceManager API",
-		"description": "Collection for testing InstanceManager API with authentication scenarios",
+		"_postman_id": "DataManager-api-001",
+		"name": "DataManager API",
+		"description": "Collection for testing DataManager API with authentication scenarios",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [

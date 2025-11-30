@@ -11,4 +11,4 @@ riderModule.iml
 db/
 
 # Generated Blazor output in Azure Functions (regenerated on build)
-InstanceManager.Host.AzFuncAPI/wwwroot/
+DataManager.Host.AzFuncAPI/wwwroot/

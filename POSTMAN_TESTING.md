@@ -1,11 +1,11 @@
 # Testing with Postman - Complete Guide
 
-This guide explains how to test the InstanceManager API locally using Postman with different authentication scenarios.
+This guide explains how to test the DataManager API locally using Postman with different authentication scenarios.
 
 ## Prerequisites
 
 1. **Postman** installed (Desktop or Web version) - [Download here](https://www.postman.com/downloads/)
-2. **InstanceManager API** running locally
+2. **DataManager API** running locally
 3. **Database** initialized (happens automatically on API startup)
 
 ## Quick Start
@@ -14,8 +14,8 @@ This guide explains how to test the InstanceManager API locally using Postman wi
 
 Two files are provided in the `postman/` directory:
 
-- **Collection**: `postman/InstanceManager.postman_collection.json` - Contains all API requests
-- **Environment**: `postman/InstanceManager-Local.postman_environment.json` - Contains variables (URLs, API keys, etc.)
+- **Collection**: `postman/DataManager.postman_collection.json` - Contains all API requests
+- **Environment**: `postman/DataManager-Local.postman_environment.json` - Contains variables (URLs, API keys, etc.)
 
 **How to Import:**
 
@@ -25,13 +25,13 @@ Two files are provided in the `postman/` directory:
 4. Click **Import**
 
 You should now see:
-- **InstanceManager API** collection in the left sidebar
-- **InstanceManager - Local** environment in the environment dropdown (top-right)
+- **DataManager API** collection in the left sidebar
+- **DataManager - Local** environment in the environment dropdown (top-right)
 
 ### 2. Select Environment
 
 - In the **top-right corner** of Postman, click the environment dropdown
-- Select **"InstanceManager - Local"**
+- Select **"DataManager - Local"**
 - The variables will now be available for use in requests
 
 ### 3. Start the API
@@ -39,8 +39,8 @@ You should now see:
 Open a terminal and run:
 
 ```bash
-cd /mnt/c/Workspace/Projects/InstanceManager
-dotnet run --project InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+cd /mnt/c/Workspace/Projects/DataManager
+dotnet run --project DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
 ```
 
 The API should start on `http://localhost:7233`
@@ -53,7 +53,7 @@ Application started. Press Ctrl+C to shut down.
 
 ### 4. Test Your First Request
 
-1. In Postman, open the **InstanceManager API** collection
+1. In Postman, open the **DataManager API** collection
 2. Navigate to **ProjectInstances → Get All Project Instances**
 3. Click **Send**
 
@@ -66,7 +66,7 @@ You should receive a 200 OK response with JSON data containing project instances
 The collection is organized into these folders:
 
 ```
-InstanceManager API/
+DataManager API/
 ├── ProjectInstances/          # CRUD operations for project instances
 │   ├── Get All Project Instances
 │   ├── Get Project Instances (Paginated)
@@ -98,7 +98,7 @@ InstanceManager API/
 
 ## API Request Structure
 
-All InstanceManager API requests follow this pattern:
+All DataManager API requests follow this pattern:
 
 ```
 GET /api/query/{RequestName}?body={urlEncodedJson}
@@ -132,7 +132,7 @@ GET /api/query/SaveProjectInstanceCommand?body={"name":"Test","description":"Tes
 
 ## Environment Variables
 
-The **InstanceManager - Local** environment contains these variables:
+The **DataManager - Local** environment contains these variables:
 
 | Variable | Default Value | Purpose |
 |----------|---------------|---------|
@@ -156,7 +156,7 @@ GET {{baseUrl}}/query/GetProjectInstanceByIdQuery?body={"id":"{{instanceId}}"}
 ### Editing Environment Variables
 
 1. Click the environment dropdown (top-right)
-2. Click the eye icon next to "InstanceManager - Local"
+2. Click the eye icon next to "DataManager - Local"
 3. Click **Edit**
 4. Modify the values
 5. Click **Save**
@@ -200,7 +200,7 @@ API Key authentication is the **easiest way to test with authentication** locall
 
 #### Step 1: Enable API Key Authentication
 
-Edit `InstanceManager.Host.AzFuncAPI/local.settings.json`:
+Edit `DataManager.Host.AzFuncAPI/local.settings.json`:
 
 ```json
 {
@@ -223,7 +223,7 @@ Edit `InstanceManager.Host.AzFuncAPI/local.settings.json`:
 
 Stop the API (Ctrl+C in terminal) and restart it:
 ```bash
-dotnet run --project InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+dotnet run --project DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
 ```
 
 #### Step 3: Test Without Authentication (Should Fail)
@@ -299,7 +299,7 @@ You need an **Azure AD App Registration**:
 
 #### Step 1: Configure JWT Authentication
 
-Edit `InstanceManager.Host.AzFuncAPI/local.settings.json`:
+Edit `DataManager.Host.AzFuncAPI/local.settings.json`:
 
 ```json
 {
@@ -661,7 +661,7 @@ Share your collection with team members:
 
 1. **Start the API:**
    ```bash
-   dotnet run --project InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj
+   dotnet run --project DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj
    ```
 
 2. **Check the port:**
@@ -682,7 +682,7 @@ Share your collection with team members:
 
 2. **Database is empty**
    - The database auto-seeds on startup
-   - If empty, delete `db/instanceManager.db` and restart the API
+   - If empty, delete `db/DataManager.db` and restart the API
 
 ### Issue: Variables Not Working
 
@@ -692,7 +692,7 @@ Share your collection with team members:
 
 1. **Select the environment:**
    - Check the environment dropdown (top-right)
-   - Select "InstanceManager - Local"
+   - Select "DataManager - Local"
 
 2. **Variable doesn't exist:**
    - Click environment dropdown → Edit
@@ -715,7 +715,7 @@ Use **Postman Collection Runner**:
 1. Right-click collection → **Run collection**
 2. Select requests to run
 3. Set iterations (how many times to run)
-4. Click **Run InstanceManager API**
+4. Click **Run DataManager API**
 5. View results summary
 
 ### Creating Test Suites
@@ -780,6 +780,6 @@ Run these in sequence with Collection Runner.
 
 **API Issues:**
 - Check terminal output for errors
-- Check `db/instanceManager.db` exists
+- Check `db/DataManager.db` exists
 - Review `local.settings.json` configuration
 - Check [AUTHENTICATION.md](AUTHENTICATION.md) for auth setup

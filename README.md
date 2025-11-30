@@ -13,11 +13,11 @@ This document provides instructions on how to run the Playwright script to verif
 
 ## Running the Verification Script
 
-1.  **Disable Authentication:** Before running the application, you need to disable authentication. To do this, comment out the authentication-related services in `InstanceManager.Host.WA/Program.cs` and `InstanceManager.Host.WA/App.razor` as shown in the pull request.
+1.  **Disable Authentication:** Before running the application, you need to disable authentication. To do this, comment out the authentication-related services in `DataManager.Host.WA/Program.cs` and `DataManager.Host.WA/App.razor` as shown in the pull request.
 
 2.  **Run the Blazor Application:**
     ```bash
-    /home/jules/.dotnet/dotnet run --project InstanceManager.Host.WA
+    /home/jules/.dotnet/dotnet run --project DataManager.Host.WA
     ```
 
 3.  **Run the Verification Script:**

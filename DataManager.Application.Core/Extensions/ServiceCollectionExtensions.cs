@@ -1,0 +1,114 @@
+using DataManager.Application.Contracts;
+using DataManager.Application.Core.Common;
+using DataManager.Application.Core.Data;
+using DataManager.Application.Core.Modules.DataSet;
+using DataManager.Application.Core.Modules.ProjectInstance;
+using DataManager.Application.Core.Modules.Translations;
+using DataManager.Authentication.Core;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace DataManager.Application.Core.Extensions;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddDataManagerCore(
+        this IServiceCollection services,
+        string connectionString,
+        Action<AuthorizationOptions>? configureAuthorization = null)
+    {
+        services.AddDbContext<DataManagerDbContext>(options =>
+            options.UseSqlite(connectionString));
+
+        // Register MediatR with logging pipeline behavior
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
+            cfg.RegisterServicesFromAssembly(typeof(IRequestSender).Assembly);
+            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+            cfg.RegisterGenericHandlers = true;
+        });
+
+        // Register user context (populated by middleware in Azure Functions)
+        services.AddScoped<UserContext>();
+
+        // Register current user service
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+        // Register authorization service with options
+        var authOptions = new AuthorizationOptions();
+        configureAuthorization?.Invoke(authOptions);
+        services.AddSingleton(authOptions);
+        services.AddScoped<IAuthorizationService, AuthorizationService>();
+
+        // Register entity-specific query services
+        services.AddScoped<IQueryService<DataSet, Guid>, DataSetsQueryService>();
+        services.AddScoped<IQueryService<ProjectInstance, Guid>, ProjectInstancesQueryService>();
+        services.AddScoped<IQueryService<Translation, Guid>, TranslationsQueryService>();
+
+        // Also register specialized query services directly for injection when needed
+        services.AddScoped<DataSetsQueryService>();
+        services.AddScoped<TranslationsQueryService>();
+        services.AddScoped<ProjectInstancesQueryService>();
+
+        services.AddSingleton<IFilterHandlerRegistry, FilterHandlerRegistry>();
+
+        // Register all filter handlers
+        RegisterFilterHandlers(services);
+
+
+        return services;
+    }
+    
+    private static void RegisterFilterHandlers(IServiceCollection services)
+    {
+        var assembly = typeof(ServiceCollectionExtensions).Assembly;
+        var filterHandlerType = typeof(IFilterHandler<,>);
+
+        // Find all types that implement IFilterHandler<TEntity, TFilter>
+        var handlerTypes = assembly.GetTypes()
+            .Where(t => !t.IsInterface && !t.IsAbstract)
+            .Where(t => t.GetInterfaces().Any(i =>
+                i.IsGenericType &&
+                i.GetGenericTypeDefinition() == filterHandlerType))
+            .ToList();
+
+        foreach (var handlerType in handlerTypes)
+        {
+            services.AddScoped(handlerType);
+        }
+    }
+
+
+    public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<DataManagerDbContext>();
+
+        // Ensure the database directory exists before EF Core tries to create the file
+        EnsureDatabaseDirectoryExists(context);
+
+        await context.Database.MigrateAsync();
+        await DatabaseSeeder.SeedAsync(context);
+    }
+
+    private static void EnsureDatabaseDirectoryExists(DataManagerDbContext context)
+    {
+        var connectionString = context.Database.GetConnectionString();
+        if (string.IsNullOrEmpty(connectionString))
+            return;
+
+        var builder = new SqliteConnectionStringBuilder(connectionString);
+        var dataSource = builder.DataSource;
+
+        if (string.IsNullOrEmpty(dataSource))
+            return;
+
+        var directory = Path.GetDirectoryName(dataSource);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+}
