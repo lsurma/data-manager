@@ -48,6 +48,7 @@ var scopes = builder.Configuration.GetSection("AzureAd:DefaultScopes").Get<strin
 builder.Services.AddScoped(sp => new ApiAuthorizationMessageHandler(
     sp.GetRequiredService<IAccessTokenProvider>(),
     sp.GetRequiredService<NavigationManager>(),
+    sp.GetRequiredService<ILogger<ApiAuthorizationMessageHandler>>(),
     apiBaseUrl,
     scopes
 ));
