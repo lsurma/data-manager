@@ -1,4 +1,4 @@
-namespace InstanceManager.Host.WA.Services;
+namespace DataManager.Host.WA.Services;
 
 public interface ICookieService
 {
