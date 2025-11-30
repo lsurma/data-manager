@@ -27,14 +27,14 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore InstanceManager.sln
+        run: dotnet restore DataManager.sln
 
       - name: Build with Blazor UI and publish
         run: |
           # Build the Blazor WebAssembly UI and copy to Azure Functions wwwroot
-          dotnet build InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj -c Release -p:BuildBlazorUI=true
+          dotnet build DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj -c Release -p:BuildBlazorUI=true
           # Publish the Azure Functions API (includes wwwroot from previous step)
-          dotnet publish InstanceManager.Host.AzFuncAPI/InstanceManager.Host.AzFuncAPI.csproj -c Release -o ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }} --no-build
+          dotnet publish DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj -c Release -o ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }} --no-build
 
       - name: Deploy to Azure Functions
         uses: Azure/functions-action@v1
