@@ -8,7 +8,22 @@
         <TrimMode>link</TrimMode>
         <WasmEnableOptimizations>false</WasmEnableOptimizations>
         <RunAOTCompilation>false</RunAOTCompilation>
+        <!-- Base href for the Blazor app. Can be overridden at build/publish time.
+             Example: dotnet publish -p:BaseHref=/ui/ -->
+        <BaseHref Condition="'$(BaseHref)' == ''">/</BaseHref>
     </PropertyGroup>
+
+    <!-- Replace base href in index.html during publish -->
+    <Target Name="ReplaceBaseHref" AfterTargets="Publish" Condition="Exists('$(PublishDir)wwwroot/index.html')">
+        <PropertyGroup>
+            <IndexHtmlPath>$(PublishDir)wwwroot/index.html</IndexHtmlPath>
+        </PropertyGroup>
+        <Message Importance="high" Text="Setting base href to: $(BaseHref)" />
+        <WriteLinesToFile File="$(IndexHtmlPath).tmp" 
+                          Lines="$([System.IO.File]::ReadAllText('$(IndexHtmlPath)').Replace('&lt;base href=&quot;/&quot; /&gt;', '&lt;base href=&quot;$(BaseHref)&quot; /&gt;'))"
+                          Overwrite="true" />
+        <Move SourceFiles="$(IndexHtmlPath).tmp" DestinationFiles="$(IndexHtmlPath)" />
+    </Target>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
