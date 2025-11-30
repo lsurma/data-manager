@@ -1,6 +1,6 @@
 using Microsoft.JSInterop;
 
-namespace InstanceManager.Host.WA.Services;
+namespace DataManager.Host.WA.Services;
 
 public class CookieService : ICookieService
 {
