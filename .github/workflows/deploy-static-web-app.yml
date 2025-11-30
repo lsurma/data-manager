@@ -35,28 +35,19 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore DataManager.Host.WA/DataManager.Host.WA.csproj
 
+      - name: Generate appsettings.Production.json
+        if: ${{ vars.API_BASE_URL != '' }}
+        run: |
+          echo '{"ApiBaseUrl": "${{ vars.API_BASE_URL }}"}' > DataManager.Host.WA/wwwroot/appsettings.Production.json
+          echo "Generated appsettings.Production.json with ApiBaseUrl: ${{ vars.API_BASE_URL }}"
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+
       - name: Build Blazor WebAssembly
         run: dotnet build DataManager.Host.WA/DataManager.Host.WA.csproj -c Release --no-restore
 
       - name: Publish Blazor WebAssembly
         run: dotnet publish DataManager.Host.WA/DataManager.Host.WA.csproj -c Release -o ./publish/wwwroot --no-build
-
-      - name: Update API Base URL in appsettings.json
-        if: ${{ vars.API_BASE_URL != '' }}
-        run: |
-          APPSETTINGS_PATH="./publish/wwwroot/wwwroot/appsettings.json"
-          if [ ! -f "$APPSETTINGS_PATH" ]; then
-            echo "Error: appsettings.json not found at $APPSETTINGS_PATH"
-            exit 1
-          fi
-          TEMP_FILE=$(mktemp)
-          if ! jq --arg url "${{ vars.API_BASE_URL }}" '.ApiBaseUrl = $url' "$APPSETTINGS_PATH" > "$TEMP_FILE"; then
-            echo "Error: Failed to update appsettings.json"
-            rm -f "$TEMP_FILE"
-            exit 1
-          fi
-          mv "$TEMP_FILE" "$APPSETTINGS_PATH"
-          echo "Updated ApiBaseUrl to: ${{ vars.API_BASE_URL }}"
 
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
