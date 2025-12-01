@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using DataManager.Host.AzFuncAPI.Services;
 using MediatR;
@@ -13,6 +14,7 @@ namespace DataManager.Host.AzFuncAPI.Controllers;
 [Authorize]
 public class QueryController
 {
+    private const int MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB limit
     private readonly ILogger<QueryController> _logger;
     private readonly IMediator _mediator;
     private readonly RequestRegistry _requestRegistry;
@@ -28,14 +30,35 @@ public class QueryController
     /// Main query endpoint that routes MediatR requests.
     /// Authentication is handled by the authorization middleware.
     /// Supports both JWT Bearer tokens (Authorization: Bearer {token}) and API Keys (X-API-Key: {key}).
+    /// Accepts both GET (with body in query parameter) and POST (with body in request body) methods.
     /// </summary>
     [Function("Query")]
     public async Task<IActionResult> Query(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/query/{requestName}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "api/query/{requestName}")] HttpRequest req,
         string requestName
     )
     {
-        var bodyJson = req.Query["body"].ToString();
+        string bodyJson;
+
+        if (req.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+        {
+            if (req.ContentLength > MaxRequestBodySize)
+            {
+                return new BadRequestObjectResult(new { error = $"Request body exceeds maximum size of {MaxRequestBodySize / (1024 * 1024)} MB." });
+            }
+
+            using var reader = new StreamReader(req.Body, Encoding.UTF8);
+            bodyJson = await reader.ReadToEndAsync();
+
+            if (bodyJson.Length > MaxRequestBodySize)
+            {
+                return new BadRequestObjectResult(new { error = $"Request body exceeds maximum size of {MaxRequestBodySize / (1024 * 1024)} MB." });
+            }
+        }
+        else
+        {
+            bodyJson = req.Query["body"].ToString();
+        }
 
         if (string.IsNullOrWhiteSpace(requestName))
         {
