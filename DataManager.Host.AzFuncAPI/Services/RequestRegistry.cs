@@ -114,4 +114,38 @@ public class RequestRegistry
         names.AddRange(_genericRequestTypes.Keys.Select(name => $"{name}<...>"));
         return names;
     }
+
+    /// <summary>
+    /// Determines if a request type is a Command (ends with "Command")
+    /// </summary>
+    public bool IsCommandType(Type requestType)
+    {
+        var typeName = requestType.Name;
+        if (requestType.IsGenericType)
+        {
+            var backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex > 0)
+            {
+                typeName = typeName.Substring(0, backtickIndex);
+            }
+        }
+        return typeName.EndsWith("Command");
+    }
+
+    /// <summary>
+    /// Determines if a request type is a Query (ends with "Query" or is a PaginatedQuery)
+    /// </summary>
+    public bool IsQueryType(Type requestType)
+    {
+        var typeName = requestType.Name;
+        if (requestType.IsGenericType)
+        {
+            var backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex > 0)
+            {
+                typeName = typeName.Substring(0, backtickIndex);
+            }
+        }
+        return typeName.EndsWith("Query") || typeName == "PaginatedQuery";
+    }
 }

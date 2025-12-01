@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DataManager.Host.AzFuncAPI.Services;
@@ -12,14 +12,14 @@ using Microsoft.Extensions.Logging;
 namespace DataManager.Host.AzFuncAPI.Controllers;
 
 [Authorize]
-public class QueryController
+public class CommandController
 {
     private const int MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB limit
-    private readonly ILogger<QueryController> _logger;
+    private readonly ILogger<CommandController> _logger;
     private readonly IMediator _mediator;
     private readonly RequestRegistry _requestRegistry;
 
-    public QueryController(ILogger<QueryController> logger, IMediator mediator, RequestRegistry requestRegistry)
+    public CommandController(ILogger<CommandController> logger, IMediator mediator, RequestRegistry requestRegistry)
     {
         _logger = logger;
         _mediator = mediator;
@@ -27,25 +27,36 @@ public class QueryController
     }
 
     /// <summary>
-    /// Main query endpoint that routes MediatR queries.
+    /// Main command endpoint that routes MediatR commands.
     /// Authentication is handled by the authorization middleware.
     /// Supports both JWT Bearer tokens (Authorization: Bearer {token}) and API Keys (X-API-Key: {key}).
-    /// Accepts only GET method (with body in query parameter).
+    /// Accepts POST, PUT, and DELETE methods with body in request body.
     /// </summary>
-    [Function("Query")]
-    public async Task<IActionResult> Query(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/query/{requestName}")] HttpRequest req,
+    [Function("Command")]
+    public async Task<IActionResult> Command(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", "put", "delete", Route = "api/command/{requestName}")] HttpRequest req,
         string requestName
     )
     {
-        var bodyJson = req.Query["body"].ToString();
+        if (req.ContentLength > MaxRequestBodySize)
+        {
+            return new BadRequestObjectResult(new { error = $"Request body exceeds maximum size of {MaxRequestBodySize / (1024 * 1024)} MB." });
+        }
+
+        using var reader = new StreamReader(req.Body, Encoding.UTF8);
+        var bodyJson = await reader.ReadToEndAsync();
+
+        if (bodyJson.Length > MaxRequestBodySize)
+        {
+            return new BadRequestObjectResult(new { error = $"Request body exceeds maximum size of {MaxRequestBodySize / (1024 * 1024)} MB." });
+        }
 
         if (string.IsNullOrWhiteSpace(requestName))
         {
             return new BadRequestObjectResult(new { error = "Request name is required." });
         }
 
-        _logger.LogInformation("Processing query: {RequestName}", requestName);
+        _logger.LogInformation("Processing command: {RequestName}", requestName);
 
         try
         {
@@ -54,17 +65,17 @@ public class QueryController
             {
                 return new NotFoundObjectResult(new
                 {
-                    error = $"Query '{requestName}' not found.",
+                    error = $"Command '{requestName}' not found.",
                     availableRequests = _requestRegistry.GetAllRequestNames()
                 });
             }
 
-            // Verify this is actually a query type
-            if (!_requestRegistry.IsQueryType(requestType))
+            // Verify this is actually a command type
+            if (!_requestRegistry.IsCommandType(requestType))
             {
                 return new BadRequestObjectResult(new 
                 { 
-                    error = $"'{requestName}' is not a query. Queries should use the /api/query endpoint. Commands should use the /api/command endpoint." 
+                    error = $"'{requestName}' is not a command. Commands should use the /api/command endpoint. Queries should use the /api/query endpoint." 
                 });
             }
 
@@ -102,7 +113,7 @@ public class QueryController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing query: {RequestName}", requestName);
+            _logger.LogError(ex, "Error processing command: {RequestName}", requestName);
             return new BadRequestObjectResult(new { error = ex.Message });
         }
     }

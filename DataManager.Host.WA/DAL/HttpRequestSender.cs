@@ -34,15 +34,23 @@ public class HttpRequestSender : IRequestSender
         try
         {
             TResponse? data;
+            
+            // Determine if this is a command or query
+            bool isCommand = IsCommandType(requestType);
 
-            // Use POST for MJML-related requests (potentially large HTML content)
-            if (IsMjmlRequest(requestType))
+            if (isCommand)
             {
+                // Commands always use POST to /api/command endpoint
+                data = await _httpClient.PostAsync<object, TResponse>($"command/{requestName}", request, cancellationToken);
+            }
+            else if (IsMjmlRequest(requestType))
+            {
+                // MJML queries use POST due to potentially large HTML content
                 data = await _httpClient.PostAsync<object, TResponse>($"query/{requestName}", request, cancellationToken);
             }
             else
             {
-                // Use GET for all other requests (existing behavior)
+                // Regular queries use GET with body in query parameter
                 var requestAsJson = JsonSerializer.Serialize(request);
                 var urlEncodedRequest = WebUtility.UrlEncode(requestAsJson);
                 data = await _httpClient.GetAsync<TResponse>($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
@@ -128,5 +136,22 @@ public class HttpRequestSender : IRequestSender
         // Check if the request type is in the Mjml namespace (e.g., DataManager.Application.Contracts.Modules.Mjml)
         return requestType.Namespace?.EndsWith(".Mjml") == true || 
                requestType.Namespace?.Contains(".Mjml.") == true;
+    }
+
+    /// <summary>
+    /// Determines if the request is a Command type (ends with "Command")
+    /// </summary>
+    private static bool IsCommandType(Type requestType)
+    {
+        var typeName = requestType.Name;
+        if (requestType.IsGenericType)
+        {
+            var backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex > 0)
+            {
+                typeName = typeName.Substring(0, backtickIndex);
+            }
+        }
+        return typeName.EndsWith(CommandSuffix);
     }
 }
