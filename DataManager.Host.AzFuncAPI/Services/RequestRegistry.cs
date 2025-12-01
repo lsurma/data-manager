@@ -48,22 +48,13 @@ public class RequestRegistry
 
     public Type? GetRequestType(string requestName)
     {
-        // Try direct lookup for non-generic types
-        if (_requestTypes.TryGetValue(requestName, out var type))
+        // Try direct lookup for non-generic types with suffix variations
+        foreach (var suffix in new[] { "", "Query", "Command" })
         {
-            return type;
-        }
-
-        // Try adding "Query" suffix for non-generic types
-        if (_requestTypes.TryGetValue(requestName + "Query", out type))
-        {
-            return type;
-        }
-
-        // Try adding "Command" suffix for non-generic types
-        if (_requestTypes.TryGetValue(requestName + "Command", out type))
-        {
-            return type;
+            if (_requestTypes.TryGetValue(requestName + suffix, out var type))
+            {
+                return type;
+            }
         }
 
         // Check if it's a generic type request (format: "TypeName<Arg1,Arg2>")
@@ -76,13 +67,13 @@ public class RequestRegistry
         var genericTypeName = match.Groups[1].Value;
         var genericArgsString = match.Groups[2].Value;
 
-        // Try to find the open generic type with original name, Query suffix, or Command suffix
+        // Try to find the open generic type with suffix variations
         Type? openGenericType = null;
-        if (!_genericRequestTypes.TryGetValue(genericTypeName, out openGenericType))
+        foreach (var suffix in new[] { "", "Query", "Command" })
         {
-            if (!_genericRequestTypes.TryGetValue(genericTypeName + "Query", out openGenericType))
+            if (_genericRequestTypes.TryGetValue(genericTypeName + suffix, out openGenericType))
             {
-                _genericRequestTypes.TryGetValue(genericTypeName + "Command", out openGenericType);
+                break;
             }
         }
 

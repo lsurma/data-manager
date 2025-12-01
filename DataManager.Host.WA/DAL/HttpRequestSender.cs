@@ -99,11 +99,11 @@ public class HttpRequestSender : IRequestSender
         // Strip "Query" or "Command" suffix from the base type name
         if (baseTypeName.EndsWith("Query"))
         {
-            baseTypeName = baseTypeName.Substring(0, baseTypeName.Length - "Query".Length);
+            baseTypeName = baseTypeName[..^5]; // Remove "Query" (5 characters)
         }
         else if (baseTypeName.EndsWith("Command"))
         {
-            baseTypeName = baseTypeName.Substring(0, baseTypeName.Length - "Command".Length);
+            baseTypeName = baseTypeName[..^7]; // Remove "Command" (7 characters)
         }
 
         // For generic types, append the generic arguments
