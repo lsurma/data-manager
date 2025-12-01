@@ -14,6 +14,9 @@ namespace DataManager.Host.WA.Modules.Translations;
 
 public partial class TranslationsPage : ComponentBase, IDisposable
 {
+    [Parameter]
+    public string? DataSetId { get; set; }
+
     [Inject] 
     private IDialogService DialogService { get; set; } = null!;
     
@@ -46,13 +49,33 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     private string? _cultureNameFilter;
     private Guid? _selectedTranslationId;
 
+    private string? _previousDataSetId;
+
     protected override void OnInitialized()
     {
+        _previousDataSetId = DataSetId;
         NavigationManager.LocationChanged += OnLocationChanged;
         LoadDataSetsAsync();
         LoadLayoutsAsync();
     }
     
+    protected override void OnParametersSet()
+    {
+        if (_previousDataSetId != DataSetId)
+        {
+            _previousDataSetId = DataSetId;
+            _currentQuery = new GetTranslationsQuery
+            {
+                Filtering = new FilteringParameters
+                {
+                    QueryFilters = BuildQueryFilters()
+                },
+                Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
+            };
+            _refreshToken = Guid.NewGuid().ToString();
+        }
+    }
+
     private async void LoadDataSetsAsync()
     {
         try
@@ -240,6 +263,11 @@ public partial class TranslationsPage : ComponentBase, IDisposable
         if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
         {
             filters.Add(new CultureNameFilter { Value = _cultureNameFilter });
+        }
+
+        if (Guid.TryParse(DataSetId, out var dataSetId))
+        {
+            filters.Add(new DataSetIdFilter { Value = dataSetId });
         }
 
         return filters;
