@@ -415,4 +415,16 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
+
+    private void OnDataSetFilterChanged(Guid? dataSetId)
+    {
+        var url = dataSetId.HasValue ? $"translations/{dataSetId}" : "translations";
+        NavigationManager.NavigateTo(url);
+    }
+
+    private Appearance GetAppearanceForDataSet(Guid? dataSetId)
+    {
+        var isSelected = (DataSetId == dataSetId?.ToString()) || (DataSetId == null && !dataSetId.HasValue);
+        return isSelected ? Appearance.Accent : Appearance.Neutral;
+    }
 }
