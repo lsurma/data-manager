@@ -1,5 +1,6 @@
 using DataManager.Application.Core.Data;
 using DataManager.Authentication.Core;
+using DataManager.Authentication.Core.Authentication;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataManager.Application.Core.Common;
@@ -12,15 +13,18 @@ public class AuthorizationService : IAuthorizationService
     private readonly DataManagerDbContext _context;
     private readonly ICurrentUserService _currentUserService;
     private readonly AuthorizationOptions _options;
+    private readonly AuthenticationSettings _authenticationSettings;
 
     public AuthorizationService(
         DataManagerDbContext context,
         ICurrentUserService currentUserService,
-        AuthorizationOptions options)
+        AuthorizationOptions options,
+        AuthenticationSettings authenticationSettings)
     {
         _context = context;
         _currentUserService = currentUserService;
         _options = options;
+        _authenticationSettings = authenticationSettings;
     }
 
     /// <summary>
@@ -35,7 +39,12 @@ public class AuthorizationService : IAuthorizationService
         {
             return Task.FromResult(true);
         }
-        return Task.FromResult(true);
+
+        // If authentication is disabled, all users have root access
+        if (!_authenticationSettings.RequireAuthentication)
+        {
+            return Task.FromResult(true);
+        }
 
         // Check if user ID is in the root access list
         var hasRootAccess = _options.RootUserIds.Contains(currentUser.UserId);
