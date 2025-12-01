@@ -14,9 +14,22 @@ namespace DataManager.Host.WA.Modules.Translations
     public partial class ImportTranslationsPage : ComponentBase
     {
         private List<ImportedTranslationDto>? _importedTranslations;
+        private bool _isLoading;
+        private string? _errorMessage;
+        private DataTable? _excelDataTable;
+        private readonly List<string> _targetColumns = new() { "InternalGroupName1", "InternalGroupName2", "ResourceName", "TranslationName", "CultureName", "Content" };
+        private Dictionary<string, string> _columnMappings = new();
+
+        private IEnumerable<DataRow>? ExcelDataRows => _excelDataTable?.Rows.Cast<DataRow>();
 
         private async Task OnFileChanged(InputFileChangeEventArgs e)
         {
+            _isLoading = true;
+            _errorMessage = null;
+            _importedTranslations = null;
+            _excelDataTable = null;
+            _columnMappings = new();
+
             try
             {
                 var file = e.File;
@@ -38,25 +51,46 @@ namespace DataManager.Host.WA.Modules.Translations
                                     UseHeaderRow = true
                                 }
                             });
-                            var dataTable = result.Tables[0];
-                            _importedTranslations = dataTable.Rows.Cast<DataRow>().Select(row => new ImportedTranslationDto
+                            _excelDataTable = result.Tables[0];
+                            foreach (DataColumn col in _excelDataTable.Columns)
                             {
-                                InternalGroupName1 = row.Table.Columns.Contains("InternalGroupName1") ? row["InternalGroupName1"].ToString() : null,
-                                InternalGroupName2 = row.Table.Columns.Contains("InternalGroupName2") ? row["InternalGroupName2"].ToString() : null,
-                                ResourceName = row.Table.Columns.Contains("ResourceName") ? row["ResourceName"].ToString() : string.Empty,
-                                TranslationName = row.Table.Columns.Contains("TranslationName") ? row["TranslationName"].ToString() : string.Empty,
-                                CultureName = row.Table.Columns.Contains("CultureName") ? row["CultureName"].ToString() : null,
-                                Content = row.Table.Columns.Contains("Content") ? row["Content"].ToString() : string.Empty,
-                                OriginalRow = row
-                            }).ToList();
+                                _columnMappings.Add(col.ColumnName, _targetColumns.FirstOrDefault(t => t.Equals(col.ColumnName, StringComparison.OrdinalIgnoreCase)) ?? "");
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _errorMessage = $"An error occurred: {ex.Message}";
             }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
+
+        private void ProcessMappedColumns()
+        {
+            if (_excelDataTable == null) return;
+
+            _importedTranslations = _excelDataTable.Rows.Cast<DataRow>().Select(row =>
+            {
+                var dto = new ImportedTranslationDto { OriginalRow = row };
+                foreach (var mapping in _columnMappings)
+                {
+                    if (!string.IsNullOrEmpty(mapping.Value) && _excelDataTable.Columns.Contains(mapping.Key))
+                    {
+                        var cellValue = row[mapping.Key].ToString();
+                        var property = typeof(ImportedTranslationDto).GetProperty(mapping.Value);
+                        if (property != null && !string.IsNullOrEmpty(cellValue))
+                        {
+                            property.SetValue(dto, cellValue);
+                        }
+                    }
+                }
+                return dto;
+            }).ToList();
         }
     }
 }
