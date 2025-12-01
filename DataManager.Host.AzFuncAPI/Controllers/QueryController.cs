@@ -28,14 +28,25 @@ public class QueryController
     /// Main query endpoint that routes MediatR requests.
     /// Authentication is handled by the authorization middleware.
     /// Supports both JWT Bearer tokens (Authorization: Bearer {token}) and API Keys (X-API-Key: {key}).
+    /// Accepts both GET (with body in query parameter) and POST (with body in request body) methods.
     /// </summary>
     [Function("Query")]
     public async Task<IActionResult> Query(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/query/{requestName}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "api/query/{requestName}")] HttpRequest req,
         string requestName
     )
     {
-        var bodyJson = req.Query["body"].ToString();
+        string bodyJson;
+
+        if (req.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+        {
+            using var reader = new StreamReader(req.Body);
+            bodyJson = await reader.ReadToEndAsync();
+        }
+        else
+        {
+            bodyJson = req.Query["body"].ToString();
+        }
 
         if (string.IsNullOrWhiteSpace(requestName))
         {
