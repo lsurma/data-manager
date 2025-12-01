@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using DataManager.Host.AzFuncAPI.Services;
 using MediatR;
@@ -13,6 +14,7 @@ namespace DataManager.Host.AzFuncAPI.Controllers;
 [Authorize]
 public class QueryController
 {
+    private const int MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB limit
     private readonly ILogger<QueryController> _logger;
     private readonly IMediator _mediator;
     private readonly RequestRegistry _requestRegistry;
@@ -40,8 +42,18 @@ public class QueryController
 
         if (req.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
         {
-            using var reader = new StreamReader(req.Body);
+            if (req.ContentLength > MaxRequestBodySize)
+            {
+                return new BadRequestObjectResult(new { error = $"Request body exceeds maximum size of {MaxRequestBodySize / (1024 * 1024)} MB." });
+            }
+
+            using var reader = new StreamReader(req.Body, Encoding.UTF8);
             bodyJson = await reader.ReadToEndAsync();
+
+            if (bodyJson.Length > MaxRequestBodySize)
+            {
+                return new BadRequestObjectResult(new { error = $"Request body exceeds maximum size of {MaxRequestBodySize / (1024 * 1024)} MB." });
+            }
         }
         else
         {
