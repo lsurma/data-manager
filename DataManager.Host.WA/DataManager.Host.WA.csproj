@@ -19,13 +19,12 @@
             <IndexHtmlPath>$(PublishDir)wwwroot/index.html</IndexHtmlPath>
         </PropertyGroup>
         <Message Importance="high" Text="Setting base href to: $(BaseHref)" />
-        <WriteLinesToFile File="$(IndexHtmlPath).tmp" 
-                          Lines="$([System.IO.File]::ReadAllText('$(IndexHtmlPath)').Replace('&lt;base href=&quot;/&quot; /&gt;', '&lt;base href=&quot;$(BaseHref)&quot; /&gt;'))"
-                          Overwrite="true" />
+        <WriteLinesToFile File="$(IndexHtmlPath).tmp" Lines="$([System.IO.File]::ReadAllText('$(IndexHtmlPath)').Replace('&lt;base href=&quot;/&quot; /&gt;', '&lt;base href=&quot;$(BaseHref)&quot; /&gt;'))" Overwrite="true" />
         <Move SourceFiles="$(IndexHtmlPath).tmp" DestinationFiles="$(IndexHtmlPath)" />
     </Target>
 
     <ItemGroup>
+        <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.0" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="10.0.0" />
