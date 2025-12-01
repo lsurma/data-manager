@@ -9,6 +9,9 @@ public class RequestRegistry
     private readonly Dictionary<string, Type> _requestTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Type> _genericRequestTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Assembly _contractsAssembly;
+    
+    // Suffixes to try when looking up request types (in order of priority)
+    private static readonly string[] SuffixVariations = { "", "Query", "Command" };
 
     public RequestRegistry()
     {
@@ -49,7 +52,7 @@ public class RequestRegistry
     public Type? GetRequestType(string requestName)
     {
         // Try direct lookup for non-generic types with suffix variations
-        foreach (var suffix in new[] { "", "Query", "Command" })
+        foreach (var suffix in SuffixVariations)
         {
             if (_requestTypes.TryGetValue(requestName + suffix, out var type))
             {
@@ -69,7 +72,7 @@ public class RequestRegistry
 
         // Try to find the open generic type with suffix variations
         Type? openGenericType = null;
-        foreach (var suffix in new[] { "", "Query", "Command" })
+        foreach (var suffix in SuffixVariations)
         {
             if (_genericRequestTypes.TryGetValue(genericTypeName + suffix, out openGenericType))
             {

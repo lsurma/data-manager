@@ -10,6 +10,9 @@ public class HttpRequestSender : IRequestSender
 {
     private readonly DataManagerHttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    
+    private const string QuerySuffix = "Query";
+    private const string CommandSuffix = "Command";
 
     public HttpRequestSender(
         DataManagerHttpClient httpClient,
@@ -97,13 +100,13 @@ public class HttpRequestSender : IRequestSender
         }
 
         // Strip "Query" or "Command" suffix from the base type name
-        if (baseTypeName.EndsWith("Query"))
+        if (baseTypeName.EndsWith(QuerySuffix))
         {
-            baseTypeName = baseTypeName[..^5]; // Remove "Query" (5 characters)
+            baseTypeName = baseTypeName.Substring(0, baseTypeName.Length - QuerySuffix.Length);
         }
-        else if (baseTypeName.EndsWith("Command"))
+        else if (baseTypeName.EndsWith(CommandSuffix))
         {
-            baseTypeName = baseTypeName[..^7]; // Remove "Command" (7 characters)
+            baseTypeName = baseTypeName.Substring(0, baseTypeName.Length - CommandSuffix.Length);
         }
 
         // For generic types, append the generic arguments
