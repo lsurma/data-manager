@@ -90,22 +90,7 @@ public class HttpRequestSender : IRequestSender
     /// </summary>
     private static string GetRequestName(Type requestType)
     {
-        string baseTypeName;
-        
-        if (!requestType.IsGenericType)
-        {
-            baseTypeName = requestType.Name;
-        }
-        else
-        {
-            // For generic types, get the base name without the generic arity marker
-            baseTypeName = requestType.Name;
-            var backtickIndex = baseTypeName.IndexOf('`');
-            if (backtickIndex > 0)
-            {
-                baseTypeName = baseTypeName.Substring(0, backtickIndex);
-            }
-        }
+        string baseTypeName = GetBaseTypeName(requestType);
 
         // Strip "Query" or "Command" suffix from the base type name
         if (baseTypeName.EndsWith(QuerySuffix))
@@ -143,6 +128,15 @@ public class HttpRequestSender : IRequestSender
     /// </summary>
     private static bool IsCommandType(Type requestType)
     {
+        var typeName = GetBaseTypeName(requestType);
+        return typeName.EndsWith(CommandSuffix);
+    }
+
+    /// <summary>
+    /// Gets the base type name without generic arity marker for generic types
+    /// </summary>
+    private static string GetBaseTypeName(Type requestType)
+    {
         var typeName = requestType.Name;
         if (requestType.IsGenericType)
         {
@@ -152,6 +146,6 @@ public class HttpRequestSender : IRequestSender
                 typeName = typeName.Substring(0, backtickIndex);
             }
         }
-        return typeName.EndsWith(CommandSuffix);
+        return typeName;
     }
 }

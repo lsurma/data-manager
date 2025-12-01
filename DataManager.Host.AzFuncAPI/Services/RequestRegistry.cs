@@ -12,6 +12,10 @@ public class RequestRegistry
     
     // Suffixes to try when looking up request types (in order of priority)
     private static readonly string[] SuffixVariations = { "", "Query", "Command" };
+    
+    private const string QuerySuffix = "Query";
+    private const string CommandSuffix = "Command";
+    private const string PaginatedQueryTypeName = "PaginatedQuery";
 
     public RequestRegistry()
     {
@@ -120,22 +124,23 @@ public class RequestRegistry
     /// </summary>
     public bool IsCommandType(Type requestType)
     {
-        var typeName = requestType.Name;
-        if (requestType.IsGenericType)
-        {
-            var backtickIndex = typeName.IndexOf('`');
-            if (backtickIndex > 0)
-            {
-                typeName = typeName.Substring(0, backtickIndex);
-            }
-        }
-        return typeName.EndsWith("Command");
+        var typeName = GetBaseTypeName(requestType);
+        return typeName.EndsWith(CommandSuffix);
     }
 
     /// <summary>
     /// Determines if a request type is a Query (ends with "Query" or is a PaginatedQuery)
     /// </summary>
     public bool IsQueryType(Type requestType)
+    {
+        var typeName = GetBaseTypeName(requestType);
+        return typeName.EndsWith(QuerySuffix) || typeName == PaginatedQueryTypeName;
+    }
+
+    /// <summary>
+    /// Gets the base type name without generic arity marker for generic types
+    /// </summary>
+    private static string GetBaseTypeName(Type requestType)
     {
         var typeName = requestType.Name;
         if (requestType.IsGenericType)
@@ -146,6 +151,6 @@ public class RequestRegistry
                 typeName = typeName.Substring(0, backtickIndex);
             }
         }
-        return typeName.EndsWith("Query") || typeName == "PaginatedQuery";
+        return typeName;
     }
 }
