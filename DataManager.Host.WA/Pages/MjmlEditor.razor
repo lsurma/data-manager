@@ -5,6 +5,7 @@
 @using BlazorMonaco
 @using BlazorMonaco.Editor
 @using DataManager.Application.Contracts
+@using DataManager.Application.Contracts.Common
 @using DataManager.Application.Contracts.Modules.Mjml
 @implements IDisposable
 
@@ -190,6 +191,26 @@
                 var result = await RequestSender.SendAsync<RenderedTemplateDto>(command);
                 htmlOutput = result.Html;
             }
+        }
+        catch (ApiErrorException apiEx)
+        {
+            // Display detailed API error information
+            var errorHtml = $"<div style='padding: 20px; background-color: #fee; border: 1px solid #f00; border-radius: 4px;'>";
+            errorHtml += $"<h4 style='color: #c00; margin-top: 0;'>Error</h4>";
+            errorHtml += $"<p><strong>Message:</strong> {System.Net.WebUtility.HtmlEncode(apiEx.Error)}</p>";
+            
+            if (!string.IsNullOrWhiteSpace(apiEx.Details))
+            {
+                errorHtml += $"<p><strong>Details:</strong> {System.Net.WebUtility.HtmlEncode(apiEx.Details)}</p>";
+            }
+            
+            if (apiEx.StatusCode > 0)
+            {
+                errorHtml += $"<p><strong>Status Code:</strong> {apiEx.StatusCode}</p>";
+            }
+            
+            errorHtml += "</div>";
+            htmlOutput = errorHtml;
         }
         catch (Exception ex)
         {
