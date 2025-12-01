@@ -8,7 +8,7 @@ namespace DataManager.Application.Contracts.Common;
 public class ApiErrorResponse
 {
     [JsonPropertyName("error")]
-    public string Error { get; set; } = string.Empty;
+    public required string Error { get; set; }
 
     [JsonPropertyName("details")]
     public string? Details { get; set; }

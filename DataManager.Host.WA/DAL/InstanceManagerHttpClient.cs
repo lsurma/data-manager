@@ -11,6 +11,11 @@ namespace DataManager.Host.WA.DAL;
 /// </summary>
 public class DataManagerHttpClient
 {
+    private static readonly JsonSerializerOptions DefaultJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public HttpClient Client { get; }
 
     public DataManagerHttpClient(HttpClient httpClient)
@@ -105,10 +110,7 @@ public class DataManagerHttpClient
             if (!string.IsNullOrWhiteSpace(responseBody))
             {
                 // Try to deserialize as ApiErrorResponse
-                var errorResponse = JsonSerializer.Deserialize<ApiErrorResponse>(responseBody, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var errorResponse = JsonSerializer.Deserialize<ApiErrorResponse>(responseBody, DefaultJsonOptions);
 
                 if (errorResponse != null && !string.IsNullOrWhiteSpace(errorResponse.Error))
                 {
