@@ -75,26 +75,43 @@ public class HttpRequestSender : IRequestSender
     /// <summary>
     /// Generates a request name for the given type, including generic type arguments
     /// Format: "GetTranslationsQuery&lt;SimpleTranslationDto&gt;" for generic types
+    /// Strips "Query" and "Command" suffixes to make them transparent in the API
     /// </summary>
     private static string GetRequestName(Type requestType)
     {
+        string typeName;
+        
         if (!requestType.IsGenericType)
         {
-            return requestType.Name;
+            typeName = requestType.Name;
         }
-
-        // For generic types, format as: TypeName<Arg1,Arg2>
-        var genericTypeName = requestType.Name;
-        var backtickIndex = genericTypeName.IndexOf('`');
-        if (backtickIndex > 0)
+        else
         {
-            genericTypeName = genericTypeName.Substring(0, backtickIndex);
+            // For generic types, format as: TypeName<Arg1,Arg2>
+            var genericTypeName = requestType.Name;
+            var backtickIndex = genericTypeName.IndexOf('`');
+            if (backtickIndex > 0)
+            {
+                genericTypeName = genericTypeName.Substring(0, backtickIndex);
+            }
+
+            var genericArgs = requestType.GetGenericArguments();
+            var argNames = string.Join(",", genericArgs.Select(t => t.Name));
+
+            typeName = $"{genericTypeName}<{argNames}>";
         }
 
-        var genericArgs = requestType.GetGenericArguments();
-        var argNames = string.Join(",", genericArgs.Select(t => t.Name));
+        // Strip "Query" or "Command" suffix to make them transparent in the API
+        if (typeName.EndsWith("Query"))
+        {
+            typeName = typeName.Substring(0, typeName.Length - "Query".Length);
+        }
+        else if (typeName.EndsWith("Command"))
+        {
+            typeName = typeName.Substring(0, typeName.Length - "Command".Length);
+        }
 
-        return $"{genericTypeName}<{argNames}>";
+        return typeName;
     }
 
     /// <summary>

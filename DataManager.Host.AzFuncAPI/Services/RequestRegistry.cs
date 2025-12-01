@@ -54,6 +54,18 @@ public class RequestRegistry
             return type;
         }
 
+        // Try adding "Query" suffix for non-generic types
+        if (_requestTypes.TryGetValue(requestName + "Query", out type))
+        {
+            return type;
+        }
+
+        // Try adding "Command" suffix for non-generic types
+        if (_requestTypes.TryGetValue(requestName + "Command", out type))
+        {
+            return type;
+        }
+
         // Check if it's a generic type request (format: "TypeName<Arg1,Arg2>")
         var match = Regex.Match(requestName, @"^(\w+)<(.+)>$");
         if (!match.Success)
@@ -64,8 +76,17 @@ public class RequestRegistry
         var genericTypeName = match.Groups[1].Value;
         var genericArgsString = match.Groups[2].Value;
 
-        // Find the open generic type
-        if (!_genericRequestTypes.TryGetValue(genericTypeName, out var openGenericType))
+        // Try to find the open generic type with original name, Query suffix, or Command suffix
+        Type? openGenericType = null;
+        if (!_genericRequestTypes.TryGetValue(genericTypeName, out openGenericType))
+        {
+            if (!_genericRequestTypes.TryGetValue(genericTypeName + "Query", out openGenericType))
+            {
+                _genericRequestTypes.TryGetValue(genericTypeName + "Command", out openGenericType);
+            }
+        }
+
+        if (openGenericType == null)
         {
             return null;
         }
