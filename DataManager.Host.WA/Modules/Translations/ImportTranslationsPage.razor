@@ -1,0 +1,21 @@
+@page "/translations/import"
+@using System.Data
+@using DataManager.Host.WA.Modules.Translations.Models
+
+<h3>Import Translations</h3>
+
+<InputFile OnChange="OnFileChanged" accept=".xls,.xlsx" />
+
+@if (_importedTranslations != null)
+{
+    <RadzenDataGrid Data="@_importedTranslations" TItem="ImportedTranslationDto" AllowFiltering="true" AllowColumnResize="true" AllowSorting="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="InternalGroupName1" Title="Internal Group Name 1" />
+            <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="InternalGroupName2" Title="Internal Group Name 2" />
+            <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="ResourceName" Title="Resource Name" />
+            <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="TranslationName" Title="Translation Name" />
+            <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="CultureName" Title="Culture Name" />
+            <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="Content" Title="Content" />
+        </Columns>
+    </RadzenDataGrid>
+}
