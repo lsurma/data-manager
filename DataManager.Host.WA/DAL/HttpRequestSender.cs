@@ -10,6 +10,9 @@ public class HttpRequestSender : IRequestSender
 {
     private readonly DataManagerHttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    
+    private const string QuerySuffix = "Query";
+    private const string CommandSuffix = "Command";
 
     public HttpRequestSender(
         DataManagerHttpClient httpClient,
@@ -31,15 +34,23 @@ public class HttpRequestSender : IRequestSender
         try
         {
             TResponse? data;
+            
+            // Determine if this is a command or query
+            bool isCommand = IsCommandType(requestType);
 
-            // Use POST for MJML-related requests (potentially large HTML content)
-            if (IsMjmlRequest(requestType))
+            if (isCommand)
             {
+                // Commands always use POST to /api/command endpoint
+                data = await _httpClient.PostAsync<object, TResponse>($"command/{requestName}", request, cancellationToken);
+            }
+            else if (IsMjmlRequest(requestType))
+            {
+                // MJML queries use POST due to potentially large HTML content
                 data = await _httpClient.PostAsync<object, TResponse>($"query/{requestName}", request, cancellationToken);
             }
             else
             {
-                // Use GET for all other requests (existing behavior)
+                // Regular queries use GET with body in query parameter
                 var requestAsJson = JsonSerializer.Serialize(request);
                 var urlEncodedRequest = WebUtility.UrlEncode(requestAsJson);
                 data = await _httpClient.GetAsync<TResponse>($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
@@ -74,27 +85,32 @@ public class HttpRequestSender : IRequestSender
 
     /// <summary>
     /// Generates a request name for the given type, including generic type arguments
-    /// Format: "GetTranslationsQuery&lt;SimpleTranslationDto&gt;" for generic types
+    /// Format: "GetTranslations&lt;SimpleTranslationDto&gt;" for generic types (suffix stripped)
+    /// Strips "Query" and "Command" suffixes to make them transparent in the API
     /// </summary>
     private static string GetRequestName(Type requestType)
     {
-        if (!requestType.IsGenericType)
+        string baseTypeName = GetBaseTypeName(requestType);
+
+        // Strip "Query" or "Command" suffix from the base type name
+        if (baseTypeName.EndsWith(QuerySuffix))
         {
-            return requestType.Name;
+            baseTypeName = baseTypeName.Substring(0, baseTypeName.Length - QuerySuffix.Length);
+        }
+        else if (baseTypeName.EndsWith(CommandSuffix))
+        {
+            baseTypeName = baseTypeName.Substring(0, baseTypeName.Length - CommandSuffix.Length);
         }
 
-        // For generic types, format as: TypeName<Arg1,Arg2>
-        var genericTypeName = requestType.Name;
-        var backtickIndex = genericTypeName.IndexOf('`');
-        if (backtickIndex > 0)
+        // For generic types, append the generic arguments
+        if (requestType.IsGenericType)
         {
-            genericTypeName = genericTypeName.Substring(0, backtickIndex);
+            var genericArgs = requestType.GetGenericArguments();
+            var argNames = string.Join(",", genericArgs.Select(t => t.Name));
+            return $"{baseTypeName}<{argNames}>";
         }
 
-        var genericArgs = requestType.GetGenericArguments();
-        var argNames = string.Join(",", genericArgs.Select(t => t.Name));
-
-        return $"{genericTypeName}<{argNames}>";
+        return baseTypeName;
     }
 
     /// <summary>
@@ -105,5 +121,31 @@ public class HttpRequestSender : IRequestSender
         // Check if the request type is in the Mjml namespace (e.g., DataManager.Application.Contracts.Modules.Mjml)
         return requestType.Namespace?.EndsWith(".Mjml") == true || 
                requestType.Namespace?.Contains(".Mjml.") == true;
+    }
+
+    /// <summary>
+    /// Determines if the request is a Command type (ends with "Command")
+    /// </summary>
+    private static bool IsCommandType(Type requestType)
+    {
+        var typeName = GetBaseTypeName(requestType);
+        return typeName.EndsWith(CommandSuffix);
+    }
+
+    /// <summary>
+    /// Gets the base type name without generic arity marker for generic types
+    /// </summary>
+    private static string GetBaseTypeName(Type requestType)
+    {
+        var typeName = requestType.Name;
+        if (requestType.IsGenericType)
+        {
+            var backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex > 0)
+            {
+                typeName = typeName.Substring(0, backtickIndex);
+            }
+        }
+        return typeName;
     }
 }

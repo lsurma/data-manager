@@ -9,6 +9,13 @@ public class RequestRegistry
     private readonly Dictionary<string, Type> _requestTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Type> _genericRequestTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Assembly _contractsAssembly;
+    
+    // Suffixes to try when looking up request types (in order of priority)
+    private static readonly string[] SuffixVariations = { "", "Query", "Command" };
+    
+    private const string QuerySuffix = "Query";
+    private const string CommandSuffix = "Command";
+    private const string PaginatedQueryTypeName = "PaginatedQuery";
 
     public RequestRegistry()
     {
@@ -48,10 +55,13 @@ public class RequestRegistry
 
     public Type? GetRequestType(string requestName)
     {
-        // Try direct lookup for non-generic types
-        if (_requestTypes.TryGetValue(requestName, out var type))
+        // Try direct lookup for non-generic types with suffix variations
+        foreach (var suffix in SuffixVariations)
         {
-            return type;
+            if (_requestTypes.TryGetValue(requestName + suffix, out var type))
+            {
+                return type;
+            }
         }
 
         // Check if it's a generic type request (format: "TypeName<Arg1,Arg2>")
@@ -64,8 +74,17 @@ public class RequestRegistry
         var genericTypeName = match.Groups[1].Value;
         var genericArgsString = match.Groups[2].Value;
 
-        // Find the open generic type
-        if (!_genericRequestTypes.TryGetValue(genericTypeName, out var openGenericType))
+        // Try to find the open generic type with suffix variations
+        Type? openGenericType = null;
+        foreach (var suffix in SuffixVariations)
+        {
+            if (_genericRequestTypes.TryGetValue(genericTypeName + suffix, out openGenericType))
+            {
+                break;
+            }
+        }
+
+        if (openGenericType == null)
         {
             return null;
         }
@@ -98,5 +117,40 @@ public class RequestRegistry
         names.AddRange(_requestTypes.Keys);
         names.AddRange(_genericRequestTypes.Keys.Select(name => $"{name}<...>"));
         return names;
+    }
+
+    /// <summary>
+    /// Determines if a request type is a Command (ends with "Command")
+    /// </summary>
+    public bool IsCommandType(Type requestType)
+    {
+        var typeName = GetBaseTypeName(requestType);
+        return typeName.EndsWith(CommandSuffix);
+    }
+
+    /// <summary>
+    /// Determines if a request type is a Query (ends with "Query" or is a PaginatedQuery)
+    /// </summary>
+    public bool IsQueryType(Type requestType)
+    {
+        var typeName = GetBaseTypeName(requestType);
+        return typeName.EndsWith(QuerySuffix) || typeName == PaginatedQueryTypeName;
+    }
+
+    /// <summary>
+    /// Gets the base type name without generic arity marker for generic types
+    /// </summary>
+    private static string GetBaseTypeName(Type requestType)
+    {
+        var typeName = requestType.Name;
+        if (requestType.IsGenericType)
+        {
+            var backtickIndex = typeName.IndexOf('`');
+            if (backtickIndex > 0)
+            {
+                typeName = typeName.Substring(0, backtickIndex);
+            }
+        }
+        return typeName;
     }
 }
