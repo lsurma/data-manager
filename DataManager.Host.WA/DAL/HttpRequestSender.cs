@@ -26,10 +26,25 @@ public class HttpRequestSender : IRequestSender
     public async Task<TResponse> SendAsync<TResponse>(object request, CancellationToken cancellationToken = default)
     {
         var requestName = GetRequestName(request.GetType());
+        var requestType = request.GetType();
 
         try
         {
-            var data = await _httpClient.PostAsync<object, TResponse>($"query/{requestName}", request, cancellationToken);
+            TResponse? data;
+
+            // Use POST for MJML-related requests (potentially large HTML content)
+            if (IsMjmlRequest(requestType))
+            {
+                data = await _httpClient.PostAsync<object, TResponse>($"query/{requestName}", request, cancellationToken);
+            }
+            else
+            {
+                // Use GET for all other requests (existing behavior)
+                var requestAsJson = JsonSerializer.Serialize(request);
+                var urlEncodedRequest = WebUtility.UrlEncode(requestAsJson);
+                data = await _httpClient.GetAsync<TResponse>($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
+            }
+
             return data!;
         }
         catch (AccessTokenNotAvailableException exception)
@@ -80,5 +95,14 @@ public class HttpRequestSender : IRequestSender
         var argNames = string.Join(",", genericArgs.Select(t => t.Name));
 
         return $"{genericTypeName}<{argNames}>";
+    }
+
+    /// <summary>
+    /// Determines if the request is MJML-related (requires POST due to potentially large HTML content)
+    /// </summary>
+    private static bool IsMjmlRequest(Type requestType)
+    {
+        // Check if the request type is in the Mjml namespace
+        return requestType.Namespace?.Contains(".Mjml") == true;
     }
 }
