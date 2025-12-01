@@ -102,7 +102,8 @@ public class HttpRequestSender : IRequestSender
     /// </summary>
     private static bool IsMjmlRequest(Type requestType)
     {
-        // Check if the request type is in the Mjml namespace
-        return requestType.Namespace?.Contains(".Mjml") == true;
+        // Check if the request type is in the Mjml namespace (e.g., DataManager.Application.Contracts.Modules.Mjml)
+        return requestType.Namespace?.EndsWith(".Mjml") == true || 
+               requestType.Namespace?.Contains(".Mjml.") == true;
     }
 }
