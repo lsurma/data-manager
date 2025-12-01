@@ -74,44 +74,47 @@ public class HttpRequestSender : IRequestSender
 
     /// <summary>
     /// Generates a request name for the given type, including generic type arguments
-    /// Format: "GetTranslationsQuery&lt;SimpleTranslationDto&gt;" for generic types
+    /// Format: "GetTranslations&lt;SimpleTranslationDto&gt;" for generic types (suffix stripped)
     /// Strips "Query" and "Command" suffixes to make them transparent in the API
     /// </summary>
     private static string GetRequestName(Type requestType)
     {
-        string typeName;
+        string baseTypeName;
         
         if (!requestType.IsGenericType)
         {
-            typeName = requestType.Name;
+            baseTypeName = requestType.Name;
         }
         else
         {
-            // For generic types, format as: TypeName<Arg1,Arg2>
-            var genericTypeName = requestType.Name;
-            var backtickIndex = genericTypeName.IndexOf('`');
+            // For generic types, get the base name without the generic arity marker
+            baseTypeName = requestType.Name;
+            var backtickIndex = baseTypeName.IndexOf('`');
             if (backtickIndex > 0)
             {
-                genericTypeName = genericTypeName.Substring(0, backtickIndex);
+                baseTypeName = baseTypeName.Substring(0, backtickIndex);
             }
+        }
 
+        // Strip "Query" or "Command" suffix from the base type name
+        if (baseTypeName.EndsWith("Query"))
+        {
+            baseTypeName = baseTypeName.Substring(0, baseTypeName.Length - "Query".Length);
+        }
+        else if (baseTypeName.EndsWith("Command"))
+        {
+            baseTypeName = baseTypeName.Substring(0, baseTypeName.Length - "Command".Length);
+        }
+
+        // For generic types, append the generic arguments
+        if (requestType.IsGenericType)
+        {
             var genericArgs = requestType.GetGenericArguments();
             var argNames = string.Join(",", genericArgs.Select(t => t.Name));
-
-            typeName = $"{genericTypeName}<{argNames}>";
+            return $"{baseTypeName}<{argNames}>";
         }
 
-        // Strip "Query" or "Command" suffix to make them transparent in the API
-        if (typeName.EndsWith("Query"))
-        {
-            typeName = typeName.Substring(0, typeName.Length - "Query".Length);
-        }
-        else if (typeName.EndsWith("Command"))
-        {
-            typeName = typeName.Substring(0, typeName.Length - "Command".Length);
-        }
-
-        return typeName;
+        return baseTypeName;
     }
 
     /// <summary>
