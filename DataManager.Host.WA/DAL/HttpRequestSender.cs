@@ -25,13 +25,11 @@ public class HttpRequestSender : IRequestSender
 
     public async Task<TResponse> SendAsync<TResponse>(object request, CancellationToken cancellationToken = default)
     {
-        var requestAsJson = JsonSerializer.Serialize(request);
-        var urlEncodedRequest = WebUtility.UrlEncode(requestAsJson);
         var requestName = GetRequestName(request.GetType());
 
         try
         {
-            var data = await _httpClient.GetAsync<TResponse>($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
+            var data = await _httpClient.PostAsync<object, TResponse>($"query/{requestName}", request, cancellationToken);
             return data!;
         }
         catch (AccessTokenNotAvailableException exception)
