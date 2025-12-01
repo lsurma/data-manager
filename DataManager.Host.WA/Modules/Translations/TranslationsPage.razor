@@ -1,4 +1,4 @@
-@page "/translations"
+@page "/translations/{DataSetId?}"
 @using DataManager.Application.Contracts.Common
 @using DataManager.Application.Contracts.Modules.Translations
 @using DataManager.Host.WA.Components
@@ -14,6 +14,19 @@
 </FluentStack>
 
 <FluentDivider Style="margin: 16px 0;" />
+
+<FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" Wrap="true">
+    <FluentNavLink Href="translations" Match="NavLinkMatch.All" Class="filter-link">
+        All
+    </FluentNavLink>
+
+    @foreach (var dataSet in AllDataSets)
+    {
+        <FluentNavLink Href="@($"translations/{dataSet.Id}")" Class="filter-link">
+            @dataSet.Name
+        </FluentNavLink>
+    }
+</FluentStack>
 
 <DataLoader TResponse="PaginatedList<TranslationDto>"
             TQuery="GetTranslationsQuery"
