@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using DataManager.Application.Contracts.Modules.DataSet;
 using DataManager.Application.Core.Common;
@@ -33,7 +32,7 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
         var canonical = name.ToLowerInvariant();
 
         // Replace any non-alphanumeric characters (except hyphens) with hyphens
-        canonical = Regex.Replace(canonical, @"[^a-z0-9\-]", "-");
+        canonical = Regex.Replace(canonical, @"[^a-z0-9-]", "-");
 
         // Replace multiple consecutive hyphens with a single hyphen
         canonical = Regex.Replace(canonical, @"-+", "-");
