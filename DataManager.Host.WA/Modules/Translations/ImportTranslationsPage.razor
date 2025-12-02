@@ -1,8 +1,21 @@
 @page "/translations/import"
 @using System.Data
 @using DataManager.Host.WA.Modules.Translations.Models
+@using DataManager.Application.Contracts.Modules.DataSet
+@using Microsoft.FluentUI.AspNetCore.Components
 
 <h3>Import Translations</h3>
+
+<div style="margin-bottom: 20px;">
+    <label>Select Data Set:</label>
+    <FluentSelect TOption="DataSetDto" 
+                  Items="@_availableDataSets"
+                  OptionValue="@(ds => ds.Id.ToString())"
+                  OptionText="@(ds => ds.Name)"
+                  @bind-SelectedOption="@_selectedDataSet"
+                  @bind-Value="@_selectedDataSetValue"
+                  Style="width: 300px; margin-left: 10px;" />
+</div>
 
 <InputFile OnChange="OnFileChanged" accept=".xls,.xlsx" />
 
@@ -18,6 +31,11 @@ else if (_errorMessage != null)
 }
 else if (_excelDataTable != null)
 {
+    <div style="margin-top: 20px; margin-bottom: 20px;">
+        <h4>Map Columns</h4>
+        <p>Map the Excel columns to the target translation fields:</p>
+    </div>
+    
     <RadzenDataGrid Data="@ExcelDataRows" TItem="DataRow" AllowFiltering="true" AllowColumnResize="true" AllowSorting="true" AllowPaging="true" PageSizeOptions="new int[] { 10, 20, 50, 100 }">
         <Columns>
             @foreach (DataColumn col in _excelDataTable.Columns)
@@ -35,4 +53,97 @@ else if (_excelDataTable != null)
             }
         </Columns>
     </RadzenDataGrid>
+
+    <div style="margin-top: 20px;">
+        <FluentButton Appearance="Appearance.Accent" OnClick="@(() => ProcessMappedColumns())">
+            Process Columns
+        </FluentButton>
+    </div>
+}
+
+@if (_importedTranslations != null && _importedTranslations.Any())
+{
+    <div style="margin-top: 30px;">
+        <h4>Preview Translations to Import</h4>
+        
+        <div style="margin-bottom: 10px;">
+            <FluentButton Appearance="Appearance.Accent" 
+                         OnClick="StartImportAsync" 
+                         Disabled="@_isImporting">
+                @if (_isImporting)
+                {
+                    <text>Importing...</text>
+                }
+                else
+                {
+                    <text>Start Import</text>
+                }
+            </FluentButton>
+        </div>
+
+        <RadzenDataGrid Data="@_importedTranslations" TItem="ImportedTranslationDto" 
+                       AllowFiltering="true" AllowColumnResize="true" 
+                       AllowSorting="true" AllowPaging="true" 
+                       PageSizeOptions="new int[] { 10, 20, 50, 100 }">
+            <Columns>
+                <RadzenDataGridColumn TItem="ImportedTranslationDto" Title="Import" Width="80px" Sortable="false" Filterable="false">
+                    <HeaderTemplate>
+                        <div style="display: flex; align-items: center;">
+                            <input type="checkbox" 
+                                   checked="@(_importedTranslations.All(t => t.ShouldImport))"
+                                   @onchange="@(e => ToggleSelectAll((bool)e.Value!))" />
+                            <span style="margin-left: 5px;">Import</span>
+                        </div>
+                    </HeaderTemplate>
+                    <Template Context="translation">
+                        <input type="checkbox" @bind="translation.ShouldImport" disabled="@_isImporting" />
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="ImportedTranslationDto" Title="Status" Width="150px">
+                    <Template Context="translation">
+                        @switch (translation.Status)
+                        {
+                            case ImportStatus.Pending:
+                                <span style="color: gray;">Pending</span>
+                                break;
+                            case ImportStatus.InProgress:
+                                <span style="color: blue;">In Progress...</span>
+                                break;
+                            case ImportStatus.Success:
+                                <span style="color: green;">✓ Success</span>
+                                break;
+                            case ImportStatus.Failed:
+                                <span style="color: red;">✗ Failed</span>
+                                break;
+                        }
+                        @if (!string.IsNullOrEmpty(translation.StatusMessage))
+                        {
+                            <div style="font-size: 0.85em; color: gray;">
+                                @translation.StatusMessage
+                            </div>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="ResourceName" Title="Resource" Width="150px" />
+                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="TranslationName" Title="Key" Width="150px" />
+                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="CultureName" Title="Culture" Width="100px" />
+                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="Content" Title="Content">
+                    <Template Context="translation">
+                        @if (!string.IsNullOrEmpty(translation.Content) && translation.Content.Length > 100)
+                        {
+                            <text>@translation.Content.Substring(0, 100)...</text>
+                        }
+                        else
+                        {
+                            <text>@translation.Content</text>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="InternalGroupName1" Title="Group 1" Width="120px" />
+                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="InternalGroupName2" Title="Group 2" Width="120px" />
+            </Columns>
+        </RadzenDataGrid>
+    </div>
 }
