@@ -1,6 +1,5 @@
 using System.Text.Json;
 using DataManager.Application.Contracts.Common;
-using DataManager.Application.Contracts.Modules.DataSet;
 using DataManager.Application.Contracts.Modules.Translations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -88,6 +87,7 @@ public class TranslationsController
 
     /// <summary>
     /// Import translations from a remote source for a specific dataset
+    /// Accepts a JSON list of translation objects
     /// </summary>
     [Function("ImportTranslations")]
     public async Task<IActionResult> ImportTranslations(
@@ -105,26 +105,45 @@ public class TranslationsController
                 return new NotFoundObjectResult(new { error = $"DataSet '{dataSetNameOrId}' not found." });
             }
 
-            // Read request body for file upload
-            await req.ReadFormAsync();
-            var file = req.Form.Files["file"];
-
-            if (file == null || file.Length == 0)
+            // Read request body as JSON
+            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            if (string.IsNullOrWhiteSpace(requestBody))
             {
-                return new BadRequestObjectResult(new { error = "No file received." });
+                return new BadRequestObjectResult(new { error = "Request body is empty." });
             }
 
-            // Use the existing UploadTranslationFileCommand
-            var command = new UploadTranslationFileCommand
+            var translations = JsonSerializer.Deserialize<List<ImportTranslationDto>>(requestBody, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (translations == null || translations.Count == 0)
+            {
+                return new BadRequestObjectResult(new { error = "No translations provided." });
+            }
+
+            // Use the ImportTranslationsCommand
+            var command = new ImportTranslationsCommand
             {
                 DataSetId = dataSet.Id,
-                FileName = file.FileName,
-                Content = file.OpenReadStream()
+                Translations = translations
             };
 
-            await _mediator.Send(command);
+            var result = await _mediator.Send(command);
 
-            return new OkObjectResult(new { message = "Translations imported successfully.", dataSetId = dataSet.Id });
+            return new OkObjectResult(new 
+            { 
+                message = "Translations import completed.", 
+                dataSetId = dataSet.Id,
+                importedCount = result.ImportedCount,
+                failedCount = result.FailedCount,
+                errors = result.Errors
+            });
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to deserialize request body for dataset: {DataSetNameOrId}", dataSetNameOrId);
+            return new BadRequestObjectResult(new { error = "Invalid JSON format.", details = ex.Message });
         }
         catch (Exception ex)
         {

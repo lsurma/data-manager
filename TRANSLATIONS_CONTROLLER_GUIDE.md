@@ -103,7 +103,7 @@ GET /api/translations/MyDataSet?orderBy=resourceName&orderDirection=asc&limit=25
 
 **Endpoint:** `POST /api/translations/{dataSetNameOrId}`
 
-Imports translations from a file (e.g., CSV, JSON, XLSX) for a specific dataset.
+Imports translations from a remote source by accepting a JSON array of translation objects.
 
 #### Route Parameters
 
@@ -111,44 +111,112 @@ Imports translations from a file (e.g., CSV, JSON, XLSX) for a specific dataset.
 
 #### Request Format
 
-This endpoint expects a multipart/form-data request with a file upload.
+This endpoint expects a JSON array of translation objects in the request body.
 
-**Form Data Fields:**
-- `file` (required) - The translation file to import
+**Request Body Schema:**
+```json
+[
+  {
+    "cultureName": "en-US",
+    "resourceName": "MyResource",
+    "translationName": "MyTranslation",
+    "content": "Hello World",
+    "internalGroupName1": "Group1",
+    "internalGroupName2": "Group2",
+    "contentTemplate": null
+  }
+]
+```
+
+**Required Fields:**
+- `resourceName` (string) - The resource identifier
+- `translationName` (string) - The translation identifier
+- `content` (string) - The translated content
+
+**Optional Fields:**
+- `cultureName` (string) - The culture/language code (e.g., "en-US", "fr-FR")
+- `internalGroupName1` (string) - First grouping level
+- `internalGroupName2` (string) - Second grouping level
+- `contentTemplate` (string) - Optional MJML template content before processing
 
 #### Examples
 
 **Using curl:**
 ```bash
 curl -X POST http://localhost:7233/api/translations/MyDataSet \
-  -F "file=@translations.csv"
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "cultureName": "en-US",
+      "resourceName": "Emails",
+      "translationName": "WelcomeEmail",
+      "content": "Welcome to our service!"
+    },
+    {
+      "cultureName": "fr-FR",
+      "resourceName": "Emails",
+      "translationName": "WelcomeEmail",
+      "content": "Bienvenue à notre service!"
+    }
+  ]'
 ```
 
 **Using curl with DataSet ID:**
 ```bash
 curl -X POST http://localhost:7233/api/translations/3fa85f64-5717-4562-b3fc-2c963f66afa6 \
-  -F "file=@translations.xlsx"
+  -H "Content-Type: application/json" \
+  -d '[{"cultureName":"en-US","resourceName":"Test","translationName":"Hello","content":"Hello World"}]'
 ```
 
 **Using PowerShell:**
 ```powershell
 $uri = "http://localhost:7233/api/translations/MyDataSet"
-$filePath = "C:\path\to\translations.csv"
+$body = @(
+    @{
+        cultureName = "en-US"
+        resourceName = "Emails"
+        translationName = "WelcomeEmail"
+        content = "Welcome to our service!"
+    },
+    @{
+        cultureName = "fr-FR"
+        resourceName = "Emails"
+        translationName = "WelcomeEmail"
+        content = "Bienvenue à notre service!"
+    }
+) | ConvertTo-Json
 
-$form = @{
-    file = Get-Item -Path $filePath
-}
+Invoke-RestMethod -Uri $uri -Method Post -Body $body -ContentType "application/json"
+```
 
-Invoke-RestMethod -Uri $uri -Method Post -Form $form
+**Using JavaScript/Fetch:**
+```javascript
+const response = await fetch('http://localhost:7233/api/translations/MyDataSet', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify([
+    {
+      cultureName: 'en-US',
+      resourceName: 'Emails',
+      translationName: 'WelcomeEmail',
+      content: 'Welcome to our service!'
+    }
+  ])
+});
+
+const result = await response.json();
+console.log(result);
 ```
 
 **Using Postman:**
 1. Set method to POST
 2. Set URL to `/api/translations/MyDataSet`
 3. Go to "Body" tab
-4. Select "form-data"
-5. Add key "file" with type "File"
-6. Choose your translation file
+4. Select "raw"
+5. Choose "JSON" from the dropdown
+6. Paste your JSON array
 7. Click "Send"
 
 #### Response Format
@@ -156,15 +224,31 @@ Invoke-RestMethod -Uri $uri -Method Post -Form $form
 **Success:**
 ```json
 {
-  "message": "Translations imported successfully.",
-  "dataSetId": "7b8e9f10-1234-5678-90ab-cdef12345678"
+  "message": "Translations import completed.",
+  "dataSetId": "7b8e9f10-1234-5678-90ab-cdef12345678",
+  "importedCount": 2,
+  "failedCount": 0,
+  "errors": []
+}
+```
+
+**Partial Success (some failures):**
+```json
+{
+  "message": "Translations import completed.",
+  "dataSetId": "7b8e9f10-1234-5678-90ab-cdef12345678",
+  "importedCount": 1,
+  "failedCount": 1,
+  "errors": [
+    "Failed to import translation 'InvalidTranslation' (InvalidResource): Required field missing"
+  ]
 }
 ```
 
 #### Status Codes
 
-- `200 OK` - File uploaded and queued for processing
-- `400 Bad Request` - No file provided or invalid request
+- `200 OK` - Import completed (check importedCount and failedCount in response)
+- `400 Bad Request` - Invalid JSON format, empty request body, or no translations provided
 - `404 Not Found` - DataSet with the specified name or ID not found
 - `401 Unauthorized` - Authentication required (if authentication is enabled)
 - `500 Internal Server Error` - Server error occurred
@@ -189,6 +273,7 @@ GET /api/query/GetTranslationsQuery?body={"pagination":{"skip":0,"pageSize":20},
 ### New TranslationsController Endpoint
 ```
 GET /api/translations/MyDataSet?orderBy=resourceName&limit=20&offset=0
+POST /api/translations/MyDataSet (with JSON array of translations)
 ```
 
 The TranslationsController provides:
@@ -197,6 +282,7 @@ The TranslationsController provides:
 - ✅ Support for both DataSet names and IDs
 - ✅ RESTful design patterns
 - ✅ Automatic DataSet filtering
+- ✅ Direct JSON import for remote data sources
 
 ---
 
@@ -206,7 +292,9 @@ The TranslationsController provides:
 2. **Pagination** - Use `limit` and `offset` for efficient pagination of large datasets
 3. **Sorting** - Combine `orderBy` and `orderDirection` for custom sorting
 4. **Offset calculation** - For page-based pagination: `offset = (pageNumber - 1) * limit`
-5. **Import processing** - The POST endpoint saves the file for asynchronous processing; check logs for processing status
+5. **Batch imports** - Import multiple translations in a single request for efficiency
+6. **Error handling** - Check `importedCount` and `failedCount` in the response; review `errors` array for details on failed imports
+7. **Required fields** - Ensure each translation object has at minimum: `resourceName`, `translationName`, and `content`
 
 ---
 
@@ -223,7 +311,9 @@ All endpoints return structured error responses:
 Common errors:
 - DataSet not found
 - Invalid query parameters
-- Missing file in import request
+- Invalid JSON format in import request
+- Empty request body or no translations provided
+- Required fields missing in translation objects
 - Authentication failures
 
 ---
