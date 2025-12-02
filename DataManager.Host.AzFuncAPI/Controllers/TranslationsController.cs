@@ -28,6 +28,7 @@ public class TranslationsController
 
     /// <summary>
     /// Get translations for a specific dataset by name or ID
+    /// Returns simplified translation data with only essential fields
     /// Supports query parameters: orderBy, orderDirection, limit, offset
     /// </summary>
     [Function("GetTranslations")]
@@ -52,8 +53,8 @@ public class TranslationsController
             var limit = int.TryParse(req.Query["limit"], out var limitValue) ? limitValue : 20;
             var offset = int.TryParse(req.Query["offset"], out var offsetValue) ? offsetValue : 0;
 
-            // Create query with pagination and ordering
-            var query = new GetTranslationsQuery
+            // Create query with simplified DTO projection
+            var query = new GetTranslationsQuery<SimpleTranslationDto>
             {
                 Pagination = new PaginationParameters
                 {

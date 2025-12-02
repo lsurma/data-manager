@@ -12,7 +12,7 @@ The TranslationsController provides simplified REST endpoints for working with t
 
 **Endpoint:** `GET /api/translations/{dataSetNameOrId}`
 
-Retrieves translations for a specific dataset with optional filtering, pagination, and sorting.
+Retrieves translations for a specific dataset with optional filtering, pagination, and sorting. Returns simplified translation data with only essential fields (id, translationName, cultureName, content).
 
 #### Route Parameters
 
@@ -22,7 +22,7 @@ Retrieves translations for a specific dataset with optional filtering, paginatio
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `orderBy` | string | - | Field name to sort by (e.g., "resourceName", "cultureName", "createdAt") |
+| `orderBy` | string | - | Field name to sort by (e.g., "translationName", "cultureName") |
 | `orderDirection` | string | "asc" | Sort direction: "asc" or "desc" |
 | `limit` | integer | 20 | Number of items per page (page size) |
 | `offset` | integer | 0 | Number of items to skip (for pagination) |
@@ -44,9 +44,9 @@ GET /api/translations/MyDataSet?limit=50
 GET /api/translations/MyDataSet?limit=10&offset=10
 ```
 
-**Get translations sorted by creation date (newest first):**
+**Get translations sorted by translation name:**
 ```
-GET /api/translations/MyDataSet?orderBy=createdAt&orderDirection=desc
+GET /api/translations/MyDataSet?orderBy=translationName&orderDirection=asc
 ```
 
 **Get translations by DataSet ID:**
@@ -56,29 +56,22 @@ GET /api/translations/3fa85f64-5717-4562-b3fc-2c963f66afa6
 
 **Complex query with all parameters:**
 ```
-GET /api/translations/MyDataSet?orderBy=resourceName&orderDirection=asc&limit=25&offset=50
+GET /api/translations/MyDataSet?orderBy=translationName&orderDirection=asc&limit=25&offset=50
 ```
 
 #### Response Format
 
+This endpoint returns a **simplified projection** with only essential fields for better performance and reduced payload size.
+
+**Response Schema:**
 ```json
 {
   "items": [
     {
       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      "internalGroupName1": "Group1",
-      "internalGroupName2": "Group2",
-      "resourceName": "MyResource",
       "translationName": "MyTranslation",
       "cultureName": "en-US",
-      "content": "Hello World",
-      "contentTemplate": null,
-      "dataSetId": "7b8e9f10-1234-5678-90ab-cdef12345678",
-      "layoutId": null,
-      "sourceId": null,
-      "createdAt": "2025-12-02T10:00:00Z",
-      "updatedAt": "2025-12-02T11:00:00Z",
-      "createdBy": "user@example.com"
+      "content": "Hello World"
     }
   ],
   "pageNumber": 1,
@@ -88,6 +81,15 @@ GET /api/translations/MyDataSet?orderBy=resourceName&orderDirection=asc&limit=25
   "hasPreviousPage": false,
   "hasNextPage": true
 }
+```
+
+**Fields Included:**
+- `id` (Guid) - Unique identifier
+- `translationName` (string) - Translation name
+- `cultureName` (string, nullable) - Culture/language code (e.g., "en-US", "fr-FR")
+- `content` (string) - The translated content
+
+> **Note:** For full translation details including metadata, resource names, and relationships, use the generic `/api/query/GetTranslationsQuery` endpoint.
 ```
 
 #### Status Codes
