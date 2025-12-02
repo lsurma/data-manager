@@ -58,5 +58,11 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
         builder.HasIndex(e => e.LayoutId);
         builder.HasIndex(e => e.SourceId);
         builder.HasIndex(e => new { e.InternalGroupName1, e.InternalGroupName2, e.ResourceName, e.CultureName });
+
+        // Configure relationship with OldVersions
+        builder.HasMany(e => e.OldVersions)
+            .WithOne()
+            .HasForeignKey(e => e.TranslationId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -34,4 +34,6 @@ public class SaveTranslationCommand : IRequest<Guid>
     /// Optional reference to a source Translation (for linking similar/same translations)
     /// </summary>
     public Guid? SourceId { get; set; }
+
+    public string? DraftContent { get; set; }
 }

@@ -34,6 +34,12 @@
         <None Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
     <!-- Local build target: Build Blazor WebAssembly and copy to wwwroot -->
     <PropertyGroup>
         <BlazorWAProjectPath>$(MSBuildThisFileDirectory)..\DataManager.Host.WA\DataManager.Host.WA.csproj</BlazorWAProjectPath>

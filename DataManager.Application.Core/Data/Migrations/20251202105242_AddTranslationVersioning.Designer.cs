@@ -3,6 +3,7 @@ using System;
 using DataManager.Application.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataManager.Application.Core.Data.Migrations
 {
     [DbContext(typeof(DataManagerDbContext))]
-    partial class DataManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202105242_AddTranslationVersioning")]
+    partial class AddTranslationVersioning
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -165,6 +168,9 @@ namespace DataManager.Application.Core.Data.Migrations
                     b.Property<string>("InternalGroupName2")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsCurrentVersion")
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid?>("LayoutId")
                         .HasColumnType("TEXT");

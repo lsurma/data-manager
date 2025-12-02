@@ -24,6 +24,8 @@ public class DataManagerDbContext : DbContext
 
     public DbSet<Translation> Translations { get; set; }
 
+    public DbSet<TranslationVersion> TranslationVersions { get; set; }
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         SetAuditFields();

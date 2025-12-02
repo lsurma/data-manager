@@ -38,4 +38,6 @@ public record TranslationDto : ITranslationDto
     public DateTimeOffset? UpdatedAt { get; set; }
 
     public string CreatedBy { get; set; } = string.Empty;
+
+    public string? DraftContent { get; set; }
 }

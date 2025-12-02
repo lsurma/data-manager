@@ -1,4 +1,5 @@
 using DataManager.Application.Core.Abstractions;
+using System.Collections.Generic;
 
 namespace DataManager.Application.Core.Modules.Translations;
 
@@ -44,4 +45,8 @@ public class Translation : AuditableEntityBase
     /// Navigation property to the source Translation
     /// </summary>
     public Translation? Source { get; set; }
+
+    public string? DraftContent { get; set; }
+
+    public List<TranslationVersion> OldVersions { get; set; } = new();
 }
