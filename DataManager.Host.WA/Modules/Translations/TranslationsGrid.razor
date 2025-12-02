@@ -1,0 +1,60 @@
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.Translations
+@using DataManager.Host.WA.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+
+<DataLoader TResponse="PaginatedList<TranslationDto>"
+            TQuery="GetTranslationsQuery"
+            Query="@_currentQuery"
+            CacheKey="@_cacheKey"
+            RefreshToken="@_refreshToken"
+            OnDataFetched="HandleDataFetched">
+    <ChildContent Context="result">
+        <PaginatedDataGrid TItem="TranslationDto"
+                          Items="@AllTranslations"
+                          TotalItems="@_totalItems"
+                          PageSize="@_pageSize"
+                          SearchPlaceholder="Search translations..."
+                          @bind-SearchTerm="@_searchTerm"
+                          OnSearchChanged="@OnSearchChanged"
+                          LoadData="@OnLoadData"
+                          SelectedRows="@_selectedRows"
+                          SelectedRowsChanged="@OnDataGridSelectionChanged"
+                          SettingsStorageKey="grid-settings-translations">
+            <AdditionalFilters>
+                <FluentTextField Placeholder="Filter by culture (e.g., en-US)..."
+                                @bind-Value="@_cultureNameFilter"
+                                @bind-Value:after="OnCultureFilterChanged"
+                                Style="width: 250px;" />
+                @if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
+                {
+                    <FluentButton Appearance="Appearance.Lightweight"
+                                  IconStart="@(new Size20.Dismiss())"
+                                  OnClick="ClearCultureFilter">
+                        Clear Culture
+                    </FluentButton>
+                }
+            </AdditionalFilters>
+            <Columns>
+                <RadzenDataGridColumn TItem="TranslationDto" Property="InternalGroupName1" Title="Group 1" Width="120px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="InternalGroupName2" Title="Group 2" Width="120px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="ResourceName" Title="Resource" Width="150px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="TranslationName" Title="Key" Width="150px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="CultureName" Title="Culture" Width="80px" />
+                <RadzenDataGridColumn TItem="TranslationDto" Property="Content" Title="Content">
+                    <Template Context="translation">
+                        @if (translation.Content.Length > 100)
+                        {
+                            <text>@translation.Content.Substring(0, 100)...</text>
+                        }
+                        else
+                        {
+                            <text>@translation.Content</text>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="TranslationDto" Property="CreatedAt" Title="Created At" FormatString="{0:yyyy-MM-dd HH:mm}" Width="150px" />
+            </Columns>
+        </PaginatedDataGrid>
+    </ChildContent>
+</DataLoader>
