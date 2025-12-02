@@ -302,6 +302,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             await _currentDialog.CloseAsync();
         }
         _currentDialog = newDialog;
+        
     }
 
     public void Dispose()

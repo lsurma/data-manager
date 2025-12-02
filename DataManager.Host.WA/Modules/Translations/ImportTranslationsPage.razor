@@ -18,8 +18,6 @@ else if (_errorMessage != null)
 }
 else if (_excelDataTable != null)
 {
-    <RadzenButton Text="Process Mapped Columns" Click="ProcessMappedColumns" />
-
     <RadzenDataGrid Data="@ExcelDataRows" TItem="DataRow" AllowFiltering="true" AllowColumnResize="true" AllowSorting="true" AllowPaging="true" PageSizeOptions="new int[] { 10, 20, 50, 100 }">
         <Columns>
             @foreach (DataColumn col in _excelDataTable.Columns)
@@ -29,6 +27,7 @@ else if (_excelDataTable != null)
                         @col.ColumnName
                         <RadzenDropDown @bind-Value="_columnMappings[col.ColumnName]" Data="@_targetColumns" />
                     </HeaderTemplate>
+                    
                     <Template Context="row">
                         @row[col.ColumnName]
                     </Template>
@@ -36,19 +35,4 @@ else if (_excelDataTable != null)
             }
         </Columns>
     </RadzenDataGrid>
-
-    @if (_importedTranslations != null)
-    {
-        <h4>Processed Data</h4>
-        <RadzenDataGrid Data="@_importedTranslations" TItem="ImportedTranslationDto" AllowFiltering="true" AllowColumnResize="true" AllowSorting="true" AllowPaging="true" PageSizeOptions="new int[] { 10, 20, 50, 100 }">
-            <Columns>
-                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="InternalGroupName1" Title="Internal Group Name 1" />
-                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="InternalGroupName2" Title="Internal Group Name 2" />
-                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="ResourceName" Title="Resource Name" />
-                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="TranslationName" Title="Translation Name" />
-                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="CultureName" Title="Culture Name" />
-                <RadzenDataGridColumn TItem="ImportedTranslationDto" Property="Content" Title="Content" />
-            </Columns>
-        </RadzenDataGrid>
-    }
 }
