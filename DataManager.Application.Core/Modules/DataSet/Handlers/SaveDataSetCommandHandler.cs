@@ -45,7 +45,7 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
         canonical = canonical.Trim('-');
 
         // Ensure we have something left after canonicalization
-        if (string.IsNullOrWhiteSpace(canonical))
+        if (string.IsNullOrEmpty(canonical))
         {
             throw new ArgumentException("DataSet name must contain at least one alphanumeric character.", nameof(name));
         }
