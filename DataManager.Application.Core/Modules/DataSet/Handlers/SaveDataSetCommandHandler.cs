@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using DataManager.Application.Contracts.Modules.DataSet;
 using DataManager.Application.Core.Common;
 using DataManager.Application.Core.Data;
@@ -17,8 +19,42 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
         _queryService = queryService;
     }
 
+    /// <summary>
+    /// Converts a string to a canonical URL-safe format (lowercase alphanumeric and hyphens only).
+    /// </summary>
+    private static string CanonicalizeDataSetName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("DataSet name cannot be empty.", nameof(name));
+        }
+
+        // Convert to lowercase
+        var canonical = name.ToLowerInvariant();
+
+        // Replace any non-alphanumeric characters (except hyphens) with hyphens
+        canonical = Regex.Replace(canonical, @"[^a-z0-9\-]", "-");
+
+        // Replace multiple consecutive hyphens with a single hyphen
+        canonical = Regex.Replace(canonical, @"-+", "-");
+
+        // Remove leading and trailing hyphens
+        canonical = canonical.Trim('-');
+
+        // Ensure we have something left after canonicalization
+        if (string.IsNullOrWhiteSpace(canonical))
+        {
+            throw new ArgumentException("DataSet name must contain at least one alphanumeric character.", nameof(name));
+        }
+
+        return canonical;
+    }
+
     public async Task<Guid> Handle(SaveDataSetCommand request, CancellationToken cancellationToken)
     {
+        // Canonicalize the name to ensure it's URL-safe
+        var canonicalName = CanonicalizeDataSetName(request.Name);
+        
         DataSet? dataSet;
 
         if (request.Id.HasValue && request.Id.Value != Guid.Empty)
@@ -40,7 +76,7 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
                 throw new KeyNotFoundException($"DataSet with Id {request.Id} not found.");
             }
 
-            dataSet.Name = request.Name;
+            dataSet.Name = canonicalName;
             dataSet.Description = request.Description;
             dataSet.Notes = request.Notes;
             dataSet.AllowedIdentityIds = request.AllowedIdentityIds.ToList();
@@ -79,7 +115,7 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
             dataSet = new DataSet
             {
                 Id = Guid.NewGuid(),
-                Name = request.Name,
+                Name = canonicalName,
                 Description = request.Description,
                 Notes = request.Notes,
                 AllowedIdentityIds = request.AllowedIdentityIds.ToList(),
