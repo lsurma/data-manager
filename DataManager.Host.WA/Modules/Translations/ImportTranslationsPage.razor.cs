@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ExcelDataReader;
 using Microsoft.AspNetCore.Components;
@@ -54,10 +55,10 @@ namespace DataManager.Host.WA.Modules.Translations
             }
         }
 
-        private static readonly System.Text.RegularExpressions.Regex ErrorMessageRegex = 
-            new System.Text.RegularExpressions.Regex(
+        private static readonly Regex ErrorMessageRegex = 
+            new Regex(
                 @"Failed to import translation '([^']+)' \(([^)]+)\):",
-                System.Text.RegularExpressions.RegexOptions.Compiled);
+                RegexOptions.Compiled);
 
         private IEnumerable<DataRow>? ExcelDataRows => _excelDataTable?.Rows.Cast<DataRow>();
 
@@ -211,6 +212,7 @@ namespace DataManager.Host.WA.Modules.Translations
                 // Update failed translations based on error messages
                 // Error format: "Failed to import translation '{TranslationName}' ({ResourceName}): {message}"
                 var unmatchedErrors = new List<string>();
+                var matchedErrorCount = 0;
                 
                 foreach (var error in result.Errors)
                 {
@@ -229,6 +231,7 @@ namespace DataManager.Host.WA.Modules.Translations
                         {
                             failedTranslation.Status = ImportStatus.Failed;
                             failedTranslation.StatusMessage = error;
+                            matchedErrorCount++;
                         }
                         else
                         {
@@ -252,11 +255,12 @@ namespace DataManager.Host.WA.Modules.Translations
                 }
 
                 // Handle case where we have more failures than matched errors
-                if (result.FailedCount > result.Errors.Count)
+                if (result.FailedCount > matchedErrorCount)
                 {
-                    // Some errors might not have been properly formatted
-                    var unmatchedFailures = result.FailedCount - result.Errors.Count;
-                    _errorMessage = $"Warning: {unmatchedFailures} translation(s) failed but no error details were provided.";
+                    // Some errors might not have been properly formatted or matched
+                    var unmatchedFailures = result.FailedCount - matchedErrorCount;
+                    _errorMessage = $"Warning: {unmatchedFailures} translation(s) failed but could not be matched to specific items.";
+                    Logger.LogWarning("Import had {UnmatchedFailures} unmatched failures", unmatchedFailures);
                 }
 
                 ToastService.ShowSuccess($"Import completed: {result.ImportedCount} succeeded, {result.FailedCount} failed.");
