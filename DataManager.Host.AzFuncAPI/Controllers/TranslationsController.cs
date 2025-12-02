@@ -29,7 +29,7 @@ public class TranslationsController
 
     /// <summary>
     /// Get translations for a specific dataset by name or ID
-    /// Supports query parameters: orderBy, limit (pageSize), offset (skip)
+    /// Supports query parameters: orderBy, orderDirection, limit, offset
     /// </summary>
     [Function("GetTranslations")]
     public async Task<IActionResult> GetTranslations(
@@ -106,7 +106,7 @@ public class TranslationsController
             }
 
             // Read request body for file upload
-            var formdata = await req.ReadFormAsync();
+            await req.ReadFormAsync();
             var file = req.Form.Files["file"];
 
             if (file == null || file.Length == 0)
