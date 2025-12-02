@@ -187,29 +187,47 @@ namespace DataManager.Host.WA.Modules.Translations
 
                 var result = await RequestSender.SendAsync(command);
 
-                // Update statuses based on result
-                var successCount = result.ImportedCount;
-                var failedCount = result.FailedCount;
-
-                // Mark successful imports
-                foreach (var translation in translationsToImport.Take(successCount))
+                // Mark all as success initially
+                foreach (var translation in translationsToImport)
                 {
                     translation.Status = ImportStatus.Success;
                     translation.StatusMessage = "Imported successfully";
                 }
 
-                // Mark failed imports
-                if (failedCount > 0)
+                // Update failed translations based on error messages
+                // Error format: "Failed to import translation '{TranslationName}' ({ResourceName}): {message}"
+                foreach (var error in result.Errors)
                 {
-                    var failedTranslations = translationsToImport.Skip(successCount).Take(failedCount).ToList();
-                    for (int i = 0; i < failedTranslations.Count && i < result.Errors.Count; i++)
+                    // Try to extract translation name and resource name from error message
+                    var match = System.Text.RegularExpressions.Regex.Match(
+                        error, 
+                        @"Failed to import translation '([^']+)' \(([^)]+)\):");
+                    
+                    if (match.Success)
                     {
-                        failedTranslations[i].Status = ImportStatus.Failed;
-                        failedTranslations[i].StatusMessage = result.Errors[i];
+                        var translationName = match.Groups[1].Value;
+                        var resourceName = match.Groups[2].Value;
+                        
+                        var failedTranslation = translationsToImport.FirstOrDefault(t => 
+                            t.TranslationName == translationName && t.ResourceName == resourceName);
+                        
+                        if (failedTranslation != null)
+                        {
+                            failedTranslation.Status = ImportStatus.Failed;
+                            failedTranslation.StatusMessage = error;
+                        }
                     }
                 }
 
-                ToastService.ShowSuccess($"Import completed: {successCount} succeeded, {failedCount} failed.");
+                // Handle case where we have more failures than matched errors
+                if (result.FailedCount > result.Errors.Count)
+                {
+                    // Some errors might not have been properly formatted
+                    var unmatchedFailures = result.FailedCount - result.Errors.Count;
+                    _errorMessage = $"Warning: {unmatchedFailures} translation(s) failed but could not be matched to specific items.";
+                }
+
+                ToastService.ShowSuccess($"Import completed: {result.ImportedCount} succeeded, {result.FailedCount} failed.");
             }
             catch (Exception ex)
             {
