@@ -12,6 +12,7 @@ using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Application.Contracts.Modules.DataSet;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 
 namespace DataManager.Host.WA.Modules.Translations
 {
@@ -22,6 +23,9 @@ namespace DataManager.Host.WA.Modules.Translations
 
         [Inject]
         private IToastService ToastService { get; set; } = null!;
+
+        [Inject]
+        private ILogger<ImportTranslationsPage> Logger { get; set; } = null!;
 
         private List<ImportedTranslationDto>? _importedTranslations;
         private bool _isLoading;
@@ -45,7 +49,7 @@ namespace DataManager.Host.WA.Modules.Translations
                 else if (!string.IsNullOrEmpty(value))
                 {
                     // Log invalid GUID value for debugging
-                    Console.WriteLine($"Invalid GUID value for dataset selection: {value}");
+                    Logger.LogWarning("Invalid GUID value for dataset selection: {Value}", value);
                 }
             }
         }
@@ -240,10 +244,10 @@ namespace DataManager.Host.WA.Modules.Translations
                 // Log any unmatched errors for debugging
                 if (unmatchedErrors.Any())
                 {
-                    Console.WriteLine($"Warning: {unmatchedErrors.Count} error(s) could not be matched to translations:");
+                    Logger.LogWarning("Could not match {Count} error(s) to translations during import", unmatchedErrors.Count);
                     foreach (var error in unmatchedErrors)
                     {
-                        Console.WriteLine($"  - {error}");
+                        Logger.LogDebug("Unmatched error: {Error}", error);
                     }
                 }
 
