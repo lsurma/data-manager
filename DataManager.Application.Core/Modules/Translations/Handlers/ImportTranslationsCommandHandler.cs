@@ -1,5 +1,4 @@
 using DataManager.Application.Contracts.Modules.Translations;
-using DataManager.Application.Core.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -9,16 +8,13 @@ public class ImportTranslationsCommandHandler : IRequestHandler<ImportTranslatio
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ImportTranslationsCommandHandler> _logger;
-    private readonly DataManagerDbContext _context;
 
     public ImportTranslationsCommandHandler(
         IMediator mediator, 
-        ILogger<ImportTranslationsCommandHandler> logger,
-        DataManagerDbContext context)
+        ILogger<ImportTranslationsCommandHandler> logger)
     {
         _mediator = mediator;
         _logger = logger;
-        _context = context;
     }
 
     public async Task<ImportTranslationsResult> Handle(ImportTranslationsCommand request, CancellationToken cancellationToken)
