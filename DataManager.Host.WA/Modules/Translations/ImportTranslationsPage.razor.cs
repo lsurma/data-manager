@@ -42,8 +42,18 @@ namespace DataManager.Host.WA.Modules.Translations
                 {
                     _selectedDataSetId = id;
                 }
+                else if (!string.IsNullOrEmpty(value))
+                {
+                    // Log invalid GUID value for debugging
+                    Console.WriteLine($"Invalid GUID value for dataset selection: {value}");
+                }
             }
         }
+
+        private static readonly System.Text.RegularExpressions.Regex ErrorMessageRegex = 
+            new System.Text.RegularExpressions.Regex(
+                @"Failed to import translation '([^']+)' \(([^)]+)\):",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
 
         private IEnumerable<DataRow>? ExcelDataRows => _excelDataTable?.Rows.Cast<DataRow>();
 
@@ -60,7 +70,7 @@ namespace DataManager.Host.WA.Modules.Translations
                 _availableDataSets = result.Items;
                 if (_availableDataSets.Any())
                 {
-                    _selectedDataSetId = _availableDataSets.First().Id;
+                    _selectedDataSetId = _availableDataSets.FirstOrDefault()?.Id;
                 }
             }
             catch (Exception ex)
@@ -196,12 +206,12 @@ namespace DataManager.Host.WA.Modules.Translations
 
                 // Update failed translations based on error messages
                 // Error format: "Failed to import translation '{TranslationName}' ({ResourceName}): {message}"
+                var unmatchedErrors = new List<string>();
+                
                 foreach (var error in result.Errors)
                 {
                     // Try to extract translation name and resource name from error message
-                    var match = System.Text.RegularExpressions.Regex.Match(
-                        error, 
-                        @"Failed to import translation '([^']+)' \(([^)]+)\):");
+                    var match = ErrorMessageRegex.Match(error);
                     
                     if (match.Success)
                     {
@@ -216,6 +226,24 @@ namespace DataManager.Host.WA.Modules.Translations
                             failedTranslation.Status = ImportStatus.Failed;
                             failedTranslation.StatusMessage = error;
                         }
+                        else
+                        {
+                            unmatchedErrors.Add(error);
+                        }
+                    }
+                    else
+                    {
+                        unmatchedErrors.Add(error);
+                    }
+                }
+
+                // Log any unmatched errors for debugging
+                if (unmatchedErrors.Any())
+                {
+                    Console.WriteLine($"Warning: {unmatchedErrors.Count} error(s) could not be matched to translations:");
+                    foreach (var error in unmatchedErrors)
+                    {
+                        Console.WriteLine($"  - {error}");
                     }
                 }
 
@@ -224,7 +252,7 @@ namespace DataManager.Host.WA.Modules.Translations
                 {
                     // Some errors might not have been properly formatted
                     var unmatchedFailures = result.FailedCount - result.Errors.Count;
-                    _errorMessage = $"Warning: {unmatchedFailures} translation(s) failed but could not be matched to specific items.";
+                    _errorMessage = $"Warning: {unmatchedFailures} translation(s) failed but no error details were provided.";
                 }
 
                 ToastService.ShowSuccess($"Import completed: {result.ImportedCount} succeeded, {result.FailedCount} failed.");

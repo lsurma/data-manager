@@ -91,7 +91,7 @@ else if (_excelDataTable != null)
                         <div style="display: flex; align-items: center;">
                             <input type="checkbox" 
                                    checked="@(_importedTranslations.All(t => t.ShouldImport))"
-                                   @onchange="@(e => ToggleSelectAll((bool)e.Value!))" />
+                                   @onchange="@(e => ToggleSelectAll((bool?)e.Value ?? false))" />
                             <span style="margin-left: 5px;">Import</span>
                         </div>
                     </HeaderTemplate>
