@@ -1,15 +1,40 @@
 import interactjs from 'https://cdn.jsdelivr.net/npm/interactjs@1.10.27/+esm';
 
 window.interactJs = {
+    makeResizablePanel: function (dotNetHelper, panelElement) {
+        if(!panelElement) {
+            console.error('Panel element not specified');
+            return;
+        }
+        
+        if(typeof panelElement === 'string') {
+            panelElement = document.querySelector(panelElement);
+        }
+        
+        if(!panelElement) {
+            console.error(`Element ${panelElement} not found`);
+            return;
+        }
+        
+        const handle = panelElement?.shadowRoot?.querySelector(".control");
+     
+        if(!handle) {
+            console.error(`Element ${panelElement} does not contain a handle`);
+            return;
+        }
+          
+        this.makeResizable(dotNetHelper, handle, panelElement);
+    },
+    
     makeResizable: function (dotNetHelper, targetElement, propertyElement) {
         const computedStyle = getComputedStyle(targetElement);
         const minWidthVar = computedStyle.getPropertyValue('--dialog-min-width');
-        const minWidth = parseInt(minWidthVar, 10) || 100;
+        const minWidth = parseInt(minWidthVar, 10) || 300;
         let debounceTimeout;
 
         interactjs(targetElement)
             .resizable({
-                edges: { left: true, right: false, bottom: false, top: true },
+                edges: { left: true, right: false, bottom: false, top: false },
 
                 listeners: {
                     move: function (event) {
@@ -23,7 +48,9 @@ window.interactJs = {
 
                         clearTimeout(debounceTimeout);
                         debounceTimeout = setTimeout(() => {
-                            dotNetHelper.invokeMethodAsync('SetWidth', width);
+                            if(dotNetHelper) {
+                                dotNetHelper.invokeMethodAsync('SetWidth', width);
+                            }
                         }, 250);
                     }
                 },
