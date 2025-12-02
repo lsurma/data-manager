@@ -12,6 +12,10 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
     private readonly DataManagerDbContext _context;
     private readonly DataSetsQueryService _queryService;
 
+    // Compiled regex patterns for better performance
+    private static readonly Regex NonAlphanumericPattern = new(@"[^a-z0-9-]", RegexOptions.Compiled);
+    private static readonly Regex MultipleHyphensPattern = new(@"-+", RegexOptions.Compiled);
+
     public SaveDataSetCommandHandler(DataManagerDbContext context, DataSetsQueryService queryService)
     {
         _context = context;
@@ -32,10 +36,10 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
         var canonical = name.ToLowerInvariant();
 
         // Replace any non-alphanumeric characters (except hyphens) with hyphens
-        canonical = Regex.Replace(canonical, @"[^a-z0-9-]", "-");
+        canonical = NonAlphanumericPattern.Replace(canonical, "-");
 
         // Replace multiple consecutive hyphens with a single hyphen
-        canonical = Regex.Replace(canonical, @"-+", "-");
+        canonical = MultipleHyphensPattern.Replace(canonical, "-");
 
         // Remove leading and trailing hyphens
         canonical = canonical.Trim('-');
