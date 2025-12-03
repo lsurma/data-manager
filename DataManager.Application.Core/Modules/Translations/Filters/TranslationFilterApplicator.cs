@@ -54,3 +54,21 @@ public class BaseTranslationFilterHandler : IFilterHandler<Translation, BaseTran
         return Task.FromResult(expression);
     }
 }
+
+public class VersionStatusFilterHandler : IFilterHandler<Translation, VersionStatusFilter>
+{
+    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(VersionStatusFilter filter, CancellationToken cancellationToken = default)
+    {
+        bool includeCurrent = filter.IncludeCurrentVersions ?? false;
+        bool includeDraft = filter.IncludeDraftVersions ?? false;
+        bool includeOld = filter.IncludeOldVersions ?? false;
+
+        // Build a single expression that checks all conditions
+        Expression<Func<Translation, bool>> expression = t =>
+            (includeCurrent && t.IsCurrentVersion) ||
+            (includeDraft && t.IsDraftVersion) ||
+            (includeOld && t.IsOldVersion);
+
+        return Task.FromResult(expression);
+    }
+}

@@ -12,6 +12,9 @@ namespace DataManager.Host.WA.Modules.DataSets;
 
 public partial class DataSetsPage : ComponentBase, IDisposable
 {
+    [CascadingParameter(Name = "AppDataContext")]
+    public AppDataContext AppContext { get; set; } = null!;
+
     [Inject] 
     private IDialogService DialogService { get; set; } = null!;
     
@@ -41,6 +44,19 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
+        
+        // Subscribe to context refresh events
+        if (AppContext != null)
+        {
+            AppContext.OnDataRefreshed += HandleContextRefreshed;
+        }
+    }
+    
+    private void HandleContextRefreshed()
+    {
+        // Refresh the grid when context data is updated
+        _refreshToken = Guid.NewGuid().ToString();
+        StateHasChanged();
     }
     
     private void HandleDataFetched(DataFetchedEventArgs<PaginatedList<DataSetDto>> eventArgs)
@@ -89,6 +105,7 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             return;
         }
         
+        // Try to find in current grid page first, fallback to AllDataSets if not found
         var selectedDataSet = AllDataSets.FirstOrDefault(i => i.Id == _selectedDataSetId.Value);
         
         if (selectedDataSet != null)
@@ -185,7 +202,10 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var dataSetId))
             {
                 _selectedDataSetId = dataSetId;
-                var dataSet = AllDataSets.FirstOrDefault(i => i.Id == dataSetId);
+                
+                // Try to get from current grid page, or from AppContext if not in current page
+                var dataSet = AllDataSets.FirstOrDefault(i => i.Id == dataSetId)
+                              ?? AppContext?.DataSets?.FirstOrDefault(i => i.Id == dataSetId);
 
                 if (dataSet != null)
                 {
@@ -215,6 +235,9 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     {
         var isEditMode = dataSet != null;
         
+        // Use DataSets from AppContext
+        var availableDataSets = AppContext?.DataSets ?? new List<DataSetDto>();
+        
         var parameters = new DataSetPanelParameters
         {
             DataSet = isEditMode 
@@ -228,12 +251,19 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             IsEditMode = isEditMode,
             
             AvailableDataSets = isEditMode 
-                ? AllDataSets.Where(i => i.Id != dataSet!.Id).ToList()
-                : AllDataSets,
+                ? availableDataSets.Where(i => i.Id != dataSet!.Id).ToList()
+                : availableDataSets,
             
             OnDataChanged = async () =>
             {
                 _refreshToken = Guid.NewGuid().ToString();
+                
+                // Refresh context to get updated DataSets
+                if (AppContext != null)
+                {
+                    await AppContext.RefreshAsync();
+                }
+                
                 await InvokeAsync(StateHasChanged);
             }
         };
@@ -269,6 +299,12 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
+        
+        // Unsubscribe from context refresh events
+        if (AppContext != null)
+        {
+            AppContext.OnDataRefreshed -= HandleContextRefreshed;
+        }
     }
 
     private async Task OpenImportDialog()

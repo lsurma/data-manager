@@ -44,4 +44,30 @@ public class Translation : AuditableEntityBase
     /// Navigation property to the source Translation
     /// </summary>
     public Translation? Source { get; set; }
+
+    /// <summary>
+    /// Indicates if this is the current/active version of the translation
+    /// </summary>
+    public bool IsCurrentVersion { get; set; }
+
+    /// <summary>
+    /// Indicates if this is a draft version (not yet published)
+    /// </summary>
+    public bool IsDraftVersion { get; set; }
+
+    /// <summary>
+    /// Indicates if this is an old/archived version
+    /// </summary>
+    public bool IsOldVersion { get; set; }
+
+    /// <summary>
+    /// Reference to the original Translation when this is an old version
+    /// Used to track version history
+    /// </summary>
+    public Guid? OriginalTranslationId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the original Translation
+    /// </summary>
+    public Translation? OriginalTranslation { get; set; }
 }
