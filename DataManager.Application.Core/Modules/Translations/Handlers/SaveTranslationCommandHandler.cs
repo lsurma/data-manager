@@ -46,7 +46,11 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 || translation.SourceId != request.SourceId;
 
             // Create old version if there are changes AND the result will be a current (non-draft) version
-            // This ensures we track history for published versions but not for draft-to-draft changes
+            // Design decision: Only track version history for published versions, not drafts
+            // - Draft-to-draft changes: No version history (working copy)
+            // - Draft-to-published: No old version created (first publication)
+            // - Published-to-published: Old version created (track published changes)
+            // - Published-to-draft: No old version created (unpublishing)
             bool shouldCreateOldVersion = hasChanges && !request.IsDraftVersion && !translation.IsDraftVersion;
             
             if (shouldCreateOldVersion)
