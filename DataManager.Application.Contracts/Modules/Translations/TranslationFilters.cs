@@ -36,3 +36,26 @@ public class BaseTranslationFilter : TranslationFilterBase<BaseTranslationFilter
     /// </summary>
     public override bool IsActive() => true;
 }
+
+/// <summary>
+/// Filter by version status (current, draft, old)
+/// </summary>
+public class VersionStatusFilter : TranslationFilterBase<VersionStatusFilter>
+{
+    /// <summary>
+    /// Include current versions
+    /// </summary>
+    public bool? IncludeCurrentVersions { get; set; }
+
+    /// <summary>
+    /// Include draft versions
+    /// </summary>
+    public bool? IncludeDraftVersions { get; set; }
+
+    /// <summary>
+    /// Include old versions
+    /// </summary>
+    public bool? IncludeOldVersions { get; set; }
+    
+    public override bool IsActive() => IncludeCurrentVersions.HasValue || IncludeDraftVersions.HasValue || IncludeOldVersions.HasValue;
+}

@@ -27,6 +27,10 @@ public static class TranslationProjections
             DataSetId = t.DataSetId,
             LayoutId = t.LayoutId,
             SourceId = t.SourceId,
+            IsCurrentVersion = t.IsCurrentVersion,
+            IsDraftVersion = t.IsDraftVersion,
+            IsOldVersion = t.IsOldVersion,
+            OriginalTranslationId = t.OriginalTranslationId,
             CreatedAt = t.CreatedAt,
             UpdatedAt = t.UpdatedAt,
             CreatedBy = t.CreatedBy

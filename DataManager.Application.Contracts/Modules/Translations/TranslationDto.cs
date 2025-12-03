@@ -33,6 +33,26 @@ public record TranslationDto : ITranslationDto
     /// </summary>
     public Guid? SourceId { get; set; }
 
+    /// <summary>
+    /// Indicates if this is the current/active version of the translation
+    /// </summary>
+    public bool IsCurrentVersion { get; set; }
+
+    /// <summary>
+    /// Indicates if this is a draft version (not yet published)
+    /// </summary>
+    public bool IsDraftVersion { get; set; }
+
+    /// <summary>
+    /// Indicates if this is an old/archived version
+    /// </summary>
+    public bool IsOldVersion { get; set; }
+
+    /// <summary>
+    /// Reference to the original Translation when this is an old version
+    /// </summary>
+    public Guid? OriginalTranslationId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? UpdatedAt { get; set; }

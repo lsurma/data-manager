@@ -19,6 +19,10 @@ public static class TranslationMappingExtensions
             DataSetId = translation.DataSetId,
             LayoutId = translation.LayoutId,
             SourceId = translation.SourceId,
+            IsCurrentVersion = translation.IsCurrentVersion,
+            IsDraftVersion = translation.IsDraftVersion,
+            IsOldVersion = translation.IsOldVersion,
+            OriginalTranslationId = translation.OriginalTranslationId,
             CreatedAt = translation.CreatedAt,
             UpdatedAt = translation.UpdatedAt,
             CreatedBy = translation.CreatedBy
