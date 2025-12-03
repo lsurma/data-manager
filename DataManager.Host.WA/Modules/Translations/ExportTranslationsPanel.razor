@@ -1,0 +1,56 @@
+@using DataManager.Host.WA.Modules.Translations.Models
+
+<RadzenCard>
+    <RadzenStack Gap="16px">
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="4">
+                <RadzenLabel Text="Export Format" />
+            </RadzenColumn>
+            <RadzenColumn Size="8">
+                <RadzenDropDown @bind-Value="@Model.ExportFormat" TValue="ExportFormat"
+                                Data="@(Enum.GetValues(typeof(ExportFormat)).Cast<ExportFormat>())" />
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="4">
+                <RadzenLabel Text="Export Type" />
+            </RadzenColumn>
+            <RadzenColumn Size="8">
+                <RadzenRadioButtonList @bind-Value="@Model.ExportType" TValue="ExportType">
+                    <Items>
+                        <RadzenRadioButtonListItem Text="All records" Value="ExportType.All" />
+                        <RadzenRadioButtonListItem Text="Visible records" Value="ExportType.Visible" />
+                    </Items>
+                </RadzenRadioButtonList>
+            </RadzenColumn>
+        </RadzenRow>
+
+        @if (Model.ExportType == ExportType.All)
+        {
+            <RadzenRow AlignItems="AlignItems.Center">
+                <RadzenColumn Size="4"></RadzenColumn>
+                <RadzenColumn Size="8">
+                    <RadzenCheckBox @bind-Value="@Model.UseCurrentFilters" TValue="bool" Name="useCurrentFilters" />
+                    <RadzenLabel Text="Use current filters" For="useCurrentFilters" Style="margin-left: 8px;" />
+                </RadzenColumn>
+            </RadzenRow>
+        }
+
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="4">
+                <RadzenLabel Text="Base Language" />
+            </RadzenColumn>
+            <RadzenColumn Size="8">
+                <RadzenDropDown @bind-Value="@Model.BaseLanguage" TValue="string"
+                                Data="@(new[] { "en-US", "pl-PL" })" />
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow>
+            <RadzenColumn>
+                <RadzenButton Text="Export" Click="@OnExport" ButtonStyle="ButtonStyle.Primary" />
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
+</RadzenCard>
