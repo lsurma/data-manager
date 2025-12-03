@@ -63,21 +63,12 @@ public static class ServiceCollectionExtensions
     
     private static void RegisterFilterHandlers(IServiceCollection services)
     {
-        var assembly = typeof(ServiceCollectionExtensions).Assembly;
-        var filterHandlerType = typeof(IFilterHandler<,>);
-
-        // Find all types that implement IFilterHandler<TEntity, TFilter>
-        var handlerTypes = assembly.GetTypes()
-            .Where(t => !t.IsInterface && !t.IsAbstract)
-            .Where(t => t.GetInterfaces().Any(i =>
-                i.IsGenericType &&
-                i.GetGenericTypeDefinition() == filterHandlerType))
-            .ToList();
-
-        foreach (var handlerType in handlerTypes)
-        {
-            services.AddScoped(handlerType);
-        }
+        // Use Scrutor to scan and register all filter handlers
+        services.Scan(scan => scan
+            .FromAssemblyOf<IFilterHandlerRegistry>()
+            .AddClasses(classes => classes.AssignableTo(typeof(IFilterHandler<,>)))
+            .AsSelf()
+            .WithScopedLifetime());
     }
 
 
