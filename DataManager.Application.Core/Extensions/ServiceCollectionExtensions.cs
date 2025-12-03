@@ -22,11 +22,14 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<DataManagerDbContext>(options =>
             options.UseSqlite(connectionString));
 
-        // Register MediatR with logging pipeline behavior
+        // Register MediatR with pipeline behaviors
+        // Order matters: TransactionBehavior wraps everything in a transaction first,
+        // then LoggingBehavior logs the operation (within the transaction)
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
             cfg.RegisterServicesFromAssembly(typeof(IRequestSender).Assembly);
+            cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.RegisterGenericHandlers = true;
         });
