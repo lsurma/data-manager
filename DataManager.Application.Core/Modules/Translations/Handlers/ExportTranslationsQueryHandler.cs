@@ -32,11 +32,19 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
             }
         };
 
+        if (request.ExportType == "All" && !request.UseCurrentFilters)
+        {
+            queryOptions.Filtering = new FilteringParameters();
+        }
+
         var query = await _queryService.PrepareQueryAsync(options: queryOptions, cancellationToken: cancellationToken);
         var translations = await query.ToListAsync(cancellationToken);
         var translationDtos = translations.ToDto();
 
         var exporter = _exporterFactory.GetExporter(request.Format);
-        return await exporter.ExportAsync(translationDtos, cancellationToken);
+        return await exporter.ExportAsync(translationDtos, new Dictionary<string, object>
+        {
+            { "BaseLanguage", request.BaseLanguage }
+        }, cancellationToken);
     }
 }
