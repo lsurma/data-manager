@@ -43,6 +43,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(authOptions);
         services.AddScoped<IAuthorizationService, AuthorizationService>();
 
+        // Register culture service
+        services.AddSingleton<ICultureService, CultureService>();
+
         // Register entity-specific query services
         services.AddScoped<IQueryService<DataSet, Guid>, DataSetsQueryService>();
         services.AddScoped<IQueryService<ProjectInstance, Guid>, ProjectInstancesQueryService>();

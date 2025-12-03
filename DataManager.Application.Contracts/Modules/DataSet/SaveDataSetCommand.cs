@@ -18,5 +18,11 @@ public class SaveDataSetCommand : IRequest<Guid>
     /// </summary>
     public ICollection<string> AllowedIdentityIds { get; set; } = new List<string>();
 
+    /// <summary>
+    /// List of culture codes available for this DataSet (e.g., "en-US", "pl-PL").
+    /// If null or empty, all system cultures are available.
+    /// </summary>
+    public ICollection<string>? AvailableCultures { get; set; }
+
     public ICollection<Guid> IncludedDataSetIds { get; set; } = new List<Guid>();
 }
