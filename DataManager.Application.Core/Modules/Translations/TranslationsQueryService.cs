@@ -1,6 +1,7 @@
 using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Application.Core.Common;
 using DataManager.Application.Core.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataManager.Application.Core.Modules.Translations;
 

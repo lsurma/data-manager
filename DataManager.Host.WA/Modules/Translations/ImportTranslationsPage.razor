@@ -53,13 +53,21 @@ else if (_excelDataTable != null)
     </div>
 
     
-    <RadzenDataGrid Data="@ExcelDataRows" TItem="DataRow" AllowFiltering="true" AllowColumnResize="true" AllowSorting="true" AllowPaging="true" PageSizeOptions="new int[] { 10, 20, 50, 100 }">
+    <RadzenDataGrid 
+        Data="@ExcelDataRows" 
+        TItem="DataRow" 
+        AllowFiltering="true" 
+        AllowColumnResize="true" 
+        AllowSorting="true" 
+        AllowPaging="false" 
+        AllowVirtualization="true"
+    >
         <Columns>
             @foreach (DataColumn col in _excelDataTable.Columns)
             {
                 <RadzenDataGridColumn TItem="DataRow" Title="@col.ColumnName">
                     <HeaderTemplate>
-                        @col.ColumnName
+                        @col.ColumnName <br />
                         <RadzenDropDown @bind-Value="_columnMappings[col.ColumnName]" Data="@_targetColumns" />
                     </HeaderTemplate>
                     

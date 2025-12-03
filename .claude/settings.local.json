@@ -12,7 +12,8 @@
       "Bash(curl:*)",
       "Bash(chmod:*)",
       "Bash(/tmp/dotnet-install.sh:*)",
-      "Bash(~/.dotnet/dotnet:*)"
+      "Bash(~/.dotnet/dotnet:*)",
+      "Bash(export PATH=\"$PATH:/home/lsurma/.dotnet/tools\")"
     ],
     "deny": [],
     "ask": []

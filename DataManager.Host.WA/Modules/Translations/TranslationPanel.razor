@@ -4,49 +4,83 @@
 @implements IDialogContentComponent<TranslationPanelParameters>
 
 <FluentDialogBody>
-    <EditForm Model="Content.Translation" OnSubmit="@(() => HandleSubmitAsync(false))">
-        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-            
-            <FluentTextField @bind-Value="Content.Translation.ResourceName"
-                             Label="Resource Name"
-                             Immediate="true"
-                             Required
-                             Style="width: 100%;" />
-            
-            <FluentTextField @bind-Value="Content.Translation.TranslationName"
-                             Label="Translation Key"
-                             Immediate="true"
-                             Required
-                             Style="width: 100%;" />
-            
-            
-            @if (Content.AvailableDataSets.Any())
-            {
-                <FluentSelect Value="@(Content.Translation.DataSetId?.ToString() ?? string.Empty)"
-                              ValueChanged="@(val => Content.Translation.DataSetId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
-                              Label="Data Set (Optional)"
-                              Items="DataSetSelectItems"
-                              OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"
-                              Style="width: 100%;">
-                    <OptionTemplate Context="optionTemplateContext">
-                        @optionTemplateContext.Text
-                    </OptionTemplate>
-                </FluentSelect>
-            }
-            
-            <ContentEditor 
-                Items="ContentItems"
-            />
-            
-            @if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                <FluentMessageBar Intent="MessageIntent.Error">
-                    @ErrorMessage
-                </FluentMessageBar>
-            }
-            
-        </FluentStack>
-    </EditForm>
+    @if (IsLoading)
+    {
+        <FluentProgressRing />
+        <p>Loading translation data...</p>
+    }
+    else if (Content.Translation != null)
+    {
+        <EditForm Model="Content.Translation" OnSubmit="@(() => HandleSubmitAsync(false))">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+
+                <FluentTextField @bind-Value="Content.Translation.ResourceName"
+                                 Label="Resource Name"
+                                 Immediate="true"
+                                 Required
+                                 Style="width: 100%;" />
+
+                <FluentTextField @bind-Value="Content.Translation.TranslationName"
+                                 Label="Translation Key"
+                                 Immediate="true"
+                                 Required
+                                 Style="width: 100%;" />
+
+                @if (Content.AvailableDataSets.Any())
+                {
+                    <FluentSelect Value="@(Content.Translation.DataSetId?.ToString() ?? string.Empty)"
+                                  ValueChanged="@(val => Content.Translation.DataSetId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
+                                  Label="Data Set (Optional)"
+                                  Items="DataSetSelectItems"
+                                  OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"
+                                  Style="width: 100%;">
+                        <OptionTemplate Context="optionTemplateContext">
+                            @optionTemplateContext.Text
+                        </OptionTemplate>
+                    </FluentSelect>
+                }
+
+                @if (!Content.IsEditMode)
+                {
+                    <FluentMessageBar Intent="MessageIntent.Info">
+                        This translation will be created for all cultures available in the selected DataSet (or all system cultures if no DataSet is selected).
+                    </FluentMessageBar>
+                }
+
+                @if (RelatedTranslations.Any())
+                {
+                    <FluentLabel>Related Translations (@RelatedTranslations.Count cultures)</FluentLabel>
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                        @foreach (var relatedTranslation in RelatedTranslations.OrderBy(t => t.CultureName))
+                        {
+                            <FluentCard Style="padding: 8px;">
+                                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                                    <FluentBadge Appearance="Appearance.Neutral">
+                                        @(relatedTranslation.CultureName ?? "No culture")
+                                    </FluentBadge>
+                                    <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        @(string.IsNullOrEmpty(relatedTranslation.Content) ? "(empty)" : relatedTranslation.Content)
+                                    </span>
+                                </FluentStack>
+                            </FluentCard>
+                        }
+                    </FluentStack>
+                }
+
+                <ContentEditor
+                    Items="ContentItems"
+                />
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <FluentMessageBar Intent="MessageIntent.Error">
+                        @ErrorMessage
+                    </FluentMessageBar>
+                }
+
+            </FluentStack>
+        </EditForm>
+    }
 </FluentDialogBody>
 
 <EntityPanelFooter IsEditMode="@Content.IsEditMode"

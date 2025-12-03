@@ -83,6 +83,7 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
             dataSet.Description = request.Description;
             dataSet.Notes = request.Notes;
             dataSet.AllowedIdentityIds = request.AllowedIdentityIds.ToList();
+            dataSet.AvailableCultures = request.AvailableCultures?.ToList();
 
             // Update includes
             var existingIncludes = dataSet.Includes.ToList();
@@ -122,6 +123,7 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
                 Description = request.Description,
                 Notes = request.Notes,
                 AllowedIdentityIds = request.AllowedIdentityIds.ToList(),
+                AvailableCultures = request.AvailableCultures?.ToList(),
                 CreatedBy = string.Empty // Will be set by DbContext
             };
 

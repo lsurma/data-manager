@@ -273,7 +273,8 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         var isEditMode = translation != null;
         var parameters = new TranslationPanelParameters
         {
-            Translation = isEditMode ? translation! : new TranslationDto { Id = Guid.NewGuid(), CreatedAt = DateTimeOffset.UtcNow },
+            TranslationId = translation?.Id,
+            Translation = null!, // Will be loaded by the panel
             IsEditMode = isEditMode,
             AvailableDataSets = AllDataSets,
             AvailableLayouts = AllLayouts,
@@ -299,7 +300,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             await _currentDialog.CloseAsync();
         }
         _currentDialog = newDialog;
-        
+
     }
 
     public void Dispose()

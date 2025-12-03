@@ -1,137 +1,112 @@
 using DataManager.Application.Contracts.Modules.Translations;
+using DataManager.Application.Core.Common;
 using DataManager.Application.Core.Data;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataManager.Application.Core.Modules.Translations.Handlers;
 
+/// <summary>
+/// High-level handler for saving translations.
+/// For new translations, creates entries for all cultures in the DataSet.
+/// For existing translations, delegates to SaveSingleTranslationCommand.
+/// </summary>
 public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationCommand, Guid>
 {
     private readonly DataManagerDbContext _context;
-    private readonly TranslationsQueryService _queryService;
+    private readonly ICultureService _cultureService;
+    private readonly ISender _mediator;
 
-    public SaveTranslationCommandHandler(DataManagerDbContext context, TranslationsQueryService queryService)
+    public SaveTranslationCommandHandler(
+        DataManagerDbContext context,
+        ICultureService cultureService,
+        ISender mediator)
     {
         _context = context;
-        _queryService = queryService;
+        _cultureService = cultureService;
+        _mediator = mediator;
     }
 
     public async Task<Guid> Handle(SaveTranslationCommand request, CancellationToken cancellationToken)
     {
-        Translation? translation;
-
         if (request.Id.HasValue && request.Id.Value != Guid.Empty)
         {
-            // Update existing - GetByIdAsync applies authorization automatically
-            // No need to pass query - service uses DefaultQuery
-            translation = await _queryService.GetByIdAsync(
-                request.Id.Value,
-                cancellationToken: cancellationToken
-            );
-
-            if (translation == null)
+            // Update existing - delegate to SaveSingleTranslationCommand
+            // Note: CultureName from request is used (should match the existing translation's culture)
+            var command = new SaveSingleTranslationCommand
             {
-                throw new KeyNotFoundException($"Translation with Id {request.Id} not found or you don't have access to it.");
-            }
-
-            // Check if any data has changed (excluding version flags)
-            bool hasChanges = translation.InternalGroupName1 != request.InternalGroupName1
-                || translation.InternalGroupName2 != request.InternalGroupName2
-                || translation.ResourceName != request.ResourceName
-                || translation.TranslationName != request.TranslationName
-                || translation.CultureName != request.CultureName
-                || translation.Content != request.Content
-                || translation.ContentTemplate != request.ContentTemplate
-                || translation.DataSetId != request.DataSetId
-                || translation.LayoutId != request.LayoutId
-                || translation.SourceId != request.SourceId;
-
-            // Create old version if there are changes AND the result will be a current (non-draft) version
-            // Design decision: Only track version history for published versions, not drafts
-            // - Draft-to-draft changes: No version history (working copy)
-            // - Draft-to-published: No old version created (first publication)
-            // - Published-to-published: Old version created (track published changes)
-            // - Published-to-draft: No old version created (unpublishing)
-            bool shouldCreateOldVersion = hasChanges && !request.IsDraftVersion && !translation.IsDraftVersion;
-            
-            if (shouldCreateOldVersion)
-            {
-                // Create a copy of the current version and mark it as old
-                var oldVersion = new Translation
-                {
-                    Id = Guid.NewGuid(),
-                    InternalGroupName1 = translation.InternalGroupName1,
-                    InternalGroupName2 = translation.InternalGroupName2,
-                    ResourceName = translation.ResourceName,
-                    TranslationName = translation.TranslationName,
-                    CultureName = translation.CultureName,
-                    Content = translation.Content,
-                    ContentTemplate = translation.ContentTemplate,
-                    DataSetId = translation.DataSetId,
-                    LayoutId = translation.LayoutId,
-                    SourceId = translation.SourceId,
-                    OriginalTranslationId = translation.Id,
-                    IsCurrentVersion = false,
-                    IsDraftVersion = false,
-                    IsOldVersion = true,
-                    CreatedBy = translation.CreatedBy
-                };
-
-                _context.Translations.Add(oldVersion);
-            }
-
-            // Update the translation with new values
-            translation.InternalGroupName1 = request.InternalGroupName1;
-            translation.InternalGroupName2 = request.InternalGroupName2;
-            translation.ResourceName = request.ResourceName;
-            translation.TranslationName = request.TranslationName;
-            translation.CultureName = request.CultureName;
-            translation.Content = request.Content;
-            translation.ContentTemplate = request.ContentTemplate;
-            translation.DataSetId = request.DataSetId;
-            translation.LayoutId = request.LayoutId;
-            translation.SourceId = request.SourceId;
-            
-            // Set version flags based on draft status
-            if (request.IsDraftVersion)
-            {
-                translation.IsCurrentVersion = false;
-                translation.IsDraftVersion = true;
-                translation.IsOldVersion = false;
-            }
-            else
-            {
-                translation.IsCurrentVersion = true;
-                translation.IsDraftVersion = false;
-                translation.IsOldVersion = false;
-            }
-        }
-        else
-        {
-            // Create new
-            translation = new Translation
-            {
-                Id = Guid.NewGuid(),
+                Id = request.Id,
                 InternalGroupName1 = request.InternalGroupName1,
                 InternalGroupName2 = request.InternalGroupName2,
                 ResourceName = request.ResourceName,
                 TranslationName = request.TranslationName,
-                CultureName = request.CultureName,
+                CultureName = request.CultureName ?? throw new ArgumentException("CultureName is required when updating existing translation"),
                 Content = request.Content,
                 ContentTemplate = request.ContentTemplate,
                 DataSetId = request.DataSetId,
                 LayoutId = request.LayoutId,
                 SourceId = request.SourceId,
-                CreatedBy = string.Empty, // Will be set by DbContext
-                IsCurrentVersion = !request.IsDraftVersion,
-                IsDraftVersion = request.IsDraftVersion,
-                IsOldVersion = false
+                IsDraftVersion = request.IsDraftVersion
             };
 
-            _context.Translations.Add(translation);
+            return await _mediator.Send(command, cancellationToken);
         }
+        else
+        {
+            // Create new - automatically create for all cultures in the DataSet
 
-        await _context.SaveChangesAsync(cancellationToken);
+            // Get available cultures based on DataSet configuration
+            List<string> culturesToCreate;
 
-        return translation.Id;
+            if (request.DataSetId.HasValue)
+            {
+                var dataSet = await _context.DataSets
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(ds => ds.Id == request.DataSetId.Value, cancellationToken);
+
+                if (dataSet == null)
+                {
+                    throw new KeyNotFoundException($"DataSet with Id {request.DataSetId} not found.");
+                }
+
+                // If DataSet has specific cultures configured, use those; otherwise use all system cultures
+                culturesToCreate = dataSet.AvailableCultures != null && dataSet.AvailableCultures.Any()
+                    ? dataSet.AvailableCultures.ToList()
+                    : _cultureService.GetAvailableCultures();
+            }
+            else
+            {
+                // No DataSet specified - use all system cultures
+                culturesToCreate = _cultureService.GetAvailableCultures();
+            }
+
+            // Create translation for each culture using SaveSingleTranslationCommand
+            var createdTranslationIds = new List<Guid>();
+
+            foreach (var culture in culturesToCreate)
+            {
+                var command = new SaveSingleTranslationCommand
+                {
+                    Id = null, // New translation
+                    InternalGroupName1 = request.InternalGroupName1,
+                    InternalGroupName2 = request.InternalGroupName2,
+                    ResourceName = request.ResourceName,
+                    TranslationName = request.TranslationName,
+                    CultureName = culture,
+                    Content = request.Content,
+                    ContentTemplate = request.ContentTemplate,
+                    DataSetId = request.DataSetId,
+                    LayoutId = request.LayoutId,
+                    SourceId = request.SourceId,
+                    IsDraftVersion = request.IsDraftVersion
+                };
+
+                var translationId = await _mediator.Send(command, cancellationToken);
+                createdTranslationIds.Add(translationId);
+            }
+
+            // Return the first created translation ID
+            return createdTranslationIds.First();
+        }
     }
 }

@@ -17,13 +17,23 @@ public class DataSetConfiguration : AuditableEntityConfiguration<DataSet>
 
         builder.Property(e => e.Notes);
 
-        // Store AllowedIdentityIds as JSON in SQLite
+        // Store AllowedIdentityIds as comma-separated string in SQLite
         builder.Property(e => e.AllowedIdentityIds)
             .HasConversion(
                 v => string.Join(',', v),
                 v => v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
             )
             .HasColumnType("TEXT");
+
+        // Store AvailableCultures as comma-separated string in SQLite
+        // Null means all cultures are available
+        builder.Property(e => e.AvailableCultures)
+            .HasConversion(
+                v => v == null || !v.Any() ? null : string.Join(',', v),
+                v => string.IsNullOrWhiteSpace(v) ? null : v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+            )
+            .HasColumnType("TEXT")
+            .IsRequired(false);
 
         // Configure many-to-many relationship through DataSetInclude
         builder.HasMany(e => e.Includes)
