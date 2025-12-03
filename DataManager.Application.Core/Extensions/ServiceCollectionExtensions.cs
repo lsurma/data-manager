@@ -8,6 +8,7 @@ using DataManager.Authentication.Core;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Scrutor;
 
 namespace DataManager.Application.Core.Extensions;
 
