@@ -140,9 +140,9 @@ namespace DataManager.Host.WA.Modules.Translations
             }
         }
 
-        private void ProcessMappedColumns()
+        private async Task StartImportAsync()
         {
-            if (_excelDataTable == null) return;
+             if (_excelDataTable == null) return;
 
             _importedTranslations = _excelDataTable.Rows.Cast<DataRow>().Select(row =>
             {
@@ -161,10 +161,7 @@ namespace DataManager.Host.WA.Modules.Translations
                 }
                 return dto;
             }).ToList();
-        }
-
-        private async Task StartImportAsync()
-        {
+            
             if (_importedTranslations == null || !_importedTranslations.Any() || !_selectedDataSetId.HasValue)
             {
                 ToastService.ShowError("Please select a data set and map columns before importing.");
