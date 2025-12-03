@@ -69,7 +69,9 @@ public static class ServiceCollectionExtensions
             .FromAssemblyOf<IFilterHandlerRegistry>()
             .AddClasses(classes => classes.AssignableTo(typeof(IFilterHandler<,>)))
             .AsSelf()
-            .WithScopedLifetime());
+            .AsImplementedInterfaces()
+            .WithSingletonLifetime()
+        );
     }
 
 

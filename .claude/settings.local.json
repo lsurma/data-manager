@@ -8,7 +8,11 @@
       "Bash(dotnet restore:*)",
       "Bash(dotnet tool install:*)",
       "Bash(dotnet:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(/tmp/dotnet-install.sh:*)",
+      "Bash(~/.dotnet/dotnet:*)"
     ],
     "deny": [],
     "ask": []

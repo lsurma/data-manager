@@ -1,6 +1,7 @@
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Modules.DataSet;
 using DataManager.Application.Contracts.Modules.Translations;
+using DataManager.Host.WA.Components.ContentEditor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -26,6 +27,8 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
     private bool IsSaving { get; set; }
     private bool IsDeleting { get; set; }
     private string? ErrorMessage { get; set; }
+
+    private IEnumerable<ContentEditorItem> ContentItems { get; set; } = [new() {Title = "title", Content = "content"}];
     
     private List<Option<Guid?>> DataSetSelectItems
     {
@@ -62,30 +65,6 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
             if (Content?.AvailableLayouts != null)
             {
                 items.AddRange(Content.AvailableLayouts
-                    .Where(t => t.Id != Content.Translation?.Id) // Exclude self
-                    .Select(t => new Option<Guid?> 
-                    { 
-                        Value = t.Id, 
-                        Text = $"{t.TranslationName} ({t.ResourceName})"
-                    }));
-            }
-            
-            return items;
-        }
-    }
-    
-    private List<Option<Guid?>> SourceSelectItems
-    {
-        get
-        {
-            var items = new List<Option<Guid?>>
-            {
-                new Option<Guid?> { Value = null, Text = "-- None --" }
-            };
-            
-            if (Content?.AvailableSources != null)
-            {
-                items.AddRange(Content.AvailableSources
                     .Where(t => t.Id != Content.Translation?.Id) // Exclude self
                     .Select(t => new Option<Guid?> 
                     { 
@@ -206,9 +185,10 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
 public class TranslationPanelParameters
 {
     public TranslationDto Translation { get; set; } = null!;
+
     public bool IsEditMode { get; set; }
+    
     public List<DataSetDto> AvailableDataSets { get; set; } = new();
     public List<TranslationDto> AvailableLayouts { get; set; } = new();
-    public List<TranslationDto> AvailableSources { get; set; } = new();
     public Func<Task>? OnDataChanged { get; set; }
 }

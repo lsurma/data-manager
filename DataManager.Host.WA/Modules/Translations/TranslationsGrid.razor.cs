@@ -271,15 +271,12 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private async Task OpenTranslationPanelAsync(TranslationDto? translation = null)
     {
         var isEditMode = translation != null;
-        var cultureName = translation?.CultureName;
-        var availableSources = await LoadSourcesForCultureAsync(cultureName);
         var parameters = new TranslationPanelParameters
         {
             Translation = isEditMode ? translation! : new TranslationDto { Id = Guid.NewGuid(), CreatedAt = DateTimeOffset.UtcNow },
             IsEditMode = isEditMode,
             AvailableDataSets = AllDataSets,
             AvailableLayouts = AllLayouts,
-            AvailableSources = availableSources,
             OnDataChanged = async () =>
             {
                 _refreshToken = Guid.NewGuid().ToString();

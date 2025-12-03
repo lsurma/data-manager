@@ -1,0 +1,40 @@
+﻿
+<div class="content-editor">
+    <div class="btn-group" role="group">
+        @foreach (var editorType in Enum.GetValues<ContentEditorType>())
+        {
+            <FluentButton
+                IconStart="@(GetIcon(editorType))"
+                Appearance="@(EditorTypeInternal == editorType ? Appearance.Accent : Appearance.Outline)"
+                @onclick="@(() => EditorTypeChanged(editorType))">@editorType</FluentButton>
+        }
+    </div>
+    
+    <div>   
+        @foreach (var item in Items)
+        {
+            <ContentEditorRow />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<ContentEditorItem> Items { get; set; } = [];
+    
+    [Parameter]
+    public ContentEditorType? EditorType { get; set; }
+
+    protected ContentEditorType EditorTypeInternal { get; set; } = ContentEditorType.MonacoEditor;
+    
+    public Icon? GetIcon(ContentEditorType type)
+    {
+        return null;
+    }
+
+    protected void EditorTypeChanged(ContentEditorType type)
+    {
+        EditorTypeInternal = type;
+    }
+
+}
