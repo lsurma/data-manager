@@ -1,3 +1,4 @@
+using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Application.Core.Common;
 using DataManager.Application.Core.Data;
 
@@ -60,6 +61,7 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
     /// Prepares a query with authorization pre-filtering, applying filters, includes, and ordering.
     /// Only translations from accessible datasets will be included.
     /// If query is null, uses DefaultQuery from DbContext.
+    /// By default, only current versions are returned unless version filtering is explicitly specified.
     /// </summary>
     public override async Task<IQueryable<Translation>> PrepareQueryAsync(
         IQueryable<Translation>? query = null,
@@ -70,6 +72,24 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
 
         // Apply authorization pre-filter first
         query = await ApplyAuthorizationAsync(query, cancellationToken);
+
+        // Apply default version filter if no version filter is specified in options
+        if (options?.Filtering?.QueryFilters != null)
+        {
+            var hasVersionFilter = options.Filtering.QueryFilters
+                .Any(f => f is VersionStatusFilter);
+            
+            if (!hasVersionFilter)
+            {
+                // By default, only return current versions
+                query = query.Where(t => t.IsCurrentVersion);
+            }
+        }
+        else
+        {
+            // No filters specified at all, apply default current version filter
+            query = query.Where(t => t.IsCurrentVersion);
+        }
 
         // Call base implementation to apply filters, includes, and ordering
         return await base.PrepareQueryAsync(query, options, cancellationToken);

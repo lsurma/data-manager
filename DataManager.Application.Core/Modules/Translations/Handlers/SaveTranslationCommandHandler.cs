@@ -33,6 +33,46 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 throw new KeyNotFoundException($"Translation with Id {request.Id} not found or you don't have access to it.");
             }
 
+            // Check if any data has changed (excluding version flags)
+            bool hasChanges = translation.InternalGroupName1 != request.InternalGroupName1
+                || translation.InternalGroupName2 != request.InternalGroupName2
+                || translation.ResourceName != request.ResourceName
+                || translation.TranslationName != request.TranslationName
+                || translation.CultureName != request.CultureName
+                || translation.Content != request.Content
+                || translation.ContentTemplate != request.ContentTemplate
+                || translation.DataSetId != request.DataSetId
+                || translation.LayoutId != request.LayoutId
+                || translation.SourceId != request.SourceId;
+
+            // If there are changes and this is not a draft, create an old version copy
+            if (hasChanges && !translation.IsDraftVersion)
+            {
+                // Create a copy of the current version and mark it as old
+                var oldVersion = new Translation
+                {
+                    Id = Guid.NewGuid(),
+                    InternalGroupName1 = translation.InternalGroupName1,
+                    InternalGroupName2 = translation.InternalGroupName2,
+                    ResourceName = translation.ResourceName,
+                    TranslationName = translation.TranslationName,
+                    CultureName = translation.CultureName,
+                    Content = translation.Content,
+                    ContentTemplate = translation.ContentTemplate,
+                    DataSetId = translation.DataSetId,
+                    LayoutId = translation.LayoutId,
+                    SourceId = translation.SourceId,
+                    OriginalTranslationId = translation.Id,
+                    IsCurrentVersion = false,
+                    IsDraftVersion = false,
+                    IsOldVersion = true,
+                    CreatedBy = translation.CreatedBy
+                };
+
+                _context.Translations.Add(oldVersion);
+            }
+
+            // Update the translation with new values
             translation.InternalGroupName1 = request.InternalGroupName1;
             translation.InternalGroupName2 = request.InternalGroupName2;
             translation.ResourceName = request.ResourceName;
@@ -43,6 +83,21 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
             translation.DataSetId = request.DataSetId;
             translation.LayoutId = request.LayoutId;
             translation.SourceId = request.SourceId;
+            translation.IsDraftVersion = request.IsDraftVersion;
+            
+            // Set version flags based on draft status
+            if (request.IsDraftVersion)
+            {
+                translation.IsCurrentVersion = false;
+                translation.IsDraftVersion = true;
+                translation.IsOldVersion = false;
+            }
+            else
+            {
+                translation.IsCurrentVersion = true;
+                translation.IsDraftVersion = false;
+                translation.IsOldVersion = false;
+            }
         }
         else
         {
@@ -60,7 +115,10 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 DataSetId = request.DataSetId,
                 LayoutId = request.LayoutId,
                 SourceId = request.SourceId,
-                CreatedBy = string.Empty // Will be set by DbContext
+                CreatedBy = string.Empty, // Will be set by DbContext
+                IsCurrentVersion = !request.IsDraftVersion,
+                IsDraftVersion = request.IsDraftVersion,
+                IsOldVersion = false
             };
 
             _context.Translations.Add(translation);

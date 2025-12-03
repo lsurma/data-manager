@@ -52,11 +52,32 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
             .HasForeignKey(e => e.SourceId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Configure version control fields
+        builder.Property(e => e.IsCurrentVersion)
+            .IsRequired()
+            .HasDefaultValue(true);
+
+        builder.Property(e => e.IsDraftVersion)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(e => e.IsOldVersion)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        // Configure self-referencing relationship for OriginalTranslation (version history)
+        builder.HasOne(e => e.OriginalTranslation)
+            .WithMany()
+            .HasForeignKey(e => e.OriginalTranslationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Add indexes for common queries
         builder.HasIndex(e => e.DataSetId);
         builder.HasIndex(e => e.CultureName);
         builder.HasIndex(e => e.LayoutId);
         builder.HasIndex(e => e.SourceId);
+        builder.HasIndex(e => e.OriginalTranslationId);
+        builder.HasIndex(e => new { e.IsCurrentVersion, e.IsDraftVersion, e.IsOldVersion });
         builder.HasIndex(e => new { e.InternalGroupName1, e.InternalGroupName2, e.ResourceName, e.CultureName });
     }
 }

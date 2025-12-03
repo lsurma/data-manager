@@ -35,6 +35,10 @@ public class GetTranslationByIdQueryHandler : IRequestHandler<GetTranslationById
                 ContentTemplate = t.ContentTemplate,
                 DataSetId = t.DataSetId,
                 LayoutId = t.LayoutId,
+                IsCurrentVersion = t.IsCurrentVersion,
+                IsDraftVersion = t.IsDraftVersion,
+                IsOldVersion = t.IsOldVersion,
+                OriginalTranslationId = t.OriginalTranslationId,
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt,
                 CreatedBy = t.CreatedBy
