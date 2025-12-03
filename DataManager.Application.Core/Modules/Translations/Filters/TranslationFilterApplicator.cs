@@ -59,44 +59,15 @@ public class VersionStatusFilterHandler : IFilterHandler<Translation, VersionSta
 {
     public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(VersionStatusFilter filter, CancellationToken cancellationToken = default)
     {
-        // Build expression based on which versions to include
-        // If none specified, include nothing (should not happen due to IsActive check)
-        Expression<Func<Translation, bool>> expression = t => false;
-
         bool includeCurrent = filter.IncludeCurrentVersions ?? false;
         bool includeDraft = filter.IncludeDraftVersions ?? false;
         bool includeOld = filter.IncludeOldVersions ?? false;
 
-        // Build the expression to include specified version types
-        if (includeCurrent && includeDraft && includeOld)
-        {
-            // Include all - no filtering needed
-            expression = t => true;
-        }
-        else if (includeCurrent && includeDraft)
-        {
-            expression = t => t.IsCurrentVersion || t.IsDraftVersion;
-        }
-        else if (includeCurrent && includeOld)
-        {
-            expression = t => t.IsCurrentVersion || t.IsOldVersion;
-        }
-        else if (includeDraft && includeOld)
-        {
-            expression = t => t.IsDraftVersion || t.IsOldVersion;
-        }
-        else if (includeCurrent)
-        {
-            expression = t => t.IsCurrentVersion;
-        }
-        else if (includeDraft)
-        {
-            expression = t => t.IsDraftVersion;
-        }
-        else if (includeOld)
-        {
-            expression = t => t.IsOldVersion;
-        }
+        // Build a single expression that checks all conditions
+        Expression<Func<Translation, bool>> expression = t =>
+            (includeCurrent && t.IsCurrentVersion) ||
+            (includeDraft && t.IsDraftVersion) ||
+            (includeOld && t.IsOldVersion);
 
         return Task.FromResult(expression);
     }

@@ -45,8 +45,11 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 || translation.LayoutId != request.LayoutId
                 || translation.SourceId != request.SourceId;
 
-            // If there are changes and this is not a draft, create an old version copy
-            if (hasChanges && !translation.IsDraftVersion)
+            // Create old version if there are changes AND the result will be a current (non-draft) version
+            // This ensures we track history for published versions but not for draft-to-draft changes
+            bool shouldCreateOldVersion = hasChanges && !request.IsDraftVersion && !translation.IsDraftVersion;
+            
+            if (shouldCreateOldVersion)
             {
                 // Create a copy of the current version and mark it as old
                 var oldVersion = new Translation
@@ -83,7 +86,6 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
             translation.DataSetId = request.DataSetId;
             translation.LayoutId = request.LayoutId;
             translation.SourceId = request.SourceId;
-            translation.IsDraftVersion = request.IsDraftVersion;
             
             // Set version flags based on draft status
             if (request.IsDraftVersion)
