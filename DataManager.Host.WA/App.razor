@@ -33,6 +33,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IConfiguration Configuration
 @inject AppDataContext AppContext
+@inject ILogger<App> Logger
 
 @code {
     private bool isRedirecting = true;
@@ -51,7 +52,7 @@
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to load app data context: {ex.Message}");
+                    Logger.LogError(ex, "Failed to load app data context");
                 }
             }
             
@@ -79,7 +80,7 @@
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to load app data context: {ex.Message}");
+                    Logger.LogError(ex, "Failed to load app data context");
                 }
             }
         }

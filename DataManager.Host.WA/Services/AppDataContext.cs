@@ -1,6 +1,7 @@
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Common;
 using DataManager.Application.Contracts.Modules.DataSet;
+using Microsoft.Extensions.Logging;
 
 namespace DataManager.Host.WA.Services;
 
@@ -11,10 +12,13 @@ namespace DataManager.Host.WA.Services;
 public class AppDataContext
 {
     private readonly IRequestSender _requestSender;
+    private readonly ILogger<AppDataContext> _logger;
+    private readonly SemaphoreSlim _loadingSemaphore = new(1, 1);
     
-    public AppDataContext(IRequestSender requestSender)
+    public AppDataContext(IRequestSender requestSender, ILogger<AppDataContext> logger)
     {
         _requestSender = requestSender;
+        _logger = logger;
     }
     
     /// <summary>
@@ -42,7 +46,8 @@ public class AppDataContext
     /// </summary>
     public async Task LoadDataAsync()
     {
-        if (IsLoading)
+        // Use semaphore to prevent concurrent loading
+        if (!await _loadingSemaphore.WaitAsync(0))
         {
             return;
         }
@@ -59,12 +64,13 @@ public class AppDataContext
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to load app data: {ex.Message}");
+            _logger.LogError(ex, "Failed to load app data");
             throw;
         }
         finally
         {
             IsLoading = false;
+            _loadingSemaphore.Release();
         }
     }
     
