@@ -12,13 +12,17 @@ using DataManager.Host.WA.Modules.Translations.Models;
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Host.WA.Services;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 
 namespace DataManager.Host.WA.Modules.Translations
 {
-    public partial class ImportTranslationsPage : ComponentBase
+    public partial class ImportTranslationsPage : ComponentBase, IDisposable
     {
+        [CascadingParameter(Name = "AppDataContext")]
+        public AppDataContext AppContext { get; set; } = null!;
+
         [Inject]
         private IRequestSender RequestSender { get; set; } = null!;
 
@@ -35,7 +39,7 @@ namespace DataManager.Host.WA.Modules.Translations
         private DataTable? _excelDataTable;
         private readonly List<string> _targetColumns = new() { "InternalGroupName1", "InternalGroupName2", "ResourceName", "TranslationName", "CultureName", "Content" };
         private Dictionary<string, string> _columnMappings = new();
-        private List<DataSetDto> _availableDataSets = new();
+        private List<DataSetDto> _availableDataSets => AppContext?.DataSets ?? new List<DataSetDto>();
         private Guid? _selectedDataSetId;
         private DataSetDto? _selectedDataSet;
         private string? _selectedDataSetValue
@@ -62,26 +66,30 @@ namespace DataManager.Host.WA.Modules.Translations
 
         private IEnumerable<DataRow>? ExcelDataRows => _excelDataTable?.Rows.Cast<DataRow>();
 
-        protected override async Task OnInitializedAsync()
+        protected override void OnInitialized()
         {
-            await LoadDataSetsAsync();
+            // Initialize selected dataset from context
+            if (_availableDataSets.Any())
+            {
+                _selectedDataSetId = _availableDataSets.FirstOrDefault()?.Id;
+            }
+            
+            // Subscribe to context refresh events
+            if (AppContext != null)
+            {
+                AppContext.OnDataRefreshed += HandleContextRefreshed;
+            }
         }
 
-        private async Task LoadDataSetsAsync()
+        private void HandleContextRefreshed()
         {
-            try
+            // Re-select first dataset if current one is not available anymore
+            if (_selectedDataSetId != null && !_availableDataSets.Any(ds => ds.Id == _selectedDataSetId))
             {
-                var result = await RequestSender.SendAsync(GetDataSetsQuery.AllItems());
-                _availableDataSets = result.Items;
-                if (_availableDataSets.Any())
-                {
-                    _selectedDataSetId = _availableDataSets.FirstOrDefault()?.Id;
-                }
+                _selectedDataSetId = _availableDataSets.FirstOrDefault()?.Id;
             }
-            catch (Exception ex)
-            {
-                _errorMessage = $"Failed to load data sets: {ex.Message}";
-            }
+            
+            StateHasChanged();
         }
 
         private async Task OnFileChanged(InputFileChangeEventArgs e)
@@ -292,6 +300,15 @@ namespace DataManager.Host.WA.Modules.Translations
                 {
                     translation.ShouldImport = isChecked;
                 }
+            }
+        }
+
+        public void Dispose()
+        {
+            // Unsubscribe from context refresh events
+            if (AppContext != null)
+            {
+                AppContext.OnDataRefreshed -= HandleContextRefreshed;
             }
         }
     }

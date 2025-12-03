@@ -8,10 +8,13 @@ using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace DataManager.Host.WA.Modules.Translations;
 
-public partial class TranslationsPage : ComponentBase
+public partial class TranslationsPage : ComponentBase, IDisposable
 {
     [Parameter]
     public string? DataSetId { get; set; }
+
+    [CascadingParameter(Name = "AppDataContext")]
+    public AppDataContext AppContext { get; set; } = null!;
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
@@ -22,13 +25,18 @@ public partial class TranslationsPage : ComponentBase
     [Inject]
     private IRequestSender RequestSender { get; set; } = null!;
 
-    private List<DataSetDto> AllDataSets { get; set; } = new();
+    private List<DataSetDto> AllDataSets => AppContext?.DataSets ?? new List<DataSetDto>();
     private List<IQueryFilter> _filters = new();
 
     protected override void OnInitialized()
     {
-        LoadDataSetsAsync();
         BuildFilters();
+        
+        // Subscribe to context refresh events
+        if (AppContext != null)
+        {
+            AppContext.OnDataRefreshed += HandleContextRefreshed;
+        }
     }
 
     protected override void OnParametersSet()
@@ -36,18 +44,9 @@ public partial class TranslationsPage : ComponentBase
         BuildFilters();
     }
 
-    private async void LoadDataSetsAsync()
+    private void HandleContextRefreshed()
     {
-        try
-        {
-            var result = await RequestSender.SendAsync(GetDataSetsQuery.AllItems());
-            AllDataSets = result.Items;
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to load data sets: {ex.Message}");
-        }
+        StateHasChanged();
     }
 
     private void BuildFilters()
@@ -70,5 +69,14 @@ public partial class TranslationsPage : ComponentBase
     {
         var isSelected = (DataSetId == dataSetId?.ToString()) || (DataSetId == null && !dataSetId.HasValue);
         return isSelected ? Appearance.Accent : Appearance.Neutral;
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from context refresh events
+        if (AppContext != null)
+        {
+            AppContext.OnDataRefreshed -= HandleContextRefreshed;
+        }
     }
 }
