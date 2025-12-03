@@ -1,5 +1,7 @@
 @using DataManager.Host.WA.Components
+@using DataManager.Host.WA.Services
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @inherits LayoutComponentBase
 
 <HeadContent>
@@ -10,7 +12,15 @@
     <FluentHeader>
         <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
             <FluentLabel Typo="Typography.H3">Data Manager</FluentLabel>
-            <LoginDisplay />
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                <FluentButton 
+                    IconStart="@(new Size20.ArrowSync())" 
+                    Appearance="Appearance.Outline"
+                    OnClick="@RefreshAppDataAsync"
+                    Title="Refresh cached data"
+                    Loading="@_isRefreshing" />
+                <LoginDisplay />
+            </FluentStack>
         </FluentStack>
     </FluentHeader>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
@@ -38,3 +48,31 @@
 <CustomDialogProvider />
 <FluentToastProvider RemoveToastsOnNavigation="false" Position="ToastPosition.TopCenter" />
 <RadzenComponents />
+
+@inject AppDataContext AppContext
+@inject IToastService ToastService
+
+@code {
+    private bool _isRefreshing = false;
+
+    private async Task RefreshAppDataAsync()
+    {
+        _isRefreshing = true;
+        StateHasChanged();
+
+        try
+        {
+            await AppContext.RefreshAsync();
+            ToastService.ShowSuccess("Data refreshed successfully");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Failed to refresh data: {ex.Message}");
+        }
+        finally
+        {
+            _isRefreshing = false;
+            StateHasChanged();
+        }
+    }
+}
