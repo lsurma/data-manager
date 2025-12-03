@@ -17,6 +17,9 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     [Parameter]
     public List<IQueryFilter> Filters { get; set; } = new();
 
+    [CascadingParameter(Name = "AppDataContext")]
+    public AppDataContext AppContext { get; set; } = null!;
+
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
 
@@ -30,7 +33,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private IRequestSender RequestSender { get; set; } = null!;
 
     private List<TranslationDto> AllTranslations { get; set; } = new();
-    private List<DataSetDto> AllDataSets { get; set; } = new();
+    private List<DataSetDto> AllDataSets => AppContext?.DataSets ?? new List<DataSetDto>();
     private List<TranslationDto> AllLayouts { get; set; } = new();
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
@@ -50,8 +53,13 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
-        LoadDataSetsAsync();
         LoadLayoutsAsync();
+        
+        // Subscribe to context refresh events
+        if (AppContext != null)
+        {
+            AppContext.OnDataRefreshed += HandleContextRefreshed;
+        }
     }
 
     protected override void OnParametersSet()
@@ -67,17 +75,9 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         _refreshToken = Guid.NewGuid().ToString();
     }
 
-    private async void LoadDataSetsAsync()
+    private void HandleContextRefreshed()
     {
-        try
-        {
-            var result = await RequestSender.SendAsync(GetDataSetsQuery.AllItems());
-            AllDataSets = result.Items;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to load data sets: {ex.Message}");
-        }
+        StateHasChanged();
     }
 
     private async void LoadLayoutsAsync()
@@ -308,5 +308,11 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
+        
+        // Unsubscribe from context refresh events
+        if (AppContext != null)
+        {
+            AppContext.OnDataRefreshed -= HandleContextRefreshed;
+        }
     }
 }

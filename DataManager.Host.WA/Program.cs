@@ -65,6 +65,7 @@ builder.Services.AddScoped<IRequestSender, HttpRequestSender>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ICookieService, CookieService>();
 builder.Services.AddScoped<NavigationHelper>();
+builder.Services.AddScoped<AppDataContext>();
 
 builder.Services.AddFluentUIComponents();
 builder.Services.AddRadzenComponents();
