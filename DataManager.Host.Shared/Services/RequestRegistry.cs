@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using MediatR;
 
-namespace DataManager.Host.AzFuncAPI.Services;
+namespace DataManager.Host.Shared.Services;
 
 public class RequestRegistry
 {

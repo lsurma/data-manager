@@ -1,20 +1,17 @@
-﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DataManager.Host.Shared.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Logging;
 
-namespace DataManager.Host.AzFuncAPI.Controllers;
+namespace DataManager.Host.Api.Controllers;
 
+[ApiController]
 [Authorize]
-public class QueryController
+[Route("api/query")]
+public class QueryController : ControllerBase
 {
-    private const int MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB limit
     private readonly ILogger<QueryController> _logger;
     private readonly IMediator _mediator;
     private readonly RequestRegistry _requestRegistry;
@@ -26,23 +23,12 @@ public class QueryController
         _requestRegistry = requestRegistry;
     }
 
-    /// <summary>
-    /// Main query endpoint that routes MediatR queries.
-    /// Authentication is handled by the authorization middleware.
-    /// Supports both JWT Bearer tokens (Authorization: Bearer {token}) and API Keys (X-API-Key: {key}).
-    /// Accepts only GET method (with body in query parameter).
-    /// </summary>
-    [Function("Query")]
-    public async Task<IActionResult> Query(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/query/{requestName}")] HttpRequest req,
-        string requestName
-    )
+    [HttpGet("{requestName}")]
+    public async Task<IActionResult> Query(string requestName, [FromQuery] string? body)
     {
-        var bodyJson = req.Query["body"].ToString();
-
         if (string.IsNullOrWhiteSpace(requestName))
         {
-            return new BadRequestObjectResult(new { error = "Request name is required." });
+            return BadRequest(new { error = "Request name is required." });
         }
 
         _logger.LogInformation("Processing query: {RequestName}", requestName);
@@ -52,27 +38,22 @@ public class QueryController
             var requestType = _requestRegistry.GetRequestType(requestName);
             if (requestType == null)
             {
-                return new NotFoundObjectResult(new
+                return NotFound(new
                 {
                     error = $"Query '{requestName}' not found.",
                     availableRequests = _requestRegistry.GetAllRequestNames()
                 });
             }
 
-            // Verify this is actually a query type
             if (!_requestRegistry.IsQueryType(requestType))
             {
-                return new BadRequestObjectResult(new 
-                { 
-                    error = $"'{requestName}' is not a query. Queries should use the /api/query endpoint. Commands should use the /api/command endpoint." 
-                });
+                return BadRequest(new { error = $"'{requestName}' is not a query." });
             }
 
-            // Deserialize body if provided, otherwise create empty instance
             object? request;
-            if (!string.IsNullOrWhiteSpace(bodyJson))
+            if (!string.IsNullOrWhiteSpace(body))
             {
-                request = JsonSerializer.Deserialize(bodyJson, requestType, new JsonSerializerOptions
+                request = JsonSerializer.Deserialize(body, requestType, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -84,10 +65,9 @@ public class QueryController
 
             if (request == null)
             {
-                return new BadRequestObjectResult(new { error = "Failed to create request instance." });
+                return BadRequest(new { error = "Failed to create request instance." });
             }
 
-            // Send through MediatR
             var result = await _mediator.Send(request);
 
             return new JsonResult(result, new JsonSerializerOptions
@@ -98,13 +78,12 @@ public class QueryController
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Failed to deserialize request body for: {RequestName}", requestName);
-            return new BadRequestObjectResult(new { error = "Invalid JSON in body parameter.", details = ex.Message });
+            return BadRequest(new { error = "Invalid JSON in body parameter.", details = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing query: {RequestName}", requestName);
-            return new BadRequestObjectResult(new { error = ex.Message });
+            return StatusCode(500, new { error = ex.Message });
         }
     }
-
 }

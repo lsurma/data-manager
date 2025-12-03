@@ -1,7 +1,7 @@
 using DataManager.Application.Core.Common;
 using DataManager.Application.Core.Extensions;
 using DataManager.Authentication.Core;
-using DataManager.Host.AzFuncAPI.Services;
+using DataManager.Host.Shared.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
