@@ -1,47 +1,57 @@
+using System.Collections.Concurrent;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace DataManager.Application.Core.Common;
 
 public class FilterHandlerRegistry : IFilterHandlerRegistry
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IEnumerable<IFilterHandler> _filterHandlers;
+    private readonly ConcurrentDictionary<Type, Dictionary<Type, object>> _handlerCache = new();
 
-    public FilterHandlerRegistry(IServiceProvider serviceProvider)
+    public FilterHandlerRegistry(
+        IServiceProvider serviceProvider,
+        IEnumerable<IFilterHandler> filterHandlers
+    )
     {
         _serviceProvider = serviceProvider;
+        _filterHandlers = filterHandlers;
     }
 
     public Dictionary<Type, object> GetHandlersForEntity<TEntity>()
     {
-        var handlers = new Dictionary<Type, object>();
-        
-        // Get all registered services from DI
-        var filterHandlerType = typeof(IFilterHandler<,>);
-        
-        // Find all types that implement IFilterHandler<TEntity, TFilter>
-        var assembly = typeof(FilterHandlerRegistry).Assembly;
-        var handlerTypes = assembly.GetTypes()
-            .Where(t => !t.IsInterface && !t.IsAbstract)
-            .Where(t => t.GetInterfaces().Any(i => 
-                i.IsGenericType && 
-                i.GetGenericTypeDefinition() == filterHandlerType &&
-                i.GetGenericArguments()[0] == typeof(TEntity)))
-            .ToList();
+        var entityType = typeof(TEntity);
+        return _handlerCache.GetOrAdd(entityType, _ => BuildHandlersForEntity<TEntity>());
+    }
 
-        foreach (var handlerType in handlerTypes)
+    private Dictionary<Type, object> BuildHandlersForEntity<TEntity>()
+    {
+        var handlers = new Dictionary<Type, object>();
+        var filterHandlerType = typeof(IFilterHandler<,>);
+
+        foreach (var handler in _filterHandlers)
         {
-            // Get the filter type (second generic argument)
-            var interfaceType = handlerType.GetInterfaces()
-                .First(i => i.IsGenericType && 
-                           i.GetGenericTypeDefinition() == filterHandlerType &&
-                           i.GetGenericArguments()[0] == typeof(TEntity));
-            
-            var filterType = interfaceType.GetGenericArguments()[1];
-            
-            // Get or create instance from DI
-            var handler = _serviceProvider.GetService(handlerType) ?? Activator.CreateInstance(handlerType);
-            
-            if (handler != null)
+            var handlerType = handler.GetType();
+            var matchingInterfaces = handlerType
+                .GetInterfaces()
+                .Where(interfaceType =>
+                    interfaceType.IsGenericType &&
+                    interfaceType.GetGenericTypeDefinition() == filterHandlerType &&
+                    interfaceType.GetGenericArguments()[0] == typeof(TEntity)
+                )
+                .ToList();
+
+            if (!matchingInterfaces.Any())
             {
-                handlers[filterType] = handler;
+                continue;
+            }
+
+            var filterType = matchingInterfaces.First().GetGenericArguments()[1];
+            var handlerInstance = _serviceProvider.GetService(handlerType) ?? Activator.CreateInstance(handlerType);
+
+            if (handlerInstance != null)
+            {
+                handlers[filterType] = handlerInstance;
             }
         }
 

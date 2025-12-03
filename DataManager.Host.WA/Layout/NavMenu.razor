@@ -12,12 +12,12 @@
             {
                 <FluentNavLink Href="instances" Icon="@(new Size20.NumberSymbolSquare())" IconColor="Color.Accent">Instances</FluentNavLink>
             }
+            
             <FluentNavLink Href="datasets" Icon="@(new Size20.Database())" IconColor="Color.Accent">Data Sets</FluentNavLink>
-            <FluentNavGroup Icon="@(new Size20.LocalLanguage())" Title="Translations" Gap="10px">
-                <FluentNavLink Href="translations" Icon="@(new Size20.LocalLanguage())" IconColor="Color.Accent">Translations</FluentNavLink>
-                <FluentNavLink Href="emails" Icon="@(new Size20.Mail())" IconColor="Color.Accent">Emails</FluentNavLink>
-                <FluentNavLink Href="translations/import" Icon="@(new Size20.ArrowImport())" IconColor="Color.Accent">Import</FluentNavLink>
-            </FluentNavGroup>
+            <FluentNavLink Href="translations" Icon="@(new Size20.LocalLanguage())" IconColor="Color.Accent">Translations</FluentNavLink>
+            <FluentNavLink Href="emails" Icon="@(new Size20.Mail())" IconColor="Color.Accent">Emails</FluentNavLink>
+            <FluentNavLink Href="translations/import" Icon="@(new Size20.ArrowImport())" IconColor="Color.Accent">Import</FluentNavLink>
+            
             @if (_showDevPages)
             {
                 <FluentNavLink Href="paneltest" Icon="@(new Size20.SlideLayout())" IconColor="Color.Accent">Panel Test</FluentNavLink>
