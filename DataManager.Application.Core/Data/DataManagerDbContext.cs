@@ -50,6 +50,10 @@ public class DataManagerDbContext : DbContext
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // NOTE: Defaults to acceptAllChangesOnSuccess: false to skip saves within open transactions.
+        // This is intentional design to work with MediatR's TransactionBehavior, which manages
+        // when changes should be persisted. To force save within a transaction, explicitly
+        // call SaveChangesAsync(acceptAllChangesOnSuccess: true, cancellationToken).
         return SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken);
     }
 
@@ -78,6 +82,10 @@ public class DataManagerDbContext : DbContext
 
     public override int SaveChanges()
     {
+        // NOTE: Defaults to acceptAllChangesOnSuccess: false to skip saves within open transactions.
+        // This is intentional design to work with MediatR's TransactionBehavior, which manages
+        // when changes should be persisted. To force save within a transaction, explicitly
+        // call SaveChanges(acceptAllChangesOnSuccess: true).
         return SaveChanges(acceptAllChangesOnSuccess: false);
     }
 
