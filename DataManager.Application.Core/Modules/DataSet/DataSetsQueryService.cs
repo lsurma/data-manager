@@ -98,6 +98,47 @@ public class DataSetsQueryService : QueryService<DataSet, Guid>
         Guid rootDataSetId,
         CancellationToken cancellationToken = default)
     {
+        var (hierarchyIds, _) = await GetDataSetHierarchyInternalAsync(rootDataSetId, cancellationToken);
+        return hierarchyIds;
+    }
+
+    /// <summary>
+    /// Gets all datasets in hierarchical order for a given root dataset ID, with full dataset details.
+    /// Returns a list starting with the root dataset, followed by all included datasets in breadth-first order.
+    /// Example: If "Final" includes "GlobalData", and "GlobalData" includes "A" and "B",
+    /// the result will be [Final, GlobalData, A, B].
+    /// Handles circular references by tracking visited datasets.
+    /// </summary>
+    /// <param name="rootDataSetId">The ID of the root dataset to start traversal from</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of datasets in hierarchical order</returns>
+    public async Task<List<DataSet>> GetDataSetHierarchyAsync(
+        Guid rootDataSetId,
+        CancellationToken cancellationToken = default)
+    {
+        var (hierarchyIds, dataSetLookup) = await GetDataSetHierarchyInternalAsync(rootDataSetId, cancellationToken);
+
+        // Return datasets in the same order as hierarchy IDs
+        var result = new List<DataSet>();
+        foreach (var id in hierarchyIds)
+        {
+            if (dataSetLookup.TryGetValue(id, out var dataSet))
+            {
+                result.Add(dataSet);
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Internal method that performs the hierarchy traversal and returns both IDs and entities.
+    /// This avoids duplicate database queries when both IDs and entities are needed.
+    /// </summary>
+    private async Task<(List<Guid> hierarchyIds, Dictionary<Guid, DataSet> dataSetLookup)> GetDataSetHierarchyInternalAsync(
+        Guid rootDataSetId,
+        CancellationToken cancellationToken = default)
+    {
         // Fetch all datasets with their includes from the database
         // Apply authorization filtering to ensure user only sees accessible datasets
         var query = await ApplyAuthorizationAsync(_context.DataSets, cancellationToken);
@@ -113,7 +154,7 @@ public class DataSetsQueryService : QueryService<DataSet, Guid>
         // Check if the root dataset exists and is accessible
         if (!dataSetLookup.ContainsKey(rootDataSetId))
         {
-            return new List<Guid>();
+            return (new List<Guid>(), dataSetLookup);
         }
 
         var result = new List<Guid>();
@@ -151,54 +192,6 @@ public class DataSetsQueryService : QueryService<DataSet, Guid>
             }
         }
 
-        return result;
-    }
-
-    /// <summary>
-    /// Gets all datasets in hierarchical order for a given root dataset ID, with full dataset details.
-    /// Returns a list starting with the root dataset, followed by all included datasets in breadth-first order.
-    /// Example: If "Final" includes "GlobalData", and "GlobalData" includes "A" and "B",
-    /// the result will be [Final, GlobalData, A, B].
-    /// Handles circular references by tracking visited datasets.
-    /// </summary>
-    /// <param name="rootDataSetId">The ID of the root dataset to start traversal from</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>List of datasets in hierarchical order</returns>
-    public async Task<List<DataSet>> GetDataSetHierarchyAsync(
-        Guid rootDataSetId,
-        CancellationToken cancellationToken = default)
-    {
-        // Get the hierarchy IDs
-        var hierarchyIds = await GetDataSetHierarchyIdsAsync(rootDataSetId, cancellationToken);
-
-        // If empty, return empty list
-        if (!hierarchyIds.Any())
-        {
-            return new List<DataSet>();
-        }
-
-        // Fetch all datasets in the hierarchy with authorization
-        var query = await ApplyAuthorizationAsync(_context.DataSets, cancellationToken);
-        
-        var dataSets = await query
-            .Where(ds => hierarchyIds.Contains(ds.Id))
-            .Include(ds => ds.Includes)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
-
-        // Create a lookup for ordering
-        var dataSetLookup = dataSets.ToDictionary(ds => ds.Id);
-
-        // Return datasets in the same order as hierarchy IDs
-        var result = new List<DataSet>();
-        foreach (var id in hierarchyIds)
-        {
-            if (dataSetLookup.TryGetValue(id, out var dataSet))
-            {
-                result.Add(dataSet);
-            }
-        }
-
-        return result;
+        return (result, dataSetLookup);
     }
 }
