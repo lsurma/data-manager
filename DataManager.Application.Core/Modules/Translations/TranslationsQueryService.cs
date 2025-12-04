@@ -110,7 +110,7 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
     /// 
     /// The method:
     /// 1. Traverses the DataSet hierarchy starting from root (breadth-first)
-    /// 2. Fetches translations from all datasets in hierarchy
+    /// 2. Fetches translations from each dataset in hierarchy order (memory efficient)
     /// 3. Applies deduplication: translations from higher priority datasets (earlier in hierarchy) 
     ///    take precedence over duplicates from lower priority datasets
     /// 4. Deduplication key: (ResourceName, CultureName, TranslationName)
@@ -134,27 +134,44 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
             return new List<Translation>();
         }
 
-        // Fetch all translations from all datasets in hierarchy
+        // Process translations dataset by dataset in hierarchy order (memory efficient)
         // Note: We're NOT applying authorization here as this is a core method
-        // Performance note: This loads all translations into memory before deduplication.
-        // For large datasets, consider implementing deduplication in SQL, though this would be
-        // complex due to the need to respect hierarchy order from breadth-first traversal.
-        var allTranslations = await _context.Translations
-            .Where(t => t.DataSetId.HasValue && dataSetIds.Contains(t.DataSetId.Value))
-            .Where(t => t.IsCurrentVersion) // Only current versions
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
-
-        // Group translations by their deduplication key and dataset priority
         var result = new List<Translation>();
         var seenKeys = new HashSet<(string ResourceName, string? CultureName, string TranslationName)>();
 
-        // Process translations in hierarchy order (respecting priority)
+        // Fetch translations from each dataset in hierarchy order (respecting priority)
         foreach (var dataSetId in dataSetIds)
         {
-            var translationsForDataSet = allTranslations
+            // Fetch only translations from current dataset that we haven't seen yet
+            // This is more memory efficient than loading all translations at once
+            var translationsForDataSet = await _context.Translations
                 .Where(t => t.DataSetId == dataSetId)
-                .ToList();
+                .Where(t => t.IsCurrentVersion) // Only current versions
+                .Select(t => new Translation
+                {
+                    Id = t.Id,
+                    ResourceName = t.ResourceName,
+                    TranslationName = t.TranslationName,
+                    CultureName = t.CultureName,
+                    Content = t.Content,
+                    ContentTemplate = t.ContentTemplate,
+                    InternalGroupName1 = t.InternalGroupName1,
+                    InternalGroupName2 = t.InternalGroupName2,
+                    DataSetId = t.DataSetId,
+                    SourceDataSetId = t.SourceDataSetId,
+                    SourceDataSetLastSyncedAt = t.SourceDataSetLastSyncedAt,
+                    LayoutId = t.LayoutId,
+                    SourceId = t.SourceId,
+                    IsCurrentVersion = t.IsCurrentVersion,
+                    IsDraftVersion = t.IsDraftVersion,
+                    IsOldVersion = t.IsOldVersion,
+                    OriginalTranslationId = t.OriginalTranslationId,
+                    CreatedAt = t.CreatedAt,
+                    UpdatedAt = t.UpdatedAt,
+                    CreatedBy = t.CreatedBy
+                })
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
 
             foreach (var translation in translationsForDataSet)
             {
