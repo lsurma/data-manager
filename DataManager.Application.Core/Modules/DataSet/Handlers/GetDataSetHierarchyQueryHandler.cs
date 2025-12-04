@@ -25,8 +25,9 @@ public class GetDataSetHierarchyQueryHandler : IRequestHandler<GetDataSetHierarc
             request.RootDataSetId,
             cancellationToken);
 
-        // Map to DTOs
-        var datasetDtos = datasets.Select(ds => ds.ToDto()).ToList();
+        // Map to DTOs using the optimized List extension method
+        // This properly populates IncludedDataSets navigation properties
+        var datasetDtos = datasets.ToDto();
 
         return new DataSetHierarchyDto
         {
