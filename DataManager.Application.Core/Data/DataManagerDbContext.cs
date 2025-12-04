@@ -27,58 +27,46 @@ public class DataManagerDbContext : DbContext
     /// <summary>
     /// Saves all changes made in this context to the database.
     /// </summary>
-    /// <param name="acceptAllChangesOnSuccess">
-    /// Indicates whether AcceptAllChanges() is called after the changes have been sent successfully to the database.
-    /// When repurposed as forceSave: When true, saves even if there's an open transaction. When false and a transaction is open, does nothing.
-    /// </param>
+    /// <param name="forceSave">When true, saves even if there's an open transaction. When false and a transaction is open, does nothing.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>The number of state entries written to the database.</returns>
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    public Task<int> SaveChangesAsync(bool forceSave, CancellationToken cancellationToken = default)
     {
-        // When acceptAllChangesOnSuccess is false and there's an open transaction, do nothing
-        // This allows TransactionBehavior to control when changes are persisted
-        if (Database.CurrentTransaction != null && !acceptAllChangesOnSuccess)
+        // If there's an open transaction and forceSave is false, do nothing
+        if (Database.CurrentTransaction != null && !forceSave)
         {
             return Task.FromResult(0);
         }
 
         SetAuditFields();
-        // Always accept all changes on success when we actually save
         return base.SaveChangesAsync(true, cancellationToken);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Default to not forcing save (acceptAllChangesOnSuccess: false)
-        return SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken);
+        return SaveChangesAsync(forceSave: false, cancellationToken);
     }
 
     /// <summary>
     /// Saves all changes made in this context to the database.
     /// </summary>
-    /// <param name="acceptAllChangesOnSuccess">
-    /// Indicates whether AcceptAllChanges() is called after the changes have been sent successfully to the database.
-    /// When repurposed as forceSave: When true, saves even if there's an open transaction. When false and a transaction is open, does nothing.
-    /// </param>
+    /// <param name="forceSave">When true, saves even if there's an open transaction. When false and a transaction is open, does nothing.</param>
     /// <returns>The number of state entries written to the database.</returns>
-    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    public int SaveChanges(bool forceSave)
     {
-        // When acceptAllChangesOnSuccess is false and there's an open transaction, do nothing
-        // This allows TransactionBehavior to control when changes are persisted
-        if (Database.CurrentTransaction != null && !acceptAllChangesOnSuccess)
+        // If there's an open transaction and forceSave is false, do nothing
+        if (Database.CurrentTransaction != null && !forceSave)
         {
             return 0;
         }
 
         SetAuditFields();
-        // Always accept all changes on success when we actually save
         return base.SaveChanges(true);
     }
 
     public override int SaveChanges()
     {
-        // Default to not forcing save (acceptAllChangesOnSuccess: false)
-        return SaveChanges(acceptAllChangesOnSuccess: false);
+        return SaveChanges(forceSave: false);
     }
 
     private void SetAuditFields()
