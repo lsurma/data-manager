@@ -39,7 +39,7 @@ public class DataManagerDbContext : DbContext
         }
 
         SetAuditFields();
-        return base.SaveChangesAsync(cancellationToken);
+        return base.SaveChangesAsync(forceSave, cancellationToken);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -61,7 +61,7 @@ public class DataManagerDbContext : DbContext
         }
 
         SetAuditFields();
-        return base.SaveChanges();
+        return base.SaveChanges(forceSave);
     }
 
     public override int SaveChanges()
