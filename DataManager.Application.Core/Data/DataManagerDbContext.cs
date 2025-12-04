@@ -24,16 +24,69 @@ public class DataManagerDbContext : DbContext
 
     public DbSet<Translation> Translations { get; set; }
 
+    /// <summary>
+    /// Saves all changes made in this context to the database.
+    /// </summary>
+    /// <param name="acceptAllChangesOnSuccess">
+    /// Indicates whether AcceptAllChanges() is called after the changes have been sent successfully to the database.
+    /// Additionally, when false and a transaction is open, the save operation is skipped entirely (returns 0).
+    /// This allows TransactionBehavior to control when changes are persisted.
+    /// Pass true to force save even within a transaction (can also be thought of as forceSave).
+    /// </param>
+    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        // If there's an open transaction and acceptAllChangesOnSuccess is false, do nothing
+        // This allows TransactionBehavior to control when changes are persisted
+        if (Database.CurrentTransaction != null && !acceptAllChangesOnSuccess)
+        {
+            return Task.FromResult(0);
+        }
+
+        SetAuditFields();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // NOTE: Defaults to acceptAllChangesOnSuccess: false to skip saves within open transactions.
+        // This is intentional design to work with MediatR's TransactionBehavior, which manages
+        // when changes should be persisted. To force save within a transaction, explicitly
+        // call SaveChangesAsync(acceptAllChangesOnSuccess: true, cancellationToken).
+        return SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken);
+    }
+
+    /// <summary>
+    /// Saves all changes made in this context to the database.
+    /// </summary>
+    /// <param name="acceptAllChangesOnSuccess">
+    /// Indicates whether AcceptAllChanges() is called after the changes have been sent successfully to the database.
+    /// Additionally, when false and a transaction is open, the save operation is skipped entirely (returns 0).
+    /// This allows TransactionBehavior to control when changes are persisted.
+    /// Pass true to force save even within a transaction (can also be thought of as forceSave).
+    /// </param>
+    /// <returns>The number of state entries written to the database.</returns>
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        // If there's an open transaction and acceptAllChangesOnSuccess is false, do nothing
+        // This allows TransactionBehavior to control when changes are persisted
+        if (Database.CurrentTransaction != null && !acceptAllChangesOnSuccess)
+        {
+            return 0;
+        }
+
         SetAuditFields();
-        return base.SaveChangesAsync(cancellationToken);
+        return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override int SaveChanges()
     {
-        SetAuditFields();
-        return base.SaveChanges();
+        // NOTE: Defaults to acceptAllChangesOnSuccess: false to skip saves within open transactions.
+        // This is intentional design to work with MediatR's TransactionBehavior, which manages
+        // when changes should be persisted. To force save within a transaction, explicitly
+        // call SaveChanges(acceptAllChangesOnSuccess: true).
+        return SaveChanges(acceptAllChangesOnSuccess: false);
     }
 
     private void SetAuditFields()
