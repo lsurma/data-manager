@@ -24,16 +24,49 @@ public class DataManagerDbContext : DbContext
 
     public DbSet<Translation> Translations { get; set; }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Saves all changes made in this context to the database.
+    /// </summary>
+    /// <param name="forceSave">When true, saves even if there's an open transaction. When false and a transaction is open, does nothing.</param>
+    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    public override Task<int> SaveChangesAsync(bool forceSave, CancellationToken cancellationToken = default)
     {
+        // If there's an open transaction and forceSave is false, do nothing
+        if (Database.CurrentTransaction != null && !forceSave)
+        {
+            return Task.FromResult(0);
+        }
+
         SetAuditFields();
         return base.SaveChangesAsync(cancellationToken);
     }
 
-    public override int SaveChanges()
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        return SaveChangesAsync(forceSave: false, cancellationToken);
+    }
+
+    /// <summary>
+    /// Saves all changes made in this context to the database.
+    /// </summary>
+    /// <param name="forceSave">When true, saves even if there's an open transaction. When false and a transaction is open, does nothing.</param>
+    /// <returns>The number of state entries written to the database.</returns>
+    public override int SaveChanges(bool forceSave)
+    {
+        // If there's an open transaction and forceSave is false, do nothing
+        if (Database.CurrentTransaction != null && !forceSave)
+        {
+            return 0;
+        }
+
         SetAuditFields();
         return base.SaveChanges();
+    }
+
+    public override int SaveChanges()
+    {
+        return SaveChanges(forceSave: false);
     }
 
     private void SetAuditFields()
