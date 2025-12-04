@@ -136,6 +136,9 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
 
         // Fetch all translations from all datasets in hierarchy
         // Note: We're NOT applying authorization here as this is a core method
+        // Performance note: This loads all translations into memory before deduplication.
+        // For large datasets, consider implementing deduplication in SQL, though this would be
+        // complex due to the need to respect hierarchy order from breadth-first traversal.
         var allTranslations = await _context.Translations
             .Where(t => t.DataSetId.HasValue && dataSetIds.Contains(t.DataSetId.Value))
             .Where(t => t.IsCurrentVersion) // Only current versions
@@ -182,6 +185,10 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
         CancellationToken cancellationToken = default)
     {
         // Fetch all datasets with their includes from the database WITHOUT authorization
+        // Performance note: This loads all datasets into memory. For most applications, 
+        // the number of datasets is manageable (dozens to hundreds), making this approach acceptable.
+        // If performance becomes an issue with thousands of datasets, consider using a recursive CTE
+        // or fetching only datasets reachable from the root.
         var allDataSets = await _context.DataSets
             .Include(ds => ds.Includes)
             .AsNoTracking()
