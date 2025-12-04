@@ -17,6 +17,8 @@ public static class TranslationMappingExtensions
             Content = translation.Content,
             ContentTemplate = translation.ContentTemplate,
             DataSetId = translation.DataSetId,
+            SourceDataSetId = translation.SourceDataSetId,
+            SourceDataSetLastSyncedAt = translation.SourceDataSetLastSyncedAt,
             LayoutId = translation.LayoutId,
             SourceId = translation.SourceId,
             IsCurrentVersion = translation.IsCurrentVersion,

@@ -40,6 +40,15 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
             .HasForeignKey(e => e.DataSetId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Configure relationship with SourceDataSet
+        builder.HasOne(e => e.SourceDataSet)
+            .WithMany()
+            .HasForeignKey(e => e.SourceDataSetId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Property(e => e.SourceDataSetLastSyncedAt)
+            .IsRequired(false);
+
         // Configure self-referencing relationship for Layout
         builder.HasOne(e => e.Layout)
             .WithMany()
@@ -73,6 +82,7 @@ public class TranslationConfiguration : AuditableEntityConfiguration<Translation
 
         // Add indexes for common queries
         builder.HasIndex(e => e.DataSetId);
+        builder.HasIndex(e => e.SourceDataSetId);
         builder.HasIndex(e => e.CultureName);
         builder.HasIndex(e => e.LayoutId);
         builder.HasIndex(e => e.SourceId);

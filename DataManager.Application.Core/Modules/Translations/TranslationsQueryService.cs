@@ -103,4 +103,134 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
             AsNoTracking = true;
         }
     }
+
+    /// <summary>
+    /// Fetches translations from a DataSet hierarchy with deduplication based on priority.
+    /// This is a CORE method that omits authorization - use with caution!
+    /// 
+    /// The method:
+    /// 1. Traverses the DataSet hierarchy starting from root (breadth-first)
+    /// 2. Fetches translations from all datasets in hierarchy
+    /// 3. Applies deduplication: translations from higher priority datasets (earlier in hierarchy) 
+    ///    take precedence over duplicates from lower priority datasets
+    /// 4. Deduplication key: (ResourceName, CultureName, TranslationName)
+    /// 
+    /// Use case: When a translation exists in the main dataset, any translation with the same
+    /// (ResourceName, CultureName, TranslationName) from included datasets is ignored.
+    /// </summary>
+    /// <param name="rootDataSetId">The root DataSet ID to start hierarchy traversal from</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of deduplicated translations respecting hierarchy priority</returns>
+    public async Task<List<Translation>> GetTranslationsFromHierarchyAsync(
+        Guid rootDataSetId,
+        CancellationToken cancellationToken = default)
+    {
+        // Get the dataset hierarchy IDs in priority order (root first)
+        // This is a core method without authorization
+        var dataSetIds = await GetDataSetHierarchyIdsWithoutAuthorizationAsync(rootDataSetId, cancellationToken);
+
+        if (!dataSetIds.Any())
+        {
+            return new List<Translation>();
+        }
+
+        // Fetch all translations from all datasets in hierarchy
+        // Note: We're NOT applying authorization here as this is a core method
+        var allTranslations = await _context.Translations
+            .Where(t => t.DataSetId.HasValue && dataSetIds.Contains(t.DataSetId.Value))
+            .Where(t => t.IsCurrentVersion) // Only current versions
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        // Group translations by their deduplication key and dataset priority
+        var result = new List<Translation>();
+        var seenKeys = new HashSet<(string ResourceName, string? CultureName, string TranslationName)>();
+
+        // Process translations in hierarchy order (respecting priority)
+        foreach (var dataSetId in dataSetIds)
+        {
+            var translationsForDataSet = allTranslations
+                .Where(t => t.DataSetId == dataSetId)
+                .ToList();
+
+            foreach (var translation in translationsForDataSet)
+            {
+                var key = (translation.ResourceName, translation.CultureName, translation.TranslationName);
+                
+                // Only add if we haven't seen this key before (higher priority datasets were processed first)
+                if (seenKeys.Add(key))
+                {
+                    result.Add(translation);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Gets all datasets in hierarchical order for a given root dataset ID WITHOUT authorization.
+    /// This is a CORE method - use with caution!
+    /// Returns a list starting with the root dataset, followed by all included datasets in breadth-first order.
+    /// Handles circular references by tracking visited datasets.
+    /// </summary>
+    /// <param name="rootDataSetId">The ID of the root dataset to start traversal from</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of dataset IDs in hierarchical order</returns>
+    private async Task<List<Guid>> GetDataSetHierarchyIdsWithoutAuthorizationAsync(
+        Guid rootDataSetId,
+        CancellationToken cancellationToken = default)
+    {
+        // Fetch all datasets with their includes from the database WITHOUT authorization
+        var allDataSets = await _context.DataSets
+            .Include(ds => ds.Includes)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        // Create a lookup for quick access
+        var dataSetLookup = allDataSets.ToDictionary(ds => ds.Id);
+
+        // Check if the root dataset exists
+        if (!dataSetLookup.ContainsKey(rootDataSetId))
+        {
+            return new List<Guid>();
+        }
+
+        var result = new List<Guid>();
+        var visited = new HashSet<Guid>();
+        var queue = new Queue<Guid>();
+
+        // Start with the root dataset
+        queue.Enqueue(rootDataSetId);
+        visited.Add(rootDataSetId);
+
+        // Breadth-first traversal
+        while (queue.Count > 0)
+        {
+            var currentId = queue.Dequeue();
+            result.Add(currentId);
+
+            // Get the current dataset
+            if (!dataSetLookup.TryGetValue(currentId, out var currentDataSet))
+            {
+                continue;
+            }
+
+            // Add all included datasets to the queue
+            foreach (var include in currentDataSet.Includes)
+            {
+                var includedId = include.IncludedDataSetId;
+                
+                // Only add if not visited (prevents circular references)
+                // and if the dataset exists in dataSetLookup
+                if (!visited.Contains(includedId) && dataSetLookup.ContainsKey(includedId))
+                {
+                    visited.Add(includedId);
+                    queue.Enqueue(includedId);
+                }
+            }
+        }
+
+        return result;
+    }
 }

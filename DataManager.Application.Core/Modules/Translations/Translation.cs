@@ -26,6 +26,22 @@ public class Translation : AuditableEntityBase
     public DataSet.DataSet? DataSet { get; set; }
 
     /// <summary>
+    /// Optional reference to the source DataSet where this translation was fetched from.
+    /// Used to determine if translation is "original" (null) or fetched from another dataset.
+    /// </summary>
+    public Guid? SourceDataSetId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the source DataSet
+    /// </summary>
+    public DataSet.DataSet? SourceDataSet { get; set; }
+
+    /// <summary>
+    /// Timestamp of last sync from the source DataSet
+    /// </summary>
+    public DateTimeOffset? SourceDataSetLastSyncedAt { get; set; }
+
+    /// <summary>
     /// Optional reference to a layout Translation (used for email templates)
     /// </summary>
     public Guid? LayoutId { get; set; }
