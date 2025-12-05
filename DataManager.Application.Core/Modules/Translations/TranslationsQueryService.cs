@@ -110,10 +110,11 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
     /// 
     /// The method:
     /// 1. Traverses the DataSet hierarchy starting from root (breadth-first)
-    /// 2. Fetches translations from each dataset in hierarchy order (memory efficient)
+    /// 2. Fetches minimal data (Id + deduplication keys) from each dataset in hierarchy order
     /// 3. Applies deduplication: translations from higher priority datasets (earlier in hierarchy) 
     ///    take precedence over duplicates from lower priority datasets
     /// 4. Deduplication key: (ResourceName, CultureName, TranslationName)
+    /// 5. Fetches full entities for deduplicated IDs in a single query
     /// 
     /// Use case: When a translation exists in the main dataset, any translation with the same
     /// (ResourceName, CultureName, TranslationName) from included datasets is ignored.
@@ -134,58 +135,64 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
             return new List<Translation>();
         }
 
+        // Phase 1: Collect IDs of translations that pass deduplication
         // Process translations dataset by dataset in hierarchy order (memory efficient)
         // Note: We're NOT applying authorization here as this is a core method
-        var result = new List<Translation>();
+        var selectedIds = new List<Guid>();
         var seenKeys = new HashSet<(string ResourceName, string? CultureName, string TranslationName)>();
 
-        // Fetch translations from each dataset in hierarchy order (respecting priority)
+        // Fetch minimal data from each dataset in hierarchy order (respecting priority)
         foreach (var dataSetId in dataSetIds)
         {
-            // Fetch only translations from current dataset that we haven't seen yet
-            // This is more memory efficient than loading all translations at once
-            var translationsForDataSet = await _context.Translations
+            // Fetch only minimal data needed for deduplication (Id + key fields)
+            var translationKeysForDataSet = await _context.Translations
                 .Where(t => t.DataSetId == dataSetId)
                 .Where(t => t.IsCurrentVersion) // Only current versions
-                .Select(t => new Translation
+                .Select(t => new
                 {
-                    Id = t.Id,
-                    ResourceName = t.ResourceName,
-                    TranslationName = t.TranslationName,
-                    CultureName = t.CultureName,
-                    Content = t.Content,
-                    ContentTemplate = t.ContentTemplate,
-                    InternalGroupName1 = t.InternalGroupName1,
-                    InternalGroupName2 = t.InternalGroupName2,
-                    DataSetId = t.DataSetId,
-                    SourceDataSetId = t.SourceDataSetId,
-                    SourceDataSetLastSyncedAt = t.SourceDataSetLastSyncedAt,
-                    LayoutId = t.LayoutId,
-                    SourceId = t.SourceId,
-                    IsCurrentVersion = t.IsCurrentVersion,
-                    IsDraftVersion = t.IsDraftVersion,
-                    IsOldVersion = t.IsOldVersion,
-                    OriginalTranslationId = t.OriginalTranslationId,
-                    CreatedAt = t.CreatedAt,
-                    UpdatedAt = t.UpdatedAt,
-                    CreatedBy = t.CreatedBy
+                    t.Id,
+                    t.ResourceName,
+                    t.CultureName,
+                    t.TranslationName
                 })
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
-            foreach (var translation in translationsForDataSet)
+            foreach (var translationKey in translationKeysForDataSet)
             {
-                var key = (translation.ResourceName, translation.CultureName, translation.TranslationName);
+                var key = (translationKey.ResourceName, translationKey.CultureName, translationKey.TranslationName);
                 
                 // Only add if we haven't seen this key before (higher priority datasets were processed first)
                 if (seenKeys.Add(key))
                 {
-                    result.Add(translation);
+                    selectedIds.Add(translationKey.Id);
                 }
             }
         }
 
-        return result;
+        // Phase 2: Fetch full entities for selected IDs in a single query
+        if (!selectedIds.Any())
+        {
+            return new List<Translation>();
+        }
+
+        var result = await _context.Translations
+            .Where(t => selectedIds.Contains(t.Id))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        // Maintain the order based on hierarchy priority (order in selectedIds)
+        var orderedResult = new List<Translation>();
+        foreach (var id in selectedIds)
+        {
+            var translation = result.FirstOrDefault(t => t.Id == id);
+            if (translation != null)
+            {
+                orderedResult.Add(translation);
+            }
+        }
+
+        return orderedResult;
     }
 
     /// <summary>
