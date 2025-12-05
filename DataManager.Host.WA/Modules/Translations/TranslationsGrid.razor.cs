@@ -17,6 +17,9 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     [Parameter]
     public List<IQueryFilter> Filters { get; set; } = new();
 
+    [Parameter]
+    public RenderFragment ToolbarTemplate { get; set; } = null!;
+    
     [CascadingParameter(Name = "AppDataContext")]
     public AppDataContext AppContext { get; set; } = null!;
 
@@ -36,14 +39,13 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private List<DataSetDto> AllDataSets => AppContext?.DataSets ?? new List<DataSetDto>();
     private List<TranslationDto> AllLayouts { get; set; } = new();
     private IDialogReference? _currentDialog;
-    private string _refreshToken = Guid.NewGuid().ToString();
+    private string? _refreshToken;
     private IList<TranslationDto> _selectedRows = new List<TranslationDto>();
     private GetTranslationsQuery _currentQuery = new GetTranslationsQuery
     {
         Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
     };
 
-    private string _cacheKey = "paginated_translations";
     private int _totalItems;
     private int _pageSize = 20;
     private string? _searchTerm;
@@ -72,7 +74,6 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             },
             Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
-        _refreshToken = Guid.NewGuid().ToString();
     }
 
     private void HandleContextRefreshed()
@@ -84,8 +85,8 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     {
         try
         {
-            var result = await RequestSender.SendAsync(GetTranslationsQuery.AllItems());
-            AllLayouts = result.Items;
+            // var result = await RequestSender.SendAsync(GetTranslationsQuery.AllItems());
+            // AllLayouts = result.Items;
         }
         catch (Exception ex)
         {
@@ -159,6 +160,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
 
     private void OnLoadData(LoadDataArgs args)
     {
+        Console.WriteLine("OnLoadData called with args: " + args);
         string? orderBy = null;
         string? orderDirection = null;
 

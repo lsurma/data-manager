@@ -11,13 +11,6 @@
     {
         @LoadingContent
     }
-    else
-    {
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px;">
-            <FluentProgressRing />
-            <p>Loading data...</p>
-        </div>
-    }
 }
 else if (!string.IsNullOrEmpty(ErrorMessage))
 {
@@ -49,7 +42,10 @@ else if (Data != null)
     }
     else
     {
-        @ChildContent(Data)
+        if (ChildContent != null)
+        {
+            @ChildContent(Data)
+        }
     }
 }
 
@@ -76,11 +72,17 @@ else if (Data != null)
     public RenderFragment? NoDataContent { get; set; }
 
     [Parameter]
-    public required RenderFragment<TResponse> ChildContent { get; set; }
+    public RenderFragment<TResponse>? ChildContent { get; set; }
 
     [Parameter]
     public EventCallback<DataFetchedEventArgs<TResponse>> OnDataFetched { get; set; }
 
+    [Parameter]
+    public bool CacheEnabled { get; set; } = false;
+    
+    [Parameter]
+    public bool LoadOnInitialize { get; set; } = true;
+    
     private TResponse? Data { get; set; }
     private bool IsLoading { get; set; } = true;
     private string? ErrorMessage { get; set; }
@@ -91,7 +93,11 @@ else if (Data != null)
     protected override async Task OnInitializedAsync()
     {
         _previousRefreshToken = RefreshToken;
-        await LoadDataAsync();
+
+        if (LoadOnInitialize)
+        {
+            await LoadDataAsync();
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -112,7 +118,7 @@ else if (Data != null)
             ErrorMessage = null;
 
             var cacheKey = CacheKey ?? $"query_{Query!.GetType().Name}";
-            var shouldUseCache = ShouldCache == null || await ShouldCache(Query);
+            var shouldUseCache = CacheEnabled && ( ShouldCache == null || await ShouldCache(Query));
 
             // Try to load from cache ONLY on the very first load for this component instance
             if (shouldUseCache && !_hasLoadedOnce)

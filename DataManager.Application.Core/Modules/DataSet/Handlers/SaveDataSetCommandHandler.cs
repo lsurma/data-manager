@@ -22,36 +22,6 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
         _queryService = queryService;
     }
 
-    /// <summary>
-    /// Converts a string to a canonical URL-safe format (lowercase alphanumeric and hyphens only).
-    /// </summary>
-    private static string CanonicalizeDataSetName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("DataSet name cannot be empty.", nameof(name));
-        }
-
-        // Convert to lowercase
-        var canonical = name.ToLowerInvariant();
-
-        // Replace any non-alphanumeric characters (except hyphens) with hyphens
-        canonical = NonAlphanumericPattern.Replace(canonical, "-");
-
-        // Replace multiple consecutive hyphens with a single hyphen
-        canonical = MultipleHyphensPattern.Replace(canonical, "-");
-
-        // Remove leading and trailing hyphens
-        canonical = canonical.Trim('-');
-
-        // Ensure we have something left after canonicalization
-        if (string.IsNullOrEmpty(canonical))
-        {
-            throw new ArgumentException("DataSet name must contain at least one alphanumeric character.", nameof(name));
-        }
-
-        return canonical;
-    }
 
     public async Task<Guid> Handle(SaveDataSetCommand request, CancellationToken cancellationToken)
     {
@@ -141,8 +111,38 @@ public class SaveDataSetCommandHandler : IRequestHandler<SaveDataSetCommand, Gui
             _context.DataSets.Add(dataSet);
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
-
         return dataSet.Id;
+    }
+    
+    
+    /// <summary>
+    /// Converts a string to a canonical URL-safe format (lowercase alphanumeric and hyphens only).
+    /// </summary>
+    private static string CanonicalizeDataSetName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("DataSet name cannot be empty.", nameof(name));
+        }
+
+        // Convert to lowercase
+        var canonical = name.ToLowerInvariant();
+
+        // Replace any non-alphanumeric characters (except hyphens) with hyphens
+        canonical = NonAlphanumericPattern.Replace(canonical, "-");
+
+        // Replace multiple consecutive hyphens with a single hyphen
+        canonical = MultipleHyphensPattern.Replace(canonical, "-");
+
+        // Remove leading and trailing hyphens
+        canonical = canonical.Trim('-');
+
+        // Ensure we have something left after canonicalization
+        if (string.IsNullOrEmpty(canonical))
+        {
+            throw new ArgumentException("DataSet name must contain at least one alphanumeric character.", nameof(name));
+        }
+
+        return canonical;
     }
 }

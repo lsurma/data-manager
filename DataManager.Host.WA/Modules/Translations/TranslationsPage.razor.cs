@@ -13,8 +13,8 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     [Parameter]
     public string? DataSetId { get; set; }
 
-    [CascadingParameter(Name = "AppDataContext")]
-    public AppDataContext AppContext { get; set; } = null!;
+    [CascadingParameter]
+    public AppDataContext? AppContext { get; set; }
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
@@ -31,17 +31,12 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     protected override void OnInitialized()
     {
         BuildFilters();
-        
-        // Subscribe to context refresh events
+
+
         if (AppContext != null)
         {
             AppContext.OnDataRefreshed += HandleContextRefreshed;
         }
-    }
-
-    protected override void OnParametersSet()
-    {
-        BuildFilters();
     }
 
     private void HandleContextRefreshed()

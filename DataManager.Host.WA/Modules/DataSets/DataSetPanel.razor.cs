@@ -1,11 +1,12 @@
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace DataManager.Host.WA.Modules.DataSets;
 
-public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParameters>
+public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParameters>, IAsyncDisposable
 {
     [Parameter]
     public DataSetPanelParameters Content { get; set; } = null!;
@@ -21,7 +22,10 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
     
     [Inject]
     private IToastService ToastService { get; set; } = null!;
-    
+
+    [Inject]
+    private IKeyboardShortcutsService KeyboardShortcuts { get; set; } = null!;
+
     private bool IsSaving { get; set; }
     private bool IsDeleting { get; set; }
     private string? ErrorMessage { get; set; }
@@ -43,6 +47,14 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
         }
 
         return Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await KeyboardShortcuts.RegisterSaveShortcutAsync(() => HandleSubmitAsync(closeAfterSave: false));
+        }
     }
 
     /// <summary>
@@ -77,16 +89,7 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
             SelectedIncludeIds.Remove(dataSetId);
         }
     }
-    
-    private async Task HandleKeyDownAsync(FluentKeyCodeEventArgs args)
-    {
-        // Ctrl+S to save
-        if (args.CtrlKey && args.Key == KeyCode.KeyS)
-        {
-            await HandleSubmitAsync(closeAfterSave: false);
-        }
-    }
-    
+
     private async Task HandleSubmitAsync(bool closeAfterSave = true)
     {
         if (Content?.DataSet == null) return;
@@ -175,6 +178,11 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
         {
             IsDeleting = false;
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await KeyboardShortcuts.UnregisterAsync();
     }
 }
 

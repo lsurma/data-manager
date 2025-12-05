@@ -12,7 +12,7 @@ namespace DataManager.Host.WA.Modules.DataSets;
 
 public partial class DataSetsPage : ComponentBase, IDisposable
 {
-    [CascadingParameter(Name = "AppDataContext")]
+    [CascadingParameter]
     public AppDataContext AppContext { get; set; } = null!;
 
     [Inject] 
@@ -28,44 +28,31 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     private IDialogReference? _currentDialog;
     private string _refreshToken = Guid.NewGuid().ToString();
     private IList<DataSetDto> _selectedRows = new List<DataSetDto>();
+    
+    private int PageSize { get; set; } = 15;
+    
+    protected int TotalItems { get; set; }
+    
+    private string? _searchTerm;
+    private Guid? _selectedDataSetId;
+    
     private GetDataSetsQuery _currentQuery = new GetDataSetsQuery
     {
         Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
     };
 
-    // Should stay static - we dont wanna cache all different queries separately
-    private string _cacheKey = "paginated_datasets";
-
-    private int _totalItems;
-    private int _pageSize = 20;
-    private string? _searchTerm;
-    private Guid? _selectedDataSetId;
-
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += OnLocationChanged;
-        
-        // Subscribe to context refresh events
-        if (AppContext != null)
-        {
-            AppContext.OnDataRefreshed += HandleContextRefreshed;
-        }
-    }
-    
-    private void HandleContextRefreshed()
-    {
-        // Refresh the grid when context data is updated
-        _refreshToken = Guid.NewGuid().ToString();
-        StateHasChanged();
     }
     
     private void HandleDataFetched(DataFetchedEventArgs<PaginatedList<DataSetDto>> eventArgs)
     {
         AllDataSets = eventArgs.Data.Items;
-        _totalItems = eventArgs.Data.TotalItems;
-        _pageSize = eventArgs.Data.PageSize;
+        TotalItems = eventArgs.Data.TotalItems;
+        PageSize = eventArgs.Data.PageSize;
         
-        Console.WriteLine($"Data fetched - IsFromCache: {eventArgs.IsFromCache}, IsFirstFetch: {eventArgs.IsFirstFetch}, Total: {_totalItems}, Page: {eventArgs.Data.CurrentPage}");
+        Console.WriteLine($"Data fetched - IsFromCache: {eventArgs.IsFromCache}, IsFirstFetch: {eventArgs.IsFirstFetch}, Total: {TotalItems}, Page: {eventArgs.Data.CurrentPage}");
         
         RestoreDataGridSelection();
         
@@ -155,7 +142,7 @@ public partial class DataSetsPage : ComponentBase, IDisposable
         _currentQuery = new GetDataSetsQuery
         {
             Filtering = BuildFilteringParameters(),
-            Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
+            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
         };
 
         _refreshToken = Guid.NewGuid().ToString();
@@ -202,11 +189,8 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var dataSetId))
             {
                 _selectedDataSetId = dataSetId;
+                var dataSet = AllDataSets.FirstOrDefault(i => i.Id == dataSetId);
                 
-                // Try to get from current grid page, or from AppContext if not in current page
-                var dataSet = AllDataSets.FirstOrDefault(i => i.Id == dataSetId)
-                              ?? AppContext?.DataSets?.FirstOrDefault(i => i.Id == dataSetId);
-
                 if (dataSet != null)
                 {
                     await OpenDataSetPanelAsync(dataSet);
@@ -247,7 +231,7 @@ public partial class DataSetsPage : ComponentBase, IDisposable
                     Id = Guid.NewGuid(),
                     CreatedAt = DateTimeOffset.UtcNow
                 },
-            
+
             IsEditMode = isEditMode,
             
             AvailableDataSets = isEditMode 
@@ -299,28 +283,5 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
-        
-        // Unsubscribe from context refresh events
-        if (AppContext != null)
-        {
-            AppContext.OnDataRefreshed -= HandleContextRefreshed;
-        }
-    }
-
-    private async Task OpenImportDialog()
-    {
-        if (_selectedDataSetId == null)
-        {
-            return;
-        }
-
-        await DialogService.ShowPanelAsync<ImportDialog>(new { DataSetId = _selectedDataSetId }, new DialogParameters
-        {
-            Title = "Import Translations",
-            Width = "600px",
-            TrapFocus = false,
-            Modal = false,
-            Id = $"panel-{Guid.NewGuid()}"
-        });
     }
 }
