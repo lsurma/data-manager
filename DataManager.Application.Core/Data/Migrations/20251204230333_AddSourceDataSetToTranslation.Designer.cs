@@ -3,6 +3,7 @@ using System;
 using DataManager.Application.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataManager.Application.Core.Data.Migrations
 {
     [DbContext(typeof(DataManagerDbContext))]
-    partial class DataManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251204230333_AddSourceDataSetToTranslation")]
+    partial class AddSourceDataSetToTranslation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -192,13 +195,13 @@ namespace DataManager.Application.Core.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("SourceDataSetId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("SourceDataSetLastSyncedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid?>("SourceId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("SourceTranslationId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset?>("SourceTranslationLastSyncedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TranslationName")
@@ -223,9 +226,9 @@ namespace DataManager.Application.Core.Data.Migrations
 
                     b.HasIndex("OriginalTranslationId");
 
-                    b.HasIndex("SourceId");
+                    b.HasIndex("SourceDataSetId");
 
-                    b.HasIndex("SourceTranslationId");
+                    b.HasIndex("SourceId");
 
                     b.HasIndex("IsCurrentVersion", "IsDraftVersion", "IsOldVersion");
 
@@ -280,14 +283,14 @@ namespace DataManager.Application.Core.Data.Migrations
                         .HasForeignKey("OriginalTranslationId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("DataManager.Application.Core.Modules.DataSet.DataSet", "SourceDataSet")
+                        .WithMany()
+                        .HasForeignKey("SourceDataSetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("DataManager.Application.Core.Modules.Translations.Translation", "Source")
                         .WithMany()
                         .HasForeignKey("SourceId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("DataManager.Application.Core.Modules.Translations.Translation", "SourceTranslation")
-                        .WithMany()
-                        .HasForeignKey("SourceTranslationId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("DataSet");
@@ -298,7 +301,7 @@ namespace DataManager.Application.Core.Data.Migrations
 
                     b.Navigation("Source");
 
-                    b.Navigation("SourceTranslation");
+                    b.Navigation("SourceDataSet");
                 });
 
             modelBuilder.Entity("DataManager.Application.Core.Modules.DataSet.DataSet", b =>
