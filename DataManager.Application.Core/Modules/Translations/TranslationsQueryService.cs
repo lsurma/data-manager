@@ -196,6 +196,152 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
     }
 
     /// <summary>
+    /// Materializes translations from the dataset hierarchy into the root dataset.
+    /// This is a CORE method that omits authorization - use with caution!
+    /// 
+    /// Creates a "materialized view" by copying translations from included datasets into the root dataset.
+    /// Translations that already exist in the root dataset are not copied (respecting hierarchy priority).
+    /// Each copied translation is marked with SourceDataSetId and SourceDataSetLastSyncedAt.
+    /// 
+    /// Example: If "some-custom-data-set" includes "data-set-a" and "data-set-b",
+    /// this method will copy all translations from those datasets into "some-custom-data-set"
+    /// so that a simple query on "some-custom-data-set" returns all translations without hierarchy traversal.
+    /// </summary>
+    /// <param name="rootDataSetId">The root DataSet ID to materialize translations into</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Number of translations materialized (added or updated)</returns>
+    public async Task<int> MaterializeTranslationsFromHierarchyAsync(
+        Guid rootDataSetId,
+        CancellationToken cancellationToken = default)
+    {
+        // Get the dataset hierarchy IDs in priority order (root first)
+        var dataSetIds = await GetDataSetHierarchyIdsWithoutAuthorizationAsync(rootDataSetId, cancellationToken);
+
+        if (!dataSetIds.Any() || dataSetIds.Count == 1)
+        {
+            // No included datasets to materialize from
+            return 0;
+        }
+
+        var syncTimestamp = DateTimeOffset.UtcNow;
+        var materializedCount = 0;
+
+        // Get existing translations in root dataset for deduplication
+        var existingKeysInRoot = await _context.Translations
+            .Where(t => t.DataSetId == rootDataSetId)
+            .Where(t => t.IsCurrentVersion)
+            .Select(t => new
+            {
+                Key = new { t.ResourceName, t.CultureName, t.TranslationName },
+                t.Id,
+                t.SourceDataSetId
+            })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var existingKeys = new HashSet<(string ResourceName, string? CultureName, string TranslationName)>(
+            existingKeysInRoot.Where(t => t.SourceDataSetId == null) // Only consider "original" translations, not previously materialized ones
+                .Select(t => (t.Key.ResourceName, t.Key.CultureName, t.Key.TranslationName))
+        );
+
+        var existingMaterializedIds = new HashSet<Guid>(
+            existingKeysInRoot.Where(t => t.SourceDataSetId.HasValue)
+                .Select(t => t.Id)
+        );
+
+        // Process included datasets (skip the root dataset at index 0)
+        for (int i = 1; i < dataSetIds.Count; i++)
+        {
+            var sourceDataSetId = dataSetIds[i];
+
+            // Fetch translations from source dataset
+            var translationsToMaterialize = await _context.Translations
+                .Where(t => t.DataSetId == sourceDataSetId)
+                .Where(t => t.IsCurrentVersion)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            foreach (var sourceTranslation in translationsToMaterialize)
+            {
+                var key = (sourceTranslation.ResourceName, sourceTranslation.CultureName, sourceTranslation.TranslationName);
+
+                // Skip if this translation key already exists as an original in root dataset
+                if (existingKeys.Contains(key))
+                {
+                    continue;
+                }
+
+                // Check if we already have a materialized version
+                var existingMaterialized = existingKeysInRoot
+                    .FirstOrDefault(e => e.SourceDataSetId.HasValue &&
+                                        e.Key.ResourceName == key.ResourceName &&
+                                        e.Key.CultureName == key.CultureName &&
+                                        e.Key.TranslationName == key.TranslationName);
+
+                if (existingMaterialized != null)
+                {
+                    // Update existing materialized translation
+                    var existingEntity = await _context.Translations
+                        .FirstOrDefaultAsync(t => t.Id == existingMaterialized.Id, cancellationToken);
+
+                    if (existingEntity != null)
+                    {
+                        // Update content and sync timestamp
+                        existingEntity.Content = sourceTranslation.Content;
+                        existingEntity.ContentTemplate = sourceTranslation.ContentTemplate;
+                        existingEntity.InternalGroupName1 = sourceTranslation.InternalGroupName1;
+                        existingEntity.InternalGroupName2 = sourceTranslation.InternalGroupName2;
+                        existingEntity.LayoutId = sourceTranslation.LayoutId;
+                        existingEntity.SourceDataSetLastSyncedAt = syncTimestamp;
+                        existingEntity.UpdatedAt = syncTimestamp;
+
+                        materializedCount++;
+                    }
+                }
+                else
+                {
+                    // Create new materialized translation
+                    var materializedTranslation = new Translation
+                    {
+                        Id = Guid.NewGuid(),
+                        ResourceName = sourceTranslation.ResourceName,
+                        TranslationName = sourceTranslation.TranslationName,
+                        CultureName = sourceTranslation.CultureName,
+                        Content = sourceTranslation.Content,
+                        ContentTemplate = sourceTranslation.ContentTemplate,
+                        InternalGroupName1 = sourceTranslation.InternalGroupName1,
+                        InternalGroupName2 = sourceTranslation.InternalGroupName2,
+                        DataSetId = rootDataSetId,
+                        SourceDataSetId = sourceDataSetId,
+                        SourceDataSetLastSyncedAt = syncTimestamp,
+                        LayoutId = sourceTranslation.LayoutId,
+                        SourceId = null, // Don't copy source reference
+                        IsCurrentVersion = true,
+                        IsDraftVersion = false,
+                        IsOldVersion = false,
+                        OriginalTranslationId = null,
+                        CreatedAt = syncTimestamp,
+                        UpdatedAt = syncTimestamp,
+                        CreatedBy = "System.Materialization"
+                    };
+
+                    _context.Translations.Add(materializedTranslation);
+                    existingKeys.Add(key); // Mark as seen to avoid duplicates from other datasets
+                    materializedCount++;
+                }
+            }
+        }
+
+        // Save all changes
+        if (materializedCount > 0)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        return materializedCount;
+    }
+
+    /// <summary>
     /// Gets all datasets in hierarchical order for a given root dataset ID WITHOUT authorization.
     /// This is a CORE method - use with caution!
     /// Returns a list starting with the root dataset, followed by all included datasets in breadth-first order.

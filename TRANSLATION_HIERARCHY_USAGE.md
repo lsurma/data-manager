@@ -2,48 +2,39 @@
 
 ## Overview
 
-The Translation entity now supports tracking the source dataset for translations and provides a core method to fetch translations from a dataset hierarchy with proper deduplication.
+The Translation entity now supports tracking the source dataset for translations and provides core methods to:
+1. Fetch translations from a dataset hierarchy with proper deduplication (virtual view)
+2. Materialize translations from hierarchy into the root dataset (materialized view)
 
 ## New Fields
 
 ### Translation Entity
-- **SourceDataSetId** (Guid?, nullable): Optional reference to the source DataSet where this translation was fetched from. When null, indicates this is an "original" translation; when set, indicates it was fetched from another dataset.
+- **SourceDataSetId** (Guid?, nullable): Optional reference to the source DataSet where this translation was fetched from. When null, indicates this is an "original" translation; when set, indicates it was fetched/materialized from another dataset.
 - **SourceDataSet** (DataSet?, nullable): Navigation property to the source DataSet.
 - **SourceDataSetLastSyncedAt** (DateTimeOffset?, nullable): Timestamp of the last sync from the source DataSet.
 
-## Core Method: GetTranslationsFromHierarchyAsync
+## Core Methods
 
-### Purpose
-Fetches translations from a DataSet hierarchy with automatic deduplication based on priority.
+### 1. GetTranslationsFromHierarchyAsync (Virtual View)
 
-### Method Signature
+#### Purpose
+Fetches translations from a DataSet hierarchy with automatic deduplication based on priority. This is a "virtual view" - translations are fetched on-demand without being stored in the root dataset.
+
+#### Method Signature
 ```csharp
 public async Task<List<Translation>> GetTranslationsFromHierarchyAsync(
     Guid rootDataSetId,
     CancellationToken cancellationToken = default)
 ```
 
-### How It Works
+#### How It Works
 
 1. **Hierarchy Traversal**: Uses breadth-first search starting from the root dataset
-2. **Translation Fetching**: Loads all translations from datasets in the hierarchy
+2. **Translation Fetching**: Loads translations from datasets in the hierarchy
 3. **Deduplication**: Applies deduplication logic where translations from higher priority datasets take precedence
 4. **Deduplication Key**: `(ResourceName, CultureName, TranslationName)`
 
-### Example Scenario
-
-Consider this hierarchy:
-- **Final** (root) includes **GlobalData**
-- **GlobalData** includes **A** and **B**
-
-Hierarchy order: `[Final, GlobalData, A, B]`
-
-If the same translation exists in multiple datasets:
-- Translation from **Final** has highest priority
-- Translation from **GlobalData** is used only if not in **Final**
-- Translations from **A** and **B** are used only if not in **Final** or **GlobalData**
-
-### Usage Example
+#### Usage Example
 
 ```csharp
 // Inject TranslationsQueryService
@@ -67,21 +58,102 @@ public class MyHandler
 }
 ```
 
+### 2. MaterializeTranslationsFromHierarchyAsync (Materialized View)
+
+#### Purpose
+Materializes (copies) translations from included datasets into the root dataset. This creates a "materialized view" where translations are physically stored in the root dataset, allowing simple queries without hierarchy traversal.
+
+#### Method Signature
+```csharp
+public async Task<int> MaterializeTranslationsFromHierarchyAsync(
+    Guid rootDataSetId,
+    CancellationToken cancellationToken = default)
+```
+
+#### How It Works
+
+1. **Hierarchy Traversal**: Identifies all included datasets
+2. **Deduplication Check**: Skips translations that already exist as originals in the root dataset
+3. **Copy Process**: 
+   - Creates new Translation entities in the root dataset
+   - Sets `SourceDataSetId` to track where the translation came from
+   - Sets `SourceDataSetLastSyncedAt` to current timestamp
+4. **Update Existing**: Updates previously materialized translations if they changed in source datasets
+5. **Returns**: Count of translations materialized (added or updated)
+
+#### Benefits
+
+- **Performance**: Simple queries on root dataset return all translations without hierarchy traversal
+- **Offline Access**: Root dataset contains all data even if source datasets are unavailable
+- **Auditing**: `SourceDataSetId` tracks where each translation originated
+
+#### Usage Example
+
+```csharp
+public class SyncHandler
+{
+    private readonly TranslationsQueryService _translationsQueryService;
+
+    public SyncHandler(TranslationsQueryService translationsQueryService)
+    {
+        _translationsQueryService = translationsQueryService;
+    }
+
+    public async Task<int> SyncDataSet(Guid dataSetId)
+    {
+        // Materialize all translations from hierarchy into the root dataset
+        var count = await _translationsQueryService
+            .MaterializeTranslationsFromHierarchyAsync(dataSetId, CancellationToken.None);
+        
+        Console.WriteLine($"Materialized {count} translations");
+        return count;
+    }
+}
+```
+
+## Example Scenarios
+
+### Scenario: Custom Dataset with Included Datasets
+
+Consider this hierarchy:
+- **some-custom-data-set** (root) includes **data-set-a** and **data-set-b**
+
+Hierarchy order: `[some-custom-data-set, data-set-a, data-set-b]`
+
+**Virtual View (GetTranslationsFromHierarchyAsync):**
+- Queries translations from all three datasets on-demand
+- Deduplicates based on priority
+- Does not modify database
+
+**Materialized View (MaterializeTranslationsFromHierarchyAsync):**
+- Copies translations from data-set-a and data-set-b into some-custom-data-set
+- Marks copies with `SourceDataSetId`
+- After materialization, a simple query on some-custom-data-set returns all translations
+
+### Translation Priority
+
+If the same translation key exists in multiple datasets:
+- Translation from **some-custom-data-set** (original, `SourceDataSetId = null`) has highest priority
+- Translation from **data-set-a** is used only if not in some-custom-data-set
+- Translation from **data-set-b** is used only if not in some-custom-data-set or data-set-a
+
 ## Important Notes
 
 ### Authorization
-⚠️ **WARNING**: `GetTranslationsFromHierarchyAsync` is a CORE method that **omits authorization checks**. Use with caution and ensure authorization is handled at a higher level if needed.
+⚠️ **WARNING**: Both methods are CORE methods that **omit authorization checks**. Use with caution and ensure authorization is handled at a higher level if needed.
 
 ### Performance Considerations
-- The method loads all translations from the hierarchy into memory before deduplication
-- For most applications, this is acceptable as dataset hierarchies are typically small
-- If performance becomes an issue:
-  - Consider limiting the depth of hierarchy traversal
-  - Implement caching at a higher level
-  - For very large datasets, the SQL-based deduplication approach might be needed (would require more complex implementation)
+- Virtual view: Performs hierarchy traversal on each call, suitable for ad-hoc queries
+- Materialized view: One-time cost to copy data, then fast queries; suitable for frequently accessed datasets
+- For most applications, dataset hierarchies are small (dozens to hundreds of datasets)
 
 ### Current Version Only
-The method only fetches translations where `IsCurrentVersion = true`. Draft and old versions are excluded.
+Both methods only work with translations where `IsCurrentVersion = true`. Draft and old versions are excluded.
+
+### Materialization Strategy
+- Original translations (where `SourceDataSetId = null`) in root dataset always take precedence
+- Materialized translations can be updated by re-running materialization
+- Consider running materialization on a schedule or trigger when source datasets change
 
 ## Database Migration
 
