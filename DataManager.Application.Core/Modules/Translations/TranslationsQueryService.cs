@@ -201,7 +201,7 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
     /// 
     /// Creates a "materialized view" by copying translations from included datasets into the root dataset.
     /// Translations that already exist in the root dataset are not copied (respecting hierarchy priority).
-    /// Each copied translation is marked with SourceDataSetId and SourceDataSetLastSyncedAt.
+    /// Each copied translation is marked with SourceTranslationId (pointing to source) and SourceTranslationLastSyncedAt.
     /// 
     /// Example: If "some-custom-data-set" includes "data-set-a" and "data-set-b",
     /// this method will copy all translations from those datasets into "some-custom-data-set"
@@ -234,18 +234,18 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
             {
                 Key = new { t.ResourceName, t.CultureName, t.TranslationName },
                 t.Id,
-                t.SourceDataSetId
+                t.SourceTranslationId
             })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
         var existingKeys = new HashSet<(string ResourceName, string? CultureName, string TranslationName)>(
-            existingKeysInRoot.Where(t => t.SourceDataSetId == null) // Only consider "original" translations, not previously materialized ones
+            existingKeysInRoot.Where(t => t.SourceTranslationId == null) // Only consider "original" translations, not previously materialized ones
                 .Select(t => (t.Key.ResourceName, t.Key.CultureName, t.Key.TranslationName))
         );
 
         var existingMaterializedIds = new HashSet<Guid>(
-            existingKeysInRoot.Where(t => t.SourceDataSetId.HasValue)
+            existingKeysInRoot.Where(t => t.SourceTranslationId.HasValue)
                 .Select(t => t.Id)
         );
 
@@ -273,7 +273,7 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
 
                 // Check if we already have a materialized version
                 var existingMaterialized = existingKeysInRoot
-                    .FirstOrDefault(e => e.SourceDataSetId.HasValue &&
+                    .FirstOrDefault(e => e.SourceTranslationId.HasValue &&
                                         e.Key.ResourceName == key.ResourceName &&
                                         e.Key.CultureName == key.CultureName &&
                                         e.Key.TranslationName == key.TranslationName);
@@ -292,7 +292,8 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
                         existingEntity.InternalGroupName1 = sourceTranslation.InternalGroupName1;
                         existingEntity.InternalGroupName2 = sourceTranslation.InternalGroupName2;
                         existingEntity.LayoutId = sourceTranslation.LayoutId;
-                        existingEntity.SourceDataSetLastSyncedAt = syncTimestamp;
+                        existingEntity.SourceTranslationId = sourceTranslation.Id; // Update to point to current source
+                        existingEntity.SourceTranslationLastSyncedAt = syncTimestamp;
                         existingEntity.UpdatedAt = syncTimestamp;
 
                         materializedCount++;
@@ -312,8 +313,8 @@ public class TranslationsQueryService : QueryService<Translation, Guid>
                         InternalGroupName1 = sourceTranslation.InternalGroupName1,
                         InternalGroupName2 = sourceTranslation.InternalGroupName2,
                         DataSetId = rootDataSetId,
-                        SourceDataSetId = sourceDataSetId,
-                        SourceDataSetLastSyncedAt = syncTimestamp,
+                        SourceTranslationId = sourceTranslation.Id, // Point to source translation
+                        SourceTranslationLastSyncedAt = syncTimestamp,
                         LayoutId = sourceTranslation.LayoutId,
                         SourceId = null, // Don't copy source reference
                         IsCurrentVersion = true,

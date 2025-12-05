@@ -24,15 +24,16 @@ public record TranslationDto : ITranslationDto
     public Guid? DataSetId { get; set; }
 
     /// <summary>
-    /// Optional reference to the source DataSet where this translation was fetched from.
-    /// Used to determine if translation is "original" (null) or fetched from another dataset.
+    /// Optional reference to the source Translation from which this translation was materialized.
+    /// Used to determine if translation is "original" (null) or materialized from another dataset.
+    /// Points directly to the source translation entity.
     /// </summary>
-    public Guid? SourceDataSetId { get; set; }
+    public Guid? SourceTranslationId { get; set; }
 
     /// <summary>
-    /// Timestamp of last sync from the source DataSet
+    /// Timestamp of last sync from the source Translation
     /// </summary>
-    public DateTimeOffset? SourceDataSetLastSyncedAt { get; set; }
+    public DateTimeOffset? SourceTranslationLastSyncedAt { get; set; }
 
     /// <summary>
     /// Optional reference to a layout Translation (used for email templates)

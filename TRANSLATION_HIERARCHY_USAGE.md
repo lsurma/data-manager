@@ -2,16 +2,16 @@
 
 ## Overview
 
-The Translation entity now supports tracking the source dataset for translations and provides core methods to:
+The Translation entity now supports tracking the source translation for materialized translations and provides core methods to:
 1. Fetch translations from a dataset hierarchy with proper deduplication (virtual view)
 2. Materialize translations from hierarchy into the root dataset (materialized view)
 
 ## New Fields
 
 ### Translation Entity
-- **SourceDataSetId** (Guid?, nullable): Optional reference to the source DataSet where this translation was fetched from. When null, indicates this is an "original" translation; when set, indicates it was fetched/materialized from another dataset.
-- **SourceDataSet** (DataSet?, nullable): Navigation property to the source DataSet.
-- **SourceDataSetLastSyncedAt** (DateTimeOffset?, nullable): Timestamp of the last sync from the source DataSet.
+- **SourceTranslationId** (Guid?, nullable): Optional reference to the source Translation from which this translation was materialized. When null, indicates this is an "original" translation; when set, points directly to the source translation entity from another dataset.
+- **SourceTranslation** (Translation?, nullable): Navigation property to the source Translation.
+- **SourceTranslationLastSyncedAt** (DateTimeOffset?, nullable): Timestamp of the last sync from the source Translation.
 
 ## Core Methods
 
@@ -76,8 +76,8 @@ public async Task<int> MaterializeTranslationsFromHierarchyAsync(
 2. **Deduplication Check**: Skips translations that already exist as originals in the root dataset
 3. **Copy Process**: 
    - Creates new Translation entities in the root dataset
-   - Sets `SourceDataSetId` to track where the translation came from
-   - Sets `SourceDataSetLastSyncedAt` to current timestamp
+   - Sets `SourceTranslationId` to point directly to the source translation entity
+   - Sets `SourceTranslationLastSyncedAt` to current timestamp
 4. **Update Existing**: Updates previously materialized translations if they changed in source datasets
 5. **Returns**: Count of translations materialized (added or updated)
 
@@ -85,7 +85,8 @@ public async Task<int> MaterializeTranslationsFromHierarchyAsync(
 
 - **Performance**: Simple queries on root dataset return all translations without hierarchy traversal
 - **Offline Access**: Root dataset contains all data even if source datasets are unavailable
-- **Auditing**: `SourceDataSetId` tracks where each translation originated
+- **Direct Tracking**: `SourceTranslationId` points directly to the source translation entity, enabling easy navigation and comparison
+- **Auditing**: Can trace back to exact source translation and see which dataset it came from via the source translation's DataSetId
 
 #### Usage Example
 
@@ -127,13 +128,13 @@ Hierarchy order: `[some-custom-data-set, data-set-a, data-set-b]`
 
 **Materialized View (MaterializeTranslationsFromHierarchyAsync):**
 - Copies translations from data-set-a and data-set-b into some-custom-data-set
-- Marks copies with `SourceDataSetId`
+- Marks copies with `SourceTranslationId` pointing to the source translation
 - After materialization, a simple query on some-custom-data-set returns all translations
 
 ### Translation Priority
 
 If the same translation key exists in multiple datasets:
-- Translation from **some-custom-data-set** (original, `SourceDataSetId = null`) has highest priority
+- Translation from **some-custom-data-set** (original, `SourceTranslationId = null`) has highest priority
 - Translation from **data-set-a** is used only if not in some-custom-data-set
 - Translation from **data-set-b** is used only if not in some-custom-data-set or data-set-a
 
@@ -151,13 +152,19 @@ If the same translation key exists in multiple datasets:
 Both methods only work with translations where `IsCurrentVersion = true`. Draft and old versions are excluded.
 
 ### Materialization Strategy
-- Original translations (where `SourceDataSetId = null`) in root dataset always take precedence
+- Original translations (where `SourceTranslationId = null`) in root dataset always take precedence
 - Materialized translations can be updated by re-running materialization
 - Consider running materialization on a schedule or trigger when source datasets change
+- Use `SourceTranslation` navigation property to access the original source translation and compare changes
 
-## Database Migration
+## Database Migrations
 
-The migration `20251204230333_AddSourceDataSetToTranslation` adds:
-- `SourceDataSetId` column with foreign key to DataSets table
-- `SourceDataSetLastSyncedAt` column
-- Index on `SourceDataSetId` for query performance
+### Migration: 20251204230333_AddSourceDataSetToTranslation (Superseded)
+- Initial migration that added `SourceDataSetId` and `SourceDataSetLastSyncedAt`
+- Superseded by the next migration
+
+### Migration: 20251205184538_ReplaceSourceDataSetWithSourceTranslation
+- Renamed `SourceDataSetId` to `SourceTranslationId`
+- Renamed `SourceDataSetLastSyncedAt` to `SourceTranslationLastSyncedAt`
+- Changed foreign key from DataSets to Translations (self-referencing)
+- Maintains the same index for query performance
