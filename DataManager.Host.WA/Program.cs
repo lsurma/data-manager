@@ -66,6 +66,7 @@ builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ICookieService, CookieService>();
 builder.Services.AddScoped<NavigationHelper>();
 builder.Services.AddScoped<AppDataContext>();
+builder.Services.AddTransient<IKeyboardShortcutsService, KeyboardShortcutsService>();
 
 builder.Services.AddFluentUIComponents();
 builder.Services.AddRadzenComponents();

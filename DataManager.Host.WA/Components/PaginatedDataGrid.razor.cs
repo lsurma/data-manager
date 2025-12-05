@@ -64,6 +64,9 @@ public partial class PaginatedDataGrid<TItem> : ComponentBase
     [Parameter]
     public DataGridSelectionMode SelectionMode { get; set; } = DataGridSelectionMode.Single;
 
+    [Parameter]
+    public RenderFragment? ToolbarTemplate { get; set; } = null!;
+    
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();

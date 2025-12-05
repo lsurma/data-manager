@@ -21,8 +21,6 @@ public partial class PaginatedDataGrid<TItem>
     /// </summary>
     private async Task OpenSettingsPanelAsync()
     {
-        _ = 1;
-
         // Create a copy of column states to allow canceling changes
         var settings = GridSettings ?? new AppDataGridSettings();
         settings = settings with
@@ -218,7 +216,18 @@ public partial class PaginatedDataGrid<TItem>
         GridSettings ??= new AppDataGridSettings();
         
         // Update the column width in our settings
-        var columnState = GridSettings.Columns.FirstOrDefault(c => c.UniqueID == arg.Column.UniqueID) ?? new();
+        var columnState = GridSettings.Columns.FirstOrDefault(c => c.UniqueID == arg.Column.UniqueID);
+        
+        if(columnState == null)
+        {
+            columnState = new ColumnSettings
+            {
+                UniqueID = arg.Column.UniqueID,
+                Visible = arg.Column.Visible,
+                OrderIndex = arg.Column.OrderIndex ?? 0
+            };
+            GridSettings.Columns.Add(columnState);
+        }
 
         columnState.Width = $"{(int)(arg.Width)}px";
         await SaveSettingsAsync();

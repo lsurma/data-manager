@@ -7,10 +7,6 @@
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
     <h3 style="margin: 0;">Translations</h3>
-    
-    <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
-        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Size20.Add())" />
-    </FluentNavLink>
 </FluentStack>
 
 <FluentDivider Style="margin: 16px 0;" />
@@ -28,4 +24,19 @@
     }
 </FluentStack>
 
-<TranslationsGrid Filters="@_filters" />
+<TranslationsGrid Filters="@_filters">
+    <ToolbarTemplate>
+        <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+            <FluentButton Disabled="@(string.IsNullOrWhiteSpace(DataSetId))" Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
+                Create
+            </FluentButton>
+        </FluentNavLink>
+        
+        <FluentNavLink Href="@NavHelper.BuildUrl("action", "import")">
+            <FluentButton Disabled="@(string.IsNullOrWhiteSpace(DataSetId))" Appearance="Appearance.Accent" IconStart="@(new Size20.ArrowImport())">
+                Import
+            </FluentButton>
+        </FluentNavLink>
+        
+    </ToolbarTemplate>
+</TranslationsGrid>

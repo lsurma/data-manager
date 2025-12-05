@@ -2,7 +2,7 @@
 @using DataManager.Host.WA.Services
 
 <CascadingAuthenticationState>
-    <CascadingValue Value="AppContext" Name="AppDataContext">
+    <CascadingValue Value="AppContext">
         <Router AppAssembly="@typeof(App).Assembly">
             <Found Context="routeData">
                 <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
