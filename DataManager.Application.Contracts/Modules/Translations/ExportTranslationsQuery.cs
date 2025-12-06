@@ -7,9 +7,11 @@ public class ExportTranslationsQuery : IRequest<Stream>
 {
     public string? OrderBy { get; set; }
     public string? OrderDirection { get; set; }
-    public FilteringParameters? Filtering { get; set; }
-    public string Format { get; set; } = "csv";
-    public string ExportType { get; set; } = "All";
-    public bool UseCurrentFilters { get; set; }
-    public string BaseLanguage { get; set; } = "en-US";
+    public string Format { get; set; } = "xlsx";
+    
+    public Guid TranslationsSetId { get; set; }
+    
+    public string BaseCulture { get; set; } = "en-US";
+
+    public string TargetCulture { get; set; } = "en-US";
 }

@@ -42,8 +42,9 @@
             Disabled="@(TranslationsSetId == null || IsExporting)"
             Appearance="Appearance.Accent"
             IconStart="@(new Size20.ArrowExport())"
-            OnClick="OnExportToExcelAsync">
-            @(IsExporting ? "Exporting..." : "Export all to Excel (.xlsx)")
+            OnClick="OnExportToExcelAsync"
+            Loading="IsExporting">
+            Export all to Excel (.xlsx)
         </FluentButton>
         
     </ToolbarTemplate>

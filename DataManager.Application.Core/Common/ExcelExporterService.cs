@@ -12,7 +12,8 @@ public class ExcelExporterService : ITranslationExporter
         var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Translations");
 
-        var baseLanguage = parameters.ContainsKey("BaseLanguage") ? parameters["BaseLanguage"].ToString() : "en-US";
+        var baseCulture = parameters.ContainsKey("BaseCulture") ? parameters["BaseCulture"].ToString() : "-";
+        var targetCulture = parameters.ContainsKey("TargetCulture") ? parameters["TargetCulture"].ToString() : "-";
         var baseTranslations = parameters.ContainsKey("BaseTranslations") 
             ? parameters["BaseTranslations"] as IEnumerable<TranslationExportDto> 
             : null;
@@ -29,11 +30,8 @@ public class ExcelExporterService : ITranslationExporter
         // Set up headers
         worksheet.Cell(1, 1).Value = "ResourceName";
         worksheet.Cell(1, 2).Value = "TranslationName";
-        worksheet.Cell(1, 3).Value = "CultureName";
-        worksheet.Cell(1, 4).Value = baseLanguage;
-        worksheet.Cell(1, 5).Value = "Content";
-        worksheet.Cell(1, 6).Value = "InternalGroupName1";
-        worksheet.Cell(1, 7).Value = "InternalGroupName2";
+        worksheet.Cell(1, 3).Value = $"Content ({baseCulture})";
+        worksheet.Cell(1, 4).Value = $"Content ({targetCulture})";
 
         // Style headers
         var headerRow = worksheet.Row(1);
@@ -45,7 +43,6 @@ public class ExcelExporterService : ITranslationExporter
         {
             worksheet.Cell(row, 1).Value = translation.ResourceName;
             worksheet.Cell(row, 2).Value = translation.TranslationName;
-            worksheet.Cell(row, 3).Value = translation.CultureName ?? string.Empty;
             
             // Add base language translation if available
             if (baseTranslationsLookup != null)
@@ -53,13 +50,11 @@ public class ExcelExporterService : ITranslationExporter
                 var key = new TranslationKey(translation.ResourceName, translation.TranslationName);
                 if (baseTranslationsLookup.TryGetValue(key, out var baseContent))
                 {
-                    worksheet.Cell(row, 4).Value = baseContent;
+                    worksheet.Cell(row, 3).Value = baseContent;
                 }
             }
             
-            worksheet.Cell(row, 5).Value = translation.Content;
-            worksheet.Cell(row, 6).Value = translation.InternalGroupName1 ?? string.Empty;
-            worksheet.Cell(row, 7).Value = translation.InternalGroupName2 ?? string.Empty;
+            worksheet.Cell(row, 4).Value = translation.Content;
 
             row++;
         }

@@ -67,18 +67,15 @@ public partial class TranslationsPage : ComponentBase
             var query = new ExportTranslationsQuery
             {
                 Format = "xlsx",
-                Filtering = new FilteringParameters
-                {
-                    QueryFilters = new List<IQueryFilter>
-                    {
-                        new TranslationsSetIdFilter { Value = TranslationsSetId.Value }
-                    }
-                }
+                BaseCulture = "en-US",
+                TargetCulture = "en-US",
+                TranslationsSetId = TranslationsSetId.Value,
             };
 
             var downloadedFile = await RequestSender.DownloadFileAsync(query);
-
-            await JSRuntime.InvokeVoidAsync("downloadFile", downloadedFile.FileName, downloadedFile.ContentType, downloadedFile.Content);
+            var filename = string.IsNullOrWhiteSpace(downloadedFile.FileName) ? "translations.xlsx" : downloadedFile.FileName;
+            
+            await JSRuntime.InvokeVoidAsync("downloadFile", filename, downloadedFile.ContentType, downloadedFile.Content);
         }
         catch (Exception ex)
         {

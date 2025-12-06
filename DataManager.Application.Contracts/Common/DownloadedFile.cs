@@ -18,5 +18,5 @@ public class DownloadedFile
     /// <summary>
     /// The suggested filename for the downloaded file
     /// </summary>
-    public string FileName { get; set; } = "download.bin";
+    public string? FileName { get; set; }
 }

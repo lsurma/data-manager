@@ -106,7 +106,7 @@ public class DataManagerHttpClient
 
         var content = await response.Content.ReadAsByteArrayAsync(cancellationToken);
         var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
-        var fileName = "download.bin";
+        string? fileName = null;
 
         // Try to get filename from Content-Disposition header
         if (response.Content.Headers.ContentDisposition?.FileNameStar != null)

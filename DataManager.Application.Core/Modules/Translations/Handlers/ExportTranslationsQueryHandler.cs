@@ -28,14 +28,13 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
             },
             Filtering = new FilteringParameters
             {
-                QueryFilters = request.Filtering?.QueryFilters ?? []
+                QueryFilters = new List<IQueryFilter>()
+                {
+                    new TranslationsSetIdFilter(request.TranslationsSetId),
+                    new CultureNameFilter(request.TargetCulture)
+                }
             }
         };
-
-        if (request.ExportType == "All" && !request.UseCurrentFilters)
-        {
-            queryOptions.Filtering = new FilteringParameters();
-        }
 
         // Fetch the main translations to export
         var query = await _queryService.PrepareQueryAsync(options: queryOptions, cancellationToken: cancellationToken);
@@ -49,22 +48,22 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
             .ToHashSet();
 
         // Build a query for base language translations
-        List<Translation> baseLanguageTranslations = new List<Translation>();
+        List<Translation> baseCultureTranslations = new List<Translation>();
         if (translationKeys.Any())
         {
             // Create a filter options for base language
-            var baseLanguageQueryOptions = new TranslationsQueryService.Options
+            var baseCultureQueryOptions = new TranslationsQueryService.Options
             {
                 Filtering = new FilteringParameters
                 {
                     QueryFilters = new List<IQueryFilter>
                     {
-                        new CultureNameFilter { Value = request.BaseLanguage }
+                        new CultureNameFilter(request.BaseCulture)
                     }
                 }
             };
 
-            var baseQuery = await _queryService.PrepareQueryAsync(options: baseLanguageQueryOptions, cancellationToken: cancellationToken);
+            var baseQuery = await _queryService.PrepareQueryAsync(options: baseCultureQueryOptions, cancellationToken: cancellationToken);
             
             // Filter to only include translations with matching keys using Contains for better SQL performance
             // We use separate Contains operations for ResourceName and TranslationName to leverage SQL indexes
@@ -80,18 +79,19 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
             var potentialMatches = await baseQuery.ToListAsync(cancellationToken);
             
             // Final filtering in memory to ensure exact key matches
-            baseLanguageTranslations = potentialMatches
+            baseCultureTranslations = potentialMatches
                 .Where(t => translationKeys.Contains(new TranslationKey(t.ResourceName, t.TranslationName)))
                 .ToList();
         }
 
-        var baseLanguageExportDtos = baseLanguageTranslations.ToExportDto();
+        var baseCultureExportDtos = baseCultureTranslations.ToExportDto();
 
         var exporter = _exporterFactory.GetExporter(request.Format);
         return await exporter.ExportAsync(translationExportDtos, new Dictionary<string, object>
         {
-            { "BaseLanguage", request.BaseLanguage },
-            { "BaseTranslations", baseLanguageExportDtos }
+            { "TargetCulture", request.TargetCulture },
+            { "BaseCulture", request.BaseCulture },
+            { "BaseTranslations", baseCultureExportDtos }
         }, cancellationToken);
     }
 }

@@ -5,6 +5,16 @@ namespace DataManager.Application.Contracts.Modules.Translations;
 /// </summary>
 public class TranslationsSetIdFilter : TranslationFilterBase<TranslationsSetIdFilter>
 {
+    public TranslationsSetIdFilter()
+    {
+        
+    }
+
+    public TranslationsSetIdFilter(Guid id)
+    {
+        Value = id;
+    }
+    
     public Guid? Value { get; set; }
     
     public override bool IsActive() => Value.HasValue;
@@ -15,6 +25,16 @@ public class TranslationsSetIdFilter : TranslationFilterBase<TranslationsSetIdFi
 /// </summary>
 public class CultureNameFilter : TranslationFilterBase<CultureNameFilter>
 {
+    public CultureNameFilter()
+    {
+        
+    }
+
+    public CultureNameFilter(string cultureName)
+    {
+        Value = cultureName;
+    }
+    
     public string? Value { get; set; }
     
     public override bool IsActive() => !string.IsNullOrWhiteSpace(Value);
