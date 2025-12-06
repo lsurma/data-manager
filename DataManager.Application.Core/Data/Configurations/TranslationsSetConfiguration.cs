@@ -41,7 +41,9 @@ public class TranslationsSetConfiguration : AuditableEntityConfiguration<Transla
             .HasMaxLength(500);
 
         // Store WebhookUrls as comma-separated string in SQLite
-        // Invalid URLs are filtered out at the handler level before storage
+        // Note: Invalid URLs are validated and filtered at the handler level before storage,
+        // so the Uri constructor here should not throw in practice. If corrupted data exists
+        // in the database, it will throw UriFormatException during deserialization.
         builder.Property(e => e.WebhookUrls)
             .HasConversion(
                 v => !v.Any() ? string.Empty : string.Join(',', v.Select(uri => uri.ToString())),
