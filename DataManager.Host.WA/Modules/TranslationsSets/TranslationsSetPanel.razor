@@ -1,4 +1,5 @@
 @using DataManager.Host.WA.Components
+@using DataManager.Application.Contracts.Modules.TranslationsSet
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 @implements IDialogContentComponent<TranslationsSetPanelParameters>
 
@@ -48,17 +49,20 @@
             @if (Content.AvailableTranslationsSets.Any())
             {
                 <div>
-                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">Included TranslationsSets (Optional)</label>
-                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
-                        @foreach (var availableTranslationsSet in Content.AvailableTranslationsSets)
-                        {
-                            var isSelected = SelectedIncludeIds.Contains(availableTranslationsSet.Id);
-                            <FluentCheckbox 
-                                Label="@availableTranslationsSet.Name"
-                                Value="@isSelected"
-                                ValueChanged="@((bool newValue) => HandleIncludeChanged(availableTranslationsSet.Id, newValue))" />
-                        }
-                    </FluentStack>
+                    <FluentAutocomplete TOption="TranslationsSetDto"
+                                        Multiple="true"
+                                        Placeholder="Select translation sets..."
+                                        Items="@Content.AvailableTranslationsSets"
+                                        OptionText="@(ts => ts.Name)"
+                                        @bind-SelectedOptions="@SelectedIncludedTranslationsSets"
+                                        Style="width: 100%;">
+                        <LabelTemplate>
+                            Included TranslationsSets (Optional)
+                            <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                                <br/>Select other TranslationsSets to include in this one.
+                            </span>
+                        </LabelTemplate>
+                    </FluentAutocomplete>
                 </div>
             }
             
