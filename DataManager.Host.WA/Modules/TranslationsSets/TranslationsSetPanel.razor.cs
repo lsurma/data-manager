@@ -66,7 +66,7 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
         }
 
         // Initialize selected cultures from the TranslationsSet
-        if (Content?.TranslationsSet?.AvailableCultures != null && Content.TranslationsSet.AvailableCultures.Any())
+        if (Content?.TranslationsSet?.AvailableCultures.Any() == true)
         {
             SelectedCultures = Content.TranslationsSet.AvailableCultures.ToList();
         }
