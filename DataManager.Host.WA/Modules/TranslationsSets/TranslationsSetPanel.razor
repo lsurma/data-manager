@@ -28,22 +28,19 @@
             @if (AvailableCultures.Any())
             {
                 <div>
-                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">
-                        Supported Cultures (Optional)
-                        <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
-                            <br/>Select the cultures/languages supported by this TranslationsSet. If none are selected, all system cultures are available.
-                        </span>
-                    </label>
-                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
-                        @foreach (var culture in AvailableCultures)
-                        {
-                            var isSelected = SelectedCultures.Contains(culture);
-                            <FluentCheckbox 
-                                Label="@culture"
-                                Value="@isSelected"
-                                ValueChanged="@((bool newValue) => HandleCultureChanged(culture, newValue))" />
-                        }
-                    </FluentStack>
+                    <FluentAutocomplete TOption="string"
+                                        Multiple="true"
+                                        Placeholder="Select cultures..."
+                                        Items="@AvailableCultures"
+                                        @bind-SelectedOptions="@SelectedCultures"
+                                        Style="width: 100%;">
+                        <LabelTemplate>
+                            Supported Cultures (Optional)
+                            <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                                <br/>Select the cultures/languages supported by this TranslationsSet. If none are selected, all system cultures are available.
+                            </span>
+                        </LabelTemplate>
+                    </FluentAutocomplete>
                 </div>
             }
 
