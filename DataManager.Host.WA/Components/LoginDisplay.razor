@@ -5,7 +5,7 @@
 
 <AuthorizeView>
     <Authorized>
-        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
+        <FluentStack Width="auto" Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
             <FluentButton IconStart="@(new Size24.SignOut())" OnClick="BeginSignOut">
                 Log out
             </FluentButton>
@@ -16,7 +16,7 @@
         </FluentStack>
     </Authorized>
     <NotAuthorized>
-        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
+        <FluentStack Width="auto" Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.End">
             <FluentButton Appearance="Appearance.Accent" OnClick="BeginSignIn">Log in</FluentButton>
         </FluentStack>
     </NotAuthorized>

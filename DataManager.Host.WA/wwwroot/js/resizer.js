@@ -23,12 +23,12 @@ window.interactJs = {
             return;
         }
           
-        this.makeResizable(dotNetHelper, handle, panelElement);
+        this.makeResizable(dotNetHelper, handle, panelElement, '--dialog-width');
     },
     
-    makeResizable: function (dotNetHelper, targetElement, propertyElement) {
+    makeResizable: function (dotNetHelper, targetElement, propertyElement, cssVarNameToSet) {
         const computedStyle = getComputedStyle(targetElement);
-        const minWidthVar = computedStyle.getPropertyValue('--dialog-min-width');
+        const minWidthVar = computedStyle.getPropertyValue('--min-width');
         const minWidth = parseInt(minWidthVar, 10) || 300;
         let debounceTimeout;
 
@@ -41,7 +41,7 @@ window.interactJs = {
                         const width = event.rect.width;
 
                         if (propertyElement) {
-                            propertyElement.style.setProperty('--dialog-width', `${width}px`);
+                            propertyElement.style.setProperty(cssVarNameToSet, `${width}px`);
                         } else {
                             targetElement.style.width = `${width}px`;
                         }

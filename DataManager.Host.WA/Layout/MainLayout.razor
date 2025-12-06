@@ -10,19 +10,23 @@
 
 <FluentLayout>
     <FluentHeader>
-        <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Start">
             <FluentLabel Typo="Typography.H3">Data Manager</FluentLabel>
-            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
-                <FluentButton 
-                    IconStart="@(new Size20.ArrowSync())" 
-                    Appearance="Appearance.Outline"
-                    OnClick="@RefreshAppDataAsync"
-                    Title="Refresh cached data"
-                    Loading="@IsRefreshing" />
+            
+            <FluentButton 
+                IconStart="@(new Size20.ArrowSync())" 
+                Appearance="Appearance.Stealth"
+                BackgroundColor="rgba(0,0,0,0);"
+                OnClick="@RefreshAppDataAsync"
+                Title="Refresh cached data"
+                Loading="@IsRefreshing" />
+            
+            <div style="margin-left: auto;">
                 <LoginDisplay />
-            </FluentStack>
+            </div>
         </FluentStack>
     </FluentHeader>
+    
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
         <NavMenu />
         <FluentBodyContent Class="body-content">
@@ -38,11 +42,6 @@
             </ErrorBoundary>
         </FluentBodyContent>
     </FluentStack>
-    <FluentFooter>
-        <a href="https://www.fluentui-blazor.net" target="_blank">Documentation and demos</a>
-        <FluentSpacer />
-        <a href="https://learn.microsoft.com/en-us/aspnet/core/blazor" target="_blank">About Blazor</a>
-    </FluentFooter>
 </FluentLayout>
 
 <CustomDialogProvider />
