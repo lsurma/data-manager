@@ -45,7 +45,7 @@ public struct Optional<T>
     /// <summary>
     /// Gets the value if set, otherwise returns the provided default value.
     /// </summary>
-    public T GetValueOrDefault(T defaultValue) => _isSet ? _value! : defaultValue;
+    public T GetValueOrDefault(T defaultValue) => _isSet ? (_value ?? defaultValue) : defaultValue;
 
     /// <summary>
     /// Creates an Optional with no value set.
@@ -84,9 +84,9 @@ public struct Optional<T>
     public override int GetHashCode()
     {
         if (!_isSet)
-            return 0;
+            return HashCode.Combine(typeof(T), false);
 
-        return _value?.GetHashCode() ?? 0;
+        return HashCode.Combine(_value, true);
     }
 
     public static bool operator ==(Optional<T> left, Optional<T> right) => left.Equals(right);
