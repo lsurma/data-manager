@@ -15,13 +15,21 @@ namespace DataManager.Host.WA.Modules.Translations;
 public partial class TranslationsGrid : ComponentBase, IDisposable
 {
     [Parameter]
-    public List<IQueryFilter> Filters { get; set; } = new();
-
+    public Guid? DataSetId { get; set; }
+    
     [Parameter]
     public RenderFragment ToolbarTemplate { get; set; } = null!;
-    
-    [CascadingParameter(Name = "AppDataContext")]
-    public AppDataContext AppContext { get; set; } = null!;
+
+    [CascadingParameter]
+    public AppDataContext? CascadingAppContext { get; set; }
+
+    [Inject]
+    private AppDataContext InjectedAppContext { get; set; } = null!;
+
+    /// <summary>
+    /// Gets the AppDataContext from cascading parameter if available, otherwise uses injected service
+    /// </summary>
+    private AppDataContext AppContext => CascadingAppContext ?? InjectedAppContext;
 
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
@@ -36,10 +44,10 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private IRequestSender RequestSender { get; set; } = null!;
 
     private List<TranslationDto> AllTranslations { get; set; } = new();
-    private List<DataSetDto> AllDataSets => AppContext?.DataSets ?? new List<DataSetDto>();
+    private List<DataSetDto> AllDataSets => AppContext.DataSets;
     private List<TranslationDto> AllLayouts { get; set; } = new();
     private IDialogReference? _currentDialog;
-    private string? _refreshToken;
+    private string? RefreshToken { get; set; }
     private IList<TranslationDto> _selectedRows = new List<TranslationDto>();
     private GetTranslationsQuery _currentQuery = new GetTranslationsQuery
     {
@@ -64,16 +72,24 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         }
     }
 
-    protected override void OnParametersSet()
+    public override async Task SetParametersAsync(ParameterView parameters)
     {
-        _currentQuery = new GetTranslationsQuery
+        var dataSetIdChanged = parameters.TryGetValue<Guid?>(nameof(DataSetId), out var newDataSetId) && newDataSetId != DataSetId;
+        if (dataSetIdChanged)
         {
-            Filtering = new FilteringParameters
+            DataSetId = newDataSetId;
+            _currentQuery = new GetTranslationsQuery
             {
-                QueryFilters = BuildQueryFilters()
-            },
-            Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
-        };
+                Filtering = new FilteringParameters
+                {
+                    QueryFilters = BuildQueryFilters()
+                },
+                Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
+            };
+            RefreshToken = Guid.NewGuid().ToString();
+        }
+        
+        await base.SetParametersAsync(parameters);
     }
 
     private void HandleContextRefreshed()
@@ -183,7 +199,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
             Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
         };
-        _refreshToken = Guid.NewGuid().ToString();
+        RefreshToken = Guid.NewGuid().ToString();
     }
 
     private void OnSearchChanged()
@@ -196,7 +212,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             },
             Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
-        _refreshToken = Guid.NewGuid().ToString();
+        RefreshToken = Guid.NewGuid().ToString();
     }
 
     private void OnCultureFilterChanged()
@@ -209,20 +225,28 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             },
             Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
         };
-        _refreshToken = Guid.NewGuid().ToString();
+        RefreshToken = Guid.NewGuid().ToString();
     }
 
     private List<IQueryFilter> BuildQueryFilters()
     {
-        var filters = new List<IQueryFilter>(Filters);
+        var filters = new List<IQueryFilter>();
+        
         if (!string.IsNullOrWhiteSpace(_searchTerm))
         {
             filters.Add(new SearchFilter { SearchTerm = _searchTerm });
         }
+        
         if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
         {
             filters.Add(new CultureNameFilter { Value = _cultureNameFilter });
         }
+        
+        if(DataSetId != null)
+        {
+            filters.Add(new DataSetIdFilter { Value = DataSetId.Value });
+        }
+        
         return filters;
     }
 
@@ -276,13 +300,10 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         var parameters = new TranslationPanelParameters
         {
             TranslationId = translation?.Id,
-            Translation = null!, // Will be loaded by the panel
-            IsEditMode = isEditMode,
-            AvailableDataSets = AllDataSets,
-            AvailableLayouts = AllLayouts,
+            DataSetId = DataSetId,
             OnDataChanged = async () =>
             {
-                _refreshToken = Guid.NewGuid().ToString();
+                RefreshToken = Guid.NewGuid().ToString();
                 LoadLayoutsAsync();
                 await InvokeAsync(StateHasChanged);
             }
@@ -296,13 +317,24 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             Modal = false,
             Id = $"panel-{Guid.NewGuid()}"
         });
-
+        
         if (_currentDialog != null)
         {
             await _currentDialog.CloseAsync();
         }
+        
         _currentDialog = newDialog;
 
+        var result = await _currentDialog.Result;
+        _currentDialog = null;
+        var currentId = NavHelper.GetQueryParameter("id");
+        
+        if(result.Cancelled && currentId == translation?.Id.ToString())
+        {
+            NavigationManager.NavigateTo(DataSetId != null ? "/translations/" + DataSetId : "/translations", false);
+        }
+        
+        StateHasChanged();
     }
 
     public void Dispose()

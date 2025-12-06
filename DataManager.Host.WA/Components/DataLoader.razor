@@ -4,6 +4,7 @@
 @typeparam TQuery
 @inject IRequestSender RequestSender
 @inject ILocalStorageService LocalStorage
+@implements IDisposable
 
 @if (IsLoading && Data == null)
 {
@@ -89,6 +90,7 @@ else if (Data != null)
     private string? _previousRefreshToken;
     private bool _hasLoadedOnce;
     private bool _isFirstLiveFetch = true;
+    private CancellationTokenSource? _cancellationTokenSource;
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,6 +114,17 @@ else if (Data != null)
 
     private async Task LoadDataAsync()
     {
+        // Cancel any existing request
+        if(_cancellationTokenSource != null)
+        {
+            await _cancellationTokenSource.CancelAsync();
+            _cancellationTokenSource.Dispose();
+        }
+        
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        var cancellationToken = _cancellationTokenSource.Token;
+
         try
         {
             IsLoading = true;
@@ -144,11 +157,17 @@ else if (Data != null)
                 }
             }
 
+            // Check if cancelled before making the API call
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Mark that we've attempted to load at least once
             _hasLoadedOnce = true;
 
-            // Fetch fresh data from API
-            var freshData = await RequestSender.SendAsync<TResponse>(Query!);
+            // Fetch fresh data from API with cancellation token
+            var freshData = await RequestSender.SendAsync<TResponse>(Query!, cancellationToken);
+
+            // Check if cancelled before updating state
+            cancellationToken.ThrowIfCancellationRequested();
 
             // Update cache if caching is enabled
             if (shouldUseCache)
@@ -172,13 +191,26 @@ else if (Data != null)
                 await OnDataFetched.InvokeAsync(eventArgs);
             }
         }
+        catch (OperationCanceledException)
+        {
+            // Request was cancelled, this is expected behavior
+            // Don't set error message or change loading state
+        }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading data: {ex.Message}";
+            // Only set error if the request wasn't cancelled
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                ErrorMessage = $"Error loading data: {ex.Message}";
+            }
         }
         finally
         {
-            IsLoading = false;
+            // Only set IsLoading to false if this request wasn't cancelled
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                IsLoading = false;
+            }
         }
     }
 
@@ -190,13 +222,19 @@ else if (Data != null)
     private bool IsEmpty(TResponse data)
     {
         if (data == null) return true;
-        
+
         // Check if it's a collection
         if (data is IEnumerable enumerable)
         {
             return !enumerable.Cast<object>().Any();
         }
-        
+
         return false;
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
     }
 }

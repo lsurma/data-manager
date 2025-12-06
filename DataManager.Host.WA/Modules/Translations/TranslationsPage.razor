@@ -1,4 +1,4 @@
-@page "/translations/{DataSetId?}"
+@page "/translations/{DataSetId:guid?}"
 @using DataManager.Application.Contracts.Common
 @using DataManager.Application.Contracts.Modules.Translations
 @using DataManager.Host.WA.Components
@@ -24,16 +24,16 @@
     }
 </FluentStack>
 
-<TranslationsGrid Filters="@_filters">
+<TranslationsGrid DataSetId="DataSetId">
     <ToolbarTemplate>
         <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
-            <FluentButton Disabled="@(string.IsNullOrWhiteSpace(DataSetId))" Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
+            <FluentButton Disabled="@(DataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
                 Create
             </FluentButton>
         </FluentNavLink>
         
         <FluentNavLink Href="@NavHelper.BuildUrl("action", "import")">
-            <FluentButton Disabled="@(string.IsNullOrWhiteSpace(DataSetId))" Appearance="Appearance.Accent" IconStart="@(new Size20.ArrowImport())">
+            <FluentButton Disabled="@(DataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.ArrowImport())">
                 Import
             </FluentButton>
         </FluentNavLink>

@@ -9,38 +9,28 @@
         <FluentProgressRing />
         <p>Loading translation data...</p>
     }
-    else if (Content.Translation != null)
+    else if (Model != null)
     {
-        <EditForm Model="Content.Translation" OnSubmit="@(() => HandleSubmitAsync(false))">
+        <EditForm Model="Model" OnSubmit="@(() => HandleSubmitAsync(false))">
             <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
 
-                <FluentTextField @bind-Value="Content.Translation.ResourceName"
+                <FluentTextField @bind-Value="Model.ResourceName"
                                  Label="Resource Name"
                                  Immediate="true"
                                  Required
                                  Style="width: 100%;" />
 
-                <FluentTextField @bind-Value="Content.Translation.TranslationName"
+                <FluentTextField @bind-Value="Model.TranslationName"
                                  Label="Translation Key"
                                  Immediate="true"
                                  Required
                                  Style="width: 100%;" />
 
-                @if (Content.AvailableDataSets.Any())
-                {
-                    <FluentSelect Value="@(Content.Translation.DataSetId?.ToString() ?? string.Empty)"
-                                  ValueChanged="@(val => Content.Translation.DataSetId = String.IsNullOrWhiteSpace(val) ? null : Guid.Parse(val))"
-                                  Label="Data Set (Optional)"
-                                  Items="DataSetSelectItems"
-                                  OptionValue="@(opt => opt.Value?.ToString() ?? string.Empty)"
-                                  Style="width: 100%;">
-                        <OptionTemplate Context="optionTemplateContext">
-                            @optionTemplateContext.Text
-                        </OptionTemplate>
-                    </FluentSelect>
-                }
-
-                @if (!Content.IsEditMode)
+                <div>
+                    Cultures: @(string.Join(", ", DataSet?.AvailableCultures ?? []))
+                </div>
+                
+                @if (!IsEditMode)
                 {
                     <FluentMessageBar Intent="MessageIntent.Info">
                         This translation will be created for all cultures available in the selected DataSet (or all system cultures if no DataSet is selected).
@@ -83,7 +73,7 @@
     }
 </FluentDialogBody>
 
-<EntityPanelFooter IsEditMode="@Content.IsEditMode"
+<EntityPanelFooter IsEditMode="@IsEditMode"
                    IsSaving="@IsSaving"
                    IsDeleting="@IsDeleting"
                    OnSave="@(() => HandleSubmitAsync(closeAfterSave: false))"

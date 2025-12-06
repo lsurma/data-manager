@@ -8,13 +8,21 @@ using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace DataManager.Host.WA.Modules.Translations;
 
-public partial class TranslationsPage : ComponentBase, IDisposable
+public partial class TranslationsPage : ComponentBase
 {
     [Parameter]
-    public string? DataSetId { get; set; }
+    public Guid? DataSetId { get; set; }
 
     [CascadingParameter]
-    public AppDataContext? AppContext { get; set; }
+    public AppDataContext? CascadingAppContext { get; set; }
+
+    [Inject]
+    private AppDataContext InjectedAppContext { get; set; } = null!;
+
+    /// <summary>
+    /// Gets the AppDataContext from cascading parameter if available, otherwise uses injected service
+    /// </summary>
+    private AppDataContext AppContext => CascadingAppContext ?? InjectedAppContext;
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
@@ -25,34 +33,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
     [Inject]
     private IRequestSender RequestSender { get; set; } = null!;
 
-    private List<DataSetDto> AllDataSets => AppContext?.DataSets ?? new List<DataSetDto>();
-    private List<IQueryFilter> _filters = new();
-
-    protected override void OnInitialized()
-    {
-        BuildFilters();
-
-
-        if (AppContext != null)
-        {
-            AppContext.OnDataRefreshed += HandleContextRefreshed;
-        }
-    }
-
-    private void HandleContextRefreshed()
-    {
-        StateHasChanged();
-    }
-
-    private void BuildFilters()
-    {
-        var filters = new List<IQueryFilter>();
-        if (Guid.TryParse(DataSetId, out var dataSetId))
-        {
-            filters.Add(new DataSetIdFilter { Value = dataSetId });
-        }
-        _filters = filters;
-    }
+    private List<DataSetDto> AllDataSets => AppContext.DataSets;
 
     private void OnDataSetFilterChanged(Guid? dataSetId)
     {
@@ -62,16 +43,7 @@ public partial class TranslationsPage : ComponentBase, IDisposable
 
     private Appearance GetAppearanceForDataSet(Guid? dataSetId)
     {
-        var isSelected = (DataSetId == dataSetId?.ToString()) || (DataSetId == null && !dataSetId.HasValue);
+        var isSelected = DataSetId == dataSetId;
         return isSelected ? Appearance.Accent : Appearance.Neutral;
-    }
-
-    public void Dispose()
-    {
-        // Unsubscribe from context refresh events
-        if (AppContext != null)
-        {
-            AppContext.OnDataRefreshed -= HandleContextRefreshed;
-        }
     }
 }
