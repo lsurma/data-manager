@@ -30,7 +30,7 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
     private bool IsSaving { get; set; }
     private bool IsDeleting { get; set; }
     private string? ErrorMessage { get; set; }
-    private HashSet<Guid> SelectedIncludeIds { get; set; } = new();
+    private IEnumerable<TranslationsSetDto> SelectedIncludedTranslationsSets { get; set; } = new List<TranslationsSetDto>();
     private string AllowedIdentityIdsText { get; set; } = string.Empty;
     private IEnumerable<string> SelectedCultures { get; set; } = new List<string>();
     private List<string> AvailableCultures { get; set; } = new();
@@ -39,10 +39,13 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
     {
         await base.OnInitializedAsync();
         
-        // Initialize selected includes from the TranslationsSet
-        if (Content?.TranslationsSet?.IncludedTranslationsSetIds != null)
+        // Initialize selected included TranslationsSets from the TranslationsSet
+        if (Content?.TranslationsSet?.IncludedTranslationsSetIds != null && Content.TranslationsSet.IncludedTranslationsSetIds.Any())
         {
-            SelectedIncludeIds = new HashSet<Guid>(Content.TranslationsSet.IncludedTranslationsSetIds);
+            var selectedIds = Content.TranslationsSet.IncludedTranslationsSetIds.ToHashSet();
+            SelectedIncludedTranslationsSets = Content.AvailableTranslationsSets
+                .Where(ts => selectedIds.Contains(ts.Id))
+                .ToList();
         }
 
         // Initialize AllowedIdentityIds text from TranslationsSet
@@ -97,18 +100,6 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
             .Distinct()
             .ToList();
     }
-    
-    private void HandleIncludeChanged(Guid translationsSetId, bool isSelected)
-    {
-        if (isSelected)
-        {
-            SelectedIncludeIds.Add(translationsSetId);
-        }
-        else
-        {
-            SelectedIncludeIds.Remove(translationsSetId);
-        }
-    }
 
     private async Task HandleSubmitAsync(bool closeAfterSave = true)
     {
@@ -128,7 +119,7 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
                 AllowedIdentityIds = ParseAllowedIdentityIds(),
                 // Null means all cultures are available, empty list means none
                 AvailableCultures = SelectedCultures.Any() ? SelectedCultures.ToList() : null,
-                IncludedTranslationsSetIds = SelectedIncludeIds.ToList()
+                IncludedTranslationsSetIds = SelectedIncludedTranslationsSets.Select(ts => ts.Id).ToList()
             });
             
             ToastService.ShowSuccess($"Data Set '{Content.TranslationsSet.Name}' {(Content.IsEditMode ? "updated" : "created")} successfully");
