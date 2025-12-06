@@ -74,7 +74,7 @@ public partial class TranslationsSetsPage : ComponentBase, IDisposable
             var translationsSet = selectedRows[0];
             SelectedTranslationsSetId = translationsSet.Id;
 
-            NavigationManager.NavigateTo($"/datasets?id={translationsSet.Id}", false);
+            NavigationManager.NavigateTo($"/translationssets?id={translationsSet.Id}", false);
         }
         else
         {
@@ -274,7 +274,7 @@ public partial class TranslationsSetsPage : ComponentBase, IDisposable
         
         if(result.Cancelled && currentId == translationsSet?.Id.ToString())
         {
-            NavigationManager.NavigateTo("/datasets", false);
+            NavigationManager.NavigateTo("/translationssets", false);
         }
         
         StateHasChanged();
