@@ -21,6 +21,12 @@ public class MockAuthorizationService : IAuthorizationService
     /// </summary>
     public Task<bool> HasRootAccessAsync(CancellationToken cancellationToken = default)
     {
+        // If authorization is omitted in the current scope, treat as root access
+        if (OmitAuthorizationScope.ShouldOmitAuthorization)
+        {
+            return Task.FromResult(true);
+        }
+
         return Task.FromResult(false);
     }
 
