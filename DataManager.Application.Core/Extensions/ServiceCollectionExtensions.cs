@@ -20,7 +20,10 @@ public static class ServiceCollectionExtensions
         Action<AuthorizationOptions>? configureAuthorization = null)
     {
         services.AddDbContext<DataManagerDbContext>(options =>
-            options.UseSqlite(connectionString));
+            options
+                .UseSqlite(connectionString)
+                .EnableSensitiveDataLogging()
+        );
 
         // Register MediatR with pipeline behaviors
         // Order matters: TransactionBehavior wraps everything in a transaction first,

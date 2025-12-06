@@ -56,7 +56,6 @@ public class AppDataContext
         
         try
         {
-            // Load all DataSets
             var dataSetsResult = await _requestSender.SendAsync(GetDataSetsQuery.AllItems());
             DataSets = dataSetsResult.Items;
             

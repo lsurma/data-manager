@@ -8,19 +8,6 @@ public class CultureService : ICultureService
     private static readonly List<string> _availableCultures = new()
     {
         "en-US",
-        "en-GB",
-        "pl-PL",
-        "de-DE",
-        "fr-FR",
-        "es-ES",
-        "it-IT",
-        "nl-NL",
-        "pt-PT",
-        "cs-CZ",
-        "sk-SK",
-        "hu-HU",
-        "ro-RO",
-        "bg-BG"
     };
 
     /// <summary>

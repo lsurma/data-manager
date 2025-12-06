@@ -201,3 +201,31 @@ fluent-dialog[id^="panel-"][class~="right"] {
         right: unset;
     }
 }
+
+.theme-custom {
+    /*hover : #f1f2f3*/
+    /*active : #dedfe3*/
+    /*blue #1060ff*/
+    --accent-fill-rest : #0c56e9;
+    
+    .navmenu {
+        padding: 0 16px;
+        --base-height-multiplier: 9;
+        --control-corner-radius: 5;
+        box-shadow: 0 0 0 1px #656a7633;
+        
+        .fluent-nav-link  {
+            &.active {
+                .positioning-region {
+                    background-color: #dedfe3;
+                }
+            }
+            
+            &:hover {
+                .positioning-region {
+                    background-color: #f1f2f3;
+                }
+            }
+        }
+    }
+}

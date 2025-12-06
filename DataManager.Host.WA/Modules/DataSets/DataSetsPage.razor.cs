@@ -13,9 +13,9 @@ namespace DataManager.Host.WA.Modules.DataSets;
 public partial class DataSetsPage : ComponentBase, IDisposable
 {
     [CascadingParameter]
-    public AppDataContext AppContext { get; set; } = null!;
+    public AppDataContext? CascadingAppContext { get; set; }
 
-    [Inject] 
+    [Inject]
     private IDialogService DialogService { get; set; } = null!;
     
     [Inject]
@@ -218,10 +218,10 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     private async Task OpenDataSetPanelAsync(DataSetDto? dataSet = null)
     {
         var isEditMode = dataSet != null;
-        
+
         // Use DataSets from AppContext
-        var availableDataSets = AppContext?.DataSets ?? new List<DataSetDto>();
-        
+        var availableDataSets = CascadingAppContext?.DataSets;
+
         var parameters = new DataSetPanelParameters
         {
             DataSet = isEditMode 
@@ -235,19 +235,19 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             IsEditMode = isEditMode,
             
             AvailableDataSets = isEditMode 
-                ? availableDataSets.Where(i => i.Id != dataSet!.Id).ToList()
-                : availableDataSets,
+                ? availableDataSets?.Where(i => i.Id != dataSet!.Id).ToList() ?? []
+                : availableDataSets ?? [],
             
             OnDataChanged = async () =>
             {
                 _refreshToken = Guid.NewGuid().ToString();
-                
+
                 // Refresh context to get updated DataSets
-                if (AppContext != null)
+                if (CascadingAppContext != null)
                 {
-                    await AppContext.RefreshAsync();
+                    await CascadingAppContext.RefreshAsync();
                 }
-                
+
                 await InvokeAsync(StateHasChanged);
             }
         };

@@ -20,8 +20,16 @@ namespace DataManager.Host.WA.Modules.Translations
 {
     public partial class ImportTranslationsPage : ComponentBase, IDisposable
     {
-        [CascadingParameter(Name = "AppDataContext")]
-        public AppDataContext AppContext { get; set; } = null!;
+        [CascadingParameter]
+        public AppDataContext? CascadingAppContext { get; set; }
+
+        [Inject]
+        private AppDataContext InjectedAppContext { get; set; } = null!;
+
+        /// <summary>
+        /// Gets the AppDataContext from cascading parameter if available, otherwise uses injected service
+        /// </summary>
+        private AppDataContext AppContext => CascadingAppContext ?? InjectedAppContext;
 
         [Inject]
         private IRequestSender RequestSender { get; set; } = null!;
@@ -39,7 +47,7 @@ namespace DataManager.Host.WA.Modules.Translations
         private DataTable? _excelDataTable;
         private readonly List<string> _targetColumns = new() { "InternalGroupName1", "InternalGroupName2", "ResourceName", "TranslationName", "CultureName", "Content" };
         private Dictionary<string, string> _columnMappings = new();
-        private List<DataSetDto> _availableDataSets => AppContext?.DataSets ?? new List<DataSetDto>();
+        private List<DataSetDto> _availableDataSets => AppContext.DataSets;
         private Guid? _selectedDataSetId;
         private DataSetDto? _selectedDataSet;
         private string? _selectedDataSetValue

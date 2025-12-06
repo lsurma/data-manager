@@ -6,7 +6,7 @@
 <DataLoader TResponse="PaginatedList<TranslationDto>"
             TQuery="GetTranslationsQuery"
             Query="@_currentQuery"
-            RefreshToken="@_refreshToken"
+            RefreshToken="@RefreshToken"
             OnDataFetched="HandleDataFetched"/>
 
 <PaginatedDataGrid TItem="TranslationDto"
