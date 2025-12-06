@@ -66,7 +66,7 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
         }
 
         // Initialize selected cultures from the TranslationsSet
-        if (Content?.TranslationsSet?.AvailableCultures != null)
+        if (Content?.TranslationsSet?.AvailableCultures.Any() == true)
         {
             SelectedCultures = Content.TranslationsSet.AvailableCultures.ToList();
         }
@@ -117,8 +117,8 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
                 Description = Content.TranslationsSet.Description,
                 Notes = Content.TranslationsSet.Notes,
                 AllowedIdentityIds = ParseAllowedIdentityIds(),
-                // Null means all cultures are available, empty list means none
-                AvailableCultures = SelectedCultures.Any() ? SelectedCultures.ToList() : null,
+                // Empty list means all cultures are available
+                AvailableCultures = SelectedCultures.ToList(),
                 IncludedTranslationsSetIds = SelectedIncludedTranslationsSets.Select(ts => ts.Id).ToList()
             });
             

@@ -20,9 +20,9 @@ public class SaveTranslationsSetCommand : IRequest<Guid>
 
     /// <summary>
     /// List of culture codes available for this TranslationsSet (e.g., "en-US", "pl-PL").
-    /// If null or empty, all system cultures are available.
+    /// If empty, all system cultures are available.
     /// </summary>
-    public ICollection<string>? AvailableCultures { get; set; }
+    public ICollection<string> AvailableCultures { get; set; } = new List<string>();
 
     public ICollection<Guid> IncludedTranslationsSetIds { get; set; } = new List<Guid>();
 }
