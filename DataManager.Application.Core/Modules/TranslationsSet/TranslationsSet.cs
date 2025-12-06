@@ -22,6 +22,16 @@ public class TranslationsSet : AuditableEntityBase
     /// </summary>
     public ICollection<string> AvailableCultures { get; set; } = new List<string>();
 
+    /// <summary>
+    /// Secret key that will be sent in webhook requests for authentication/verification.
+    /// </summary>
+    public string? SecretKey { get; set; }
+
+    /// <summary>
+    /// List of webhook URLs to which events will be sent.
+    /// </summary>
+    public ICollection<Uri> WebhookUrls { get; set; } = new List<Uri>();
+
     public ICollection<TranslationsSetInclude> Includes { get; set; } = new List<TranslationsSetInclude>();
 
     public ICollection<TranslationsSetInclude> IncludedIn { get; set; } = new List<TranslationsSetInclude>();

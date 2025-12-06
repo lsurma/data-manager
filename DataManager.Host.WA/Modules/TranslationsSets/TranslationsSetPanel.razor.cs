@@ -32,6 +32,7 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
     private string? ErrorMessage { get; set; }
     private IEnumerable<TranslationsSetDto> SelectedIncludedTranslationsSets { get; set; } = new List<TranslationsSetDto>();
     private string AllowedIdentityIdsText { get; set; } = string.Empty;
+    private string WebhookUrlsText { get; set; } = string.Empty;
     private IEnumerable<string> SelectedCultures { get; set; } = new List<string>();
     private List<string> AvailableCultures { get; set; } = new();
 
@@ -52,6 +53,12 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
         if (Content?.TranslationsSet?.AllowedIdentityIds != null && Content.TranslationsSet.AllowedIdentityIds.Any())
         {
             AllowedIdentityIdsText = string.Join(Environment.NewLine, Content.TranslationsSet.AllowedIdentityIds);
+        }
+
+        // Initialize WebhookUrls text from TranslationsSet
+        if (Content?.TranslationsSet?.WebhookUrls != null && Content.TranslationsSet.WebhookUrls.Any())
+        {
+            WebhookUrlsText = string.Join(Environment.NewLine, Content.TranslationsSet.WebhookUrls);
         }
 
         // Load available cultures from the system
@@ -101,6 +108,27 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
             .ToList();
     }
 
+    /// <summary>
+    /// Parses the WebhookUrlsText into a list of valid URLs.
+    /// Supports newlines, semicolons, and commas as separators.
+    /// </summary>
+    private List<string> ParseWebhookUrls()
+    {
+        if (string.IsNullOrWhiteSpace(WebhookUrlsText))
+        {
+            return new List<string>();
+        }
+
+        var separators = new[] { '\n', '\r', ';', ',' };
+
+        return WebhookUrlsText
+            .Split(separators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(url => !string.IsNullOrWhiteSpace(url))
+            .Select(url => url.Trim())
+            .Distinct()
+            .ToList();
+    }
+
     private async Task HandleSubmitAsync(bool closeAfterSave = true)
     {
         if (Content?.TranslationsSet == null) return;
@@ -119,6 +147,8 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
                 AllowedIdentityIds = ParseAllowedIdentityIds(),
                 // Empty list means all cultures are available
                 AvailableCultures = SelectedCultures.ToList(),
+                SecretKey = Content.TranslationsSet.SecretKey,
+                WebhookUrls = ParseWebhookUrls(),
                 IncludedTranslationsSetIds = SelectedIncludedTranslationsSets.Select(ts => ts.Id).ToList()
             });
             
