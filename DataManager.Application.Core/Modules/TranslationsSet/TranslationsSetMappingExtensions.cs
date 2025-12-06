@@ -14,6 +14,8 @@ public static class TranslationsSetMappingExtensions
             Notes = translationsSet.Notes,
             AllowedIdentityIds = translationsSet.AllowedIdentityIds.ToList(),
             AvailableCultures = translationsSet.AvailableCultures.ToList(),
+            SecretKey = translationsSet.SecretKey,
+            WebhookUrls = translationsSet.WebhookUrls.Select(uri => uri.ToString()).ToList(),
             IncludedTranslationsSetIds = translationsSet.Includes.Select(i => i.IncludedTranslationsSetId).ToList(),
             CreatedAt = translationsSet.CreatedAt,
             UpdatedAt = translationsSet.UpdatedAt,

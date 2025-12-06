@@ -37,6 +37,25 @@ public class TranslationsSetConfiguration : AuditableEntityConfiguration<Transla
             .HasColumnType("TEXT")
             .IsRequired();
 
+        builder.Property(e => e.SecretKey)
+            .HasMaxLength(500);
+
+        // Store WebhookUrls as comma-separated string in SQLite
+        // Note: Invalid URLs are validated and filtered at the handler level before storage,
+        // so the Uri constructor here should not throw in practice. If corrupted data exists
+        // in the database, it will throw UriFormatException during deserialization.
+        builder.Property(e => e.WebhookUrls)
+            .HasConversion(
+                v => !v.Any() ? string.Empty : string.Join(',', v.Select(uri => uri.ToString())),
+                v => string.IsNullOrWhiteSpace(v) 
+                    ? new List<Uri>() 
+                    : v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(s => new Uri(s))
+                        .ToList()
+            )
+            .HasColumnType("TEXT")
+            .IsRequired();
+
         // Configure many-to-many relationship through TranslationsSetInclude
         builder.HasMany(e => e.Includes)
             .WithOne(e => e.ParentTranslationsSet)

@@ -54,6 +54,11 @@ public class SaveTranslationsSetCommandHandler : IRequestHandler<SaveTranslation
             translationsSet.Notes = request.Notes;
             translationsSet.AllowedIdentityIds = request.AllowedIdentityIds.ToList();
             translationsSet.AvailableCultures = request.AvailableCultures.ToList();
+            translationsSet.SecretKey = request.SecretKey;
+            translationsSet.WebhookUrls = request.WebhookUrls
+                .Where(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+                .Select(url => new Uri(url))
+                .ToList();
 
             // Update includes
             var existingIncludes = translationsSet.Includes.ToList();
@@ -94,6 +99,11 @@ public class SaveTranslationsSetCommandHandler : IRequestHandler<SaveTranslation
                 Notes = request.Notes,
                 AllowedIdentityIds = request.AllowedIdentityIds.ToList(),
                 AvailableCultures = request.AvailableCultures.ToList(),
+                SecretKey = request.SecretKey,
+                WebhookUrls = request.WebhookUrls
+                    .Where(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+                    .Select(url => new Uri(url))
+                    .ToList(),
                 CreatedBy = string.Empty // Will be set by DbContext
             };
 
