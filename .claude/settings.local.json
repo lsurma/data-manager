@@ -19,7 +19,11 @@
       "Bash(git reflog:*)",
       "Bash(git gc:*)",
       "Bash(git show-ref:*)",
-      "Bash(git rev-parse:*)"
+      "Bash(git rev-parse:*)",
+      "Bash(./dotnet-install.sh:*)",
+      "Bash(bash:*)",
+      "Bash(export DOTNET_ROLL_FORWARD=LatestMajor)",
+      "Bash(export PATH=\"$PATH:/home/lsurma/.dotnet\")"
     ],
     "deny": [],
     "ask": []

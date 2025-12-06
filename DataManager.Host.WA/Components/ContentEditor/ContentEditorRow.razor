@@ -1,5 +1,136 @@
-﻿<h3>ContentEditorItem</h3>
+@if (Item != null)
+{
+    <div class="content-editor-row" style="margin-bottom: 16px; width: 100%;">
+        <FluentLabel>@Item.Title</FluentLabel>
+
+        @switch (EditorType)
+        {
+            case ContentEditorType.TextInput:
+                <FluentTextField
+                    Value="@Item.Content"
+                    ValueChanged="@HandleValueChanged"
+                    Immediate="true"
+                    Style="width: 100%;" />
+                break;
+
+            case ContentEditorType.TextArea:
+                <FluentTextArea
+                    Value="@Item.Content"
+                    ValueChanged="@HandleValueChanged"
+                    Immediate="true"
+                    Rows="4"
+                    Style="width: 100%;" />
+                break;
+
+            case ContentEditorType.MonacoEditor:
+                <StandaloneCodeEditor
+                    Id="@($"editor-{Item.Key}")"
+                    CssClass="monaco-editor-content"
+                    ConstructionOptions="EditorConstructionOptions"
+                    OnDidChangeModelContent="HandleMonacoContentChanged"
+                    @ref="MonacoEditorRef" />
+                break;
+        }
+    </div>
+}
+
+<style>
+    .monaco-editor-content {
+        height: 200px;
+        border: 1px solid var(--neutral-stroke-rest);
+        border-radius: 4px;
+    }
+</style>
 
 @code {
-    
+    [Parameter]
+    public ContentEditorItem? Item { get; set; }
+
+    [Parameter]
+    public ContentEditorType EditorType { get; set; } = ContentEditorType.TextInput;
+
+    private StandaloneCodeEditor? MonacoEditorRef { get; set; }
+    private bool _shouldUpdateMonaco = false;
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        var previousEditorType = EditorType;
+
+        await base.SetParametersAsync(parameters);
+
+        // Detect when EditorType changes to MonacoEditor
+        if (previousEditorType != EditorType && EditorType == ContentEditorType.MonacoEditor)
+        {
+            _shouldUpdateMonaco = true;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Update Monaco Editor value when switching to it from another editor type
+        if (_shouldUpdateMonaco && MonacoEditorRef != null && Item != null)
+        {
+            _shouldUpdateMonaco = false;
+            await UpdateMonacoEditorWithRetryAsync(Item.Content ?? string.Empty);
+        }
+    }
+
+    private async Task UpdateMonacoEditorWithRetryAsync(string value, int maxRetries = 3, int delayMs = 100)
+    {
+        for (int attempt = 0; attempt < maxRetries; attempt++)
+        {
+            try
+            {
+                if (MonacoEditorRef != null)
+                {
+                    await MonacoEditorRef.SetValue(value);
+                    return; // Success
+                }
+            }
+            catch (Exception)
+            {
+                // Monaco Editor might not be fully rendered in DOM yet
+                if (attempt < maxRetries - 1)
+                {
+                    await Task.Delay(delayMs);
+                }
+            }
+        }
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "html",
+            Value = Item?.Content ?? string.Empty,
+            AutomaticLayout = true,
+            Minimap = new EditorMinimapOptions() {
+                Enabled = false
+            },
+            Scrollbar = new EditorScrollbarOptions() {
+                HandleMouseWheel = false
+            },
+            WordWrap = "on"
+        };
+    }
+
+    private async Task HandleValueChanged(string newValue)
+    {
+        if (Item != null)
+        {
+            Item.Content = newValue;
+            await Item.OnContentChanged.InvokeAsync(newValue);
+        }
+    }
+
+    private async Task HandleMonacoContentChanged()
+    {
+        if (MonacoEditorRef != null && Item != null)
+        {
+            var newValue = await MonacoEditorRef.GetValue();
+            Item.Content = newValue;
+            await Item.OnContentChanged.InvokeAsync(newValue);
+        }
+    }
 }

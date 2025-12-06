@@ -36,9 +36,11 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
     private bool IsLoading { get; set; }
     private string? ErrorMessage { get; set; }
 
-    private IEnumerable<ContentEditorItem> ContentItems { get; set; } = [];
+    private List<ContentEditorItem> ContentItems { get; set; } = new();
 
     private List<TranslationDto> RelatedTranslations { get; set; } = new();
+
+    private Dictionary<string, string> TranslationContents { get; set; } = new();
 
     protected TranslationDto? Model { get; set; }
     
@@ -106,7 +108,9 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
             {
                 throw new InvalidOperationException("Related TranslationsSet not found in AppDataContext.");
             }
-            
+
+            // Build ContentItems from AvailableCultures
+            BuildContentItems();
         }
         catch (Exception ex)
         {
@@ -116,8 +120,48 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
         {
             IsLoading = false;
         }
-        
+
         await InvokeAsync(StateHasChanged);
+    }
+
+    private void BuildContentItems()
+    {
+        ContentItems.Clear();
+        TranslationContents.Clear();
+
+        if (TranslationsSet?.AvailableCultures == null || !TranslationsSet.AvailableCultures.Any())
+        {
+            return;
+        }
+
+        foreach (var culture in TranslationsSet.AvailableCultures.OrderBy(c => c))
+        {
+            // Find existing translation content for this culture
+            var existingTranslation = RelatedTranslations.FirstOrDefault(t => t.CultureName == culture);
+            var content = existingTranslation?.Content ?? string.Empty;
+
+            // Store content in dictionary
+            TranslationContents[culture] = content;
+
+            // Create ContentEditorItem
+            var item = new ContentEditorItem
+            {
+                Key = culture,
+                Title = culture,
+                Content = content,
+                OnContentChanged = EventCallback.Factory.Create<string>(this, newContent =>
+                {
+                    HandleContentChanged(culture, newContent);
+                })
+            };
+
+            ContentItems.Add(item);
+        }
+    }
+
+    private void HandleContentChanged(string culture, string newContent)
+    {
+        TranslationContents[culture] = newContent;
     }
     
     
@@ -165,7 +209,7 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
                 ResourceName = Model.ResourceName,
                 TranslationName = Model.TranslationName,
                 TranslationsSetId = Model.TranslationsSetId,
-                Translations = new Dictionary<string, string>()
+                Translations = TranslationContents
             });
             
             var successMessage = IsEditMode

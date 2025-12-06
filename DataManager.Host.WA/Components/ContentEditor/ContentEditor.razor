@@ -1,19 +1,23 @@
 ﻿
-<div class="content-editor">
-    <div class="btn-group" role="group">
+<div class="content-editor" style="width : 100%;">
+    <div class="btn-group" role="group" style="margin-bottom: 16px;">
         @foreach (var editorType in Enum.GetValues<ContentEditorType>())
         {
             <FluentButton
                 IconStart="@(GetIcon(editorType))"
                 Appearance="@(EditorTypeInternal == editorType ? Appearance.Accent : Appearance.Outline)"
-                @onclick="@(() => EditorTypeChanged(editorType))">@editorType</FluentButton>
+                @onclick="@(() => EditorTypeChanged(editorType))">
+                @GetEditorTypeLabel(editorType)
+            </FluentButton>
         }
     </div>
-    
-    <div>   
+
+    <div class="content-editor-rows">
         @foreach (var item in Items)
         {
-            <ContentEditorRow />
+            <ContentEditorRow
+                Item="@item"
+                EditorType="@EditorTypeInternal" />
         }
     </div>
 </div>
@@ -21,20 +25,42 @@
 @code {
     [Parameter]
     public IEnumerable<ContentEditorItem> Items { get; set; } = [];
-    
+
     [Parameter]
     public ContentEditorType? EditorType { get; set; }
 
+    [Parameter]
+    public EventCallback OnItemsChanged { get; set; }
+
     protected ContentEditorType EditorTypeInternal { get; set; } = ContentEditorType.MonacoEditor;
-    
-    public Icon? GetIcon(ContentEditorType type)
+
+    protected override void OnParametersSet()
     {
+        if (EditorType.HasValue)
+        {
+            EditorTypeInternal = EditorType.Value;
+        }
+    }
+
+    private Icon? GetIcon(ContentEditorType type)
+    {
+        // Icons can be added here if needed
         return null;
     }
 
-    protected void EditorTypeChanged(ContentEditorType type)
+    private string GetEditorTypeLabel(ContentEditorType type)
+    {
+        return type switch
+        {
+            ContentEditorType.TextInput => "Text Input",
+            ContentEditorType.TextArea => "Text Area",
+            ContentEditorType.MonacoEditor => "Code Editor",
+            _ => type.ToString()
+        };
+    }
+
+    private void EditorTypeChanged(ContentEditorType type)
     {
         EditorTypeInternal = type;
     }
-
 }
