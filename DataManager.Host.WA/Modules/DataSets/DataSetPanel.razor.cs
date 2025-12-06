@@ -37,6 +37,8 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        
         // Initialize selected includes from the DataSet
         if (Content?.DataSet?.IncludedDataSetIds != null)
         {
@@ -54,9 +56,9 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
         {
             AvailableCultures = await RequestSender.SendAsync<List<string>>(new GetAvailableCulturesQuery());
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ErrorMessage = $"Failed to load available cultures: {ex.Message}";
+            ErrorMessage = "Unable to load available cultures. Please try again.";
             AvailableCultures = new List<string>();
         }
 
@@ -136,6 +138,7 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
                 Description = Content.DataSet.Description,
                 Notes = Content.DataSet.Notes,
                 AllowedIdentityIds = ParseAllowedIdentityIds(),
+                // Null means all cultures are available, empty list means none
                 AvailableCultures = SelectedCultures.Any() ? SelectedCultures.ToList() : null,
                 IncludedDataSetIds = SelectedIncludeIds.ToList()
             });
