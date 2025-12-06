@@ -25,18 +25,18 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     private NavigationHelper NavHelper { get; set; } = null!;
     
     private List<DataSetDto> AllDataSets { get; set; } = new();
-    private IDialogReference? _currentDialog;
-    private string _refreshToken = Guid.NewGuid().ToString();
-    private IList<DataSetDto> _selectedRows = new List<DataSetDto>();
+    private IDialogReference? CurrentDialog { get; set; }
+    private string RefreshToken { get; set; } = Guid.NewGuid().ToString();
+    private IList<DataSetDto> SelectedRows { get; set; } = new List<DataSetDto>();
     
     private int PageSize { get; set; } = 15;
     
     protected int TotalItems { get; set; }
     
-    private string? _searchTerm;
-    private Guid? _selectedDataSetId;
+    private string? SearchTerm { get; set; }
+    private Guid? SelectedDataSetId { get; set; }
     
-    private GetDataSetsQuery _currentQuery = new GetDataSetsQuery
+    private GetDataSetsQuery CurrentQuery { get; set; } = new GetDataSetsQuery
     {
         Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
     };
@@ -67,18 +67,18 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     
     private Task OnDataGridSelectionChanged(IList<DataSetDto> selectedRows)
     {
-        _selectedRows = selectedRows;
+        SelectedRows = selectedRows;
         
         if (selectedRows != null && selectedRows.Count > 0)
         {
             var dataSet = selectedRows[0];
-            _selectedDataSetId = dataSet.Id;
+            SelectedDataSetId = dataSet.Id;
 
             NavigationManager.NavigateTo($"/datasets?id={dataSet.Id}", false);
         }
         else
         {
-            _selectedDataSetId = null;
+            SelectedDataSetId = null;
         }
         
         return Task.CompletedTask;
@@ -86,22 +86,22 @@ public partial class DataSetsPage : ComponentBase, IDisposable
     
     private void RestoreDataGridSelection()
     {
-        if (!_selectedDataSetId.HasValue)
+        if (!SelectedDataSetId.HasValue)
         {
-            _selectedRows = new List<DataSetDto>();
+            SelectedRows = new List<DataSetDto>();
             return;
         }
         
         // Try to find in current grid page first, fallback to AllDataSets if not found
-        var selectedDataSet = AllDataSets.FirstOrDefault(i => i.Id == _selectedDataSetId.Value);
+        var selectedDataSet = AllDataSets.FirstOrDefault(i => i.Id == SelectedDataSetId.Value);
         
         if (selectedDataSet != null)
         {
-            _selectedRows = new List<DataSetDto> { selectedDataSet };
+            SelectedRows = new List<DataSetDto> { selectedDataSet };
         }
         else
         {
-            _selectedRows = new List<DataSetDto>();
+            SelectedRows = new List<DataSetDto>();
         }
     }
     
@@ -120,41 +120,41 @@ public partial class DataSetsPage : ComponentBase, IDisposable
         var skip = args.Skip ?? 0;
         var pageSize = args.Top ?? 20;
 
-        if (_currentQuery.Ordering.OrderBy != orderBy ||
-            _currentQuery.Ordering.OrderDirection != orderDirection ||
-            _currentQuery.Pagination.Skip != skip ||
-            _currentQuery.Pagination.PageSize != pageSize ||
-            GetCurrentSearchTerm() != _searchTerm)
+        if (CurrentQuery.Ordering.OrderBy != orderBy ||
+            CurrentQuery.Ordering.OrderDirection != orderDirection ||
+            CurrentQuery.Pagination.Skip != skip ||
+            CurrentQuery.Pagination.PageSize != pageSize ||
+            GetCurrentSearchTerm() != SearchTerm)
         {
-            _currentQuery = new GetDataSetsQuery
+            CurrentQuery = new GetDataSetsQuery
             {
                 Filtering = BuildFilteringParameters(),
                 Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
                 Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
             };
 
-            _refreshToken = Guid.NewGuid().ToString();
+            RefreshToken = Guid.NewGuid().ToString();
         }
     }
 
     private void OnSearchChanged()
     {
-        _currentQuery = new GetDataSetsQuery
+        CurrentQuery = new GetDataSetsQuery
         {
             Filtering = BuildFilteringParameters(),
             Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
         };
 
-        _refreshToken = Guid.NewGuid().ToString();
+        RefreshToken = Guid.NewGuid().ToString();
     }
 
     private FilteringParameters BuildFilteringParameters()
     {
         var filters = new List<IQueryFilter>();
 
-        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
         {
-            filters.Add(new SearchFilter { SearchTerm = _searchTerm });
+            filters.Add(new SearchFilter { SearchTerm = SearchTerm });
         }
 
         return new FilteringParameters { QueryFilters = filters };
@@ -162,7 +162,7 @@ public partial class DataSetsPage : ComponentBase, IDisposable
 
     private string? GetCurrentSearchTerm()
     {
-        return _currentQuery.Filtering.QueryFilters
+        return CurrentQuery.Filtering.QueryFilters
             .OfType<SearchFilter>()
             .FirstOrDefault()?.SearchTerm;
     }
@@ -183,12 +183,12 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             
             if (action == "create")
             {
-                _selectedDataSetId = null;
+                SelectedDataSetId = null;
                 await OpenDataSetPanelAsync();
             }
             else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var dataSetId))
             {
-                _selectedDataSetId = dataSetId;
+                SelectedDataSetId = dataSetId;
                 var dataSet = AllDataSets.FirstOrDefault(i => i.Id == dataSetId);
                 
                 if (dataSet != null)
@@ -198,12 +198,12 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             }
             else
             {
-                _selectedDataSetId = null;
+                SelectedDataSetId = null;
                 
-                if (_currentDialog != null)
+                if (CurrentDialog != null)
                 {
-                    await _currentDialog.CloseAsync();
-                    _currentDialog = null;
+                    await CurrentDialog.CloseAsync();
+                    CurrentDialog = null;
                 }
             }
         }
@@ -240,7 +240,7 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             
             OnDataChanged = async () =>
             {
-                _refreshToken = Guid.NewGuid().ToString();
+                RefreshToken = Guid.NewGuid().ToString();
 
                 // Refresh context to get updated DataSets
                 if (CascadingAppContext != null)
@@ -261,15 +261,15 @@ public partial class DataSetsPage : ComponentBase, IDisposable
             Id = $"panel-{Guid.NewGuid()}"
         });
         
-        if (_currentDialog != null)
+        if (CurrentDialog != null)
         {
-            await _currentDialog.CloseAsync();
+            await CurrentDialog.CloseAsync();
         }
         
-        _currentDialog = newDialog;
+        CurrentDialog = newDialog;
 
-        var result = await _currentDialog.Result;
-        _currentDialog = null;
+        var result = await CurrentDialog.Result;
+        CurrentDialog = null;
         var currentId = NavHelper.GetQueryParameter("id");
         
         if(result.Cancelled && currentId == dataSet?.Id.ToString())

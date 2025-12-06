@@ -87,14 +87,14 @@ else if (Data != null)
     private TResponse? Data { get; set; }
     private bool IsLoading { get; set; } = true;
     private string? ErrorMessage { get; set; }
-    private string? _previousRefreshToken;
-    private bool _hasLoadedOnce;
-    private bool _isFirstLiveFetch = true;
-    private CancellationTokenSource? _cancellationTokenSource;
+    private string? PreviousRefreshToken { get; set; }
+    private bool HasLoadedOnce { get; set; }
+    private bool IsFirstLiveFetch { get; set; } = true;
+    private CancellationTokenSource? CancellationTokenSource { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        _previousRefreshToken = RefreshToken;
+        PreviousRefreshToken = RefreshToken;
 
         if (LoadOnInitialize)
         {
@@ -105,9 +105,9 @@ else if (Data != null)
     protected override async Task OnParametersSetAsync()
     {
         // Refresh data when RefreshToken changes
-        if (RefreshToken != _previousRefreshToken)
+        if (RefreshToken != PreviousRefreshToken)
         {
-            _previousRefreshToken = RefreshToken;
+            PreviousRefreshToken = RefreshToken;
             await LoadDataAsync();
         }
     }
@@ -115,15 +115,15 @@ else if (Data != null)
     private async Task LoadDataAsync()
     {
         // Cancel any existing request
-        if(_cancellationTokenSource != null)
+        if(CancellationTokenSource != null)
         {
-            await _cancellationTokenSource.CancelAsync();
-            _cancellationTokenSource.Dispose();
+            await CancellationTokenSource.CancelAsync();
+            CancellationTokenSource.Dispose();
         }
         
-        _cancellationTokenSource = new CancellationTokenSource();
+        CancellationTokenSource = new CancellationTokenSource();
 
-        var cancellationToken = _cancellationTokenSource.Token;
+        var cancellationToken = CancellationTokenSource.Token;
 
         try
         {
@@ -134,7 +134,7 @@ else if (Data != null)
             var shouldUseCache = CacheEnabled && ( ShouldCache == null || await ShouldCache(Query));
 
             // Try to load from cache ONLY on the very first load for this component instance
-            if (shouldUseCache && !_hasLoadedOnce)
+            if (shouldUseCache && !HasLoadedOnce)
             {
                 var cachedData = await LocalStorage.GetItemAsync<TResponse>(cacheKey);
                 if (cachedData != null)
@@ -161,7 +161,7 @@ else if (Data != null)
             cancellationToken.ThrowIfCancellationRequested();
 
             // Mark that we've attempted to load at least once
-            _hasLoadedOnce = true;
+            HasLoadedOnce = true;
 
             // Fetch fresh data from API with cancellation token
             var freshData = await RequestSender.SendAsync<TResponse>(Query!, cancellationToken);
@@ -185,9 +185,9 @@ else if (Data != null)
                 var eventArgs = new DataFetchedEventArgs<TResponse>(
                     freshData,
                     IsFromCache: false,
-                    IsFirstFetch: _isFirstLiveFetch
+                    IsFirstFetch: IsFirstLiveFetch
                 );
-                _isFirstLiveFetch = false;
+                IsFirstLiveFetch = false;
                 await OnDataFetched.InvokeAsync(eventArgs);
             }
         }
@@ -234,7 +234,7 @@ else if (Data != null)
 
     public void Dispose()
     {
-        _cancellationTokenSource?.Cancel();
-        _cancellationTokenSource?.Dispose();
+        CancellationTokenSource?.Cancel();
+        CancellationTokenSource?.Dispose();
     }
 }

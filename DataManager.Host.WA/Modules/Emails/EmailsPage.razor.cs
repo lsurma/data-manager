@@ -6,11 +6,11 @@ namespace DataManager.Host.WA.Modules.Emails
 {
     public partial class EmailsPage : ComponentBase
     {
-        private List<IQueryFilter> _filters = new();
+        private List<IQueryFilter> Filters { get; set; } = new();
 
         protected override void OnInitialized()
         {
-            _filters.Add(new InternalGroupName1Filter { Value = "Email" });
+            Filters.Add(new InternalGroupName1Filter { Value = "Email" });
         }
     }
 }

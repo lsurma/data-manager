@@ -8,7 +8,7 @@ namespace DataManager.Host.WA.Components;
 
 public partial class PaginatedDataGrid<TItem> : ComponentBase
 {
-    private RadzenDataGrid<TItem> _dataGrid;
+    private RadzenDataGrid<TItem> _dataGrid = null!;
 
     [Inject]
     private IDialogService DialogService { get; set; } = null!;

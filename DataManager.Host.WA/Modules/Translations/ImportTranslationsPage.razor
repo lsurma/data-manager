@@ -9,27 +9,27 @@
 <div style="margin-bottom: 20px;">
     <label>Select Data Set:</label>
     <FluentSelect TOption="DataSetDto" 
-                  Items="@_availableDataSets"
+                  Items="@AvailableDataSets"
                   OptionValue="@(ds => ds.Id.ToString())"
                   OptionText="@(ds => ds.Name)"
-                  @bind-SelectedOption="@_selectedDataSet"
-                  @bind-Value="@_selectedDataSetValue"
+                  @bind-SelectedOption="@SelectedDataSet"
+                  @bind-Value="@SelectedDataSetValue"
                   Style="width: 300px; margin-left: 10px;" />
 </div>
 
 <InputFile OnChange="OnFileChanged" accept=".xls,.xlsx" />
 
-@if (_isLoading)
+@if (IsLoadingFile)
 {
     <p><em>Loading...</em></p>
 }
-else if (_errorMessage != null)
+else if (ErrorMessage != null)
 {
     <div class="alert alert-danger" role="alert">
-        @_errorMessage
+        @ErrorMessage
     </div>
 }
-else if (_excelDataTable != null)
+else if (ExcelDataTable != null)
 {
     <div style="margin-top: 20px; margin-bottom: 20px;">
         <h4>Map Columns</h4>
@@ -40,8 +40,8 @@ else if (_excelDataTable != null)
     <div style="margin-bottom: 10px;">
         <FluentButton Appearance="Appearance.Accent" 
                      OnClick="StartImportAsync" 
-                     Disabled="@_isImporting">
-            @if (_isImporting)
+                     Disabled="@IsImporting">
+            @if (IsImporting)
             {
                 <text>Importing...</text>
             }
@@ -63,12 +63,12 @@ else if (_excelDataTable != null)
         AllowVirtualization="true"
     >
         <Columns>
-            @foreach (DataColumn col in _excelDataTable.Columns)
+            @foreach (DataColumn col in ExcelDataTable.Columns)
             {
                 <RadzenDataGridColumn TItem="DataRow" Title="@col.ColumnName">
                     <HeaderTemplate>
                         @col.ColumnName <br />
-                        <RadzenDropDown @bind-Value="_columnMappings[col.ColumnName]" Data="@_targetColumns" />
+                        <RadzenDropDown @bind-Value="ColumnMappings[col.ColumnName]" Data="@TargetColumns" />
                     </HeaderTemplate>
                     
                     <Template Context="row">
