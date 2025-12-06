@@ -8,7 +8,7 @@ public class CsvExporterService : ITranslationExporter
 {
     public string Format => "csv";
 
-    public async Task<Stream> ExportAsync(IEnumerable<TranslationDto> translations, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+    public async Task<Stream> ExportAsync(IEnumerable<TranslationExportDto> translations, IDictionary<string, object> parameters, CancellationToken cancellationToken)
     {
         var memoryStream = new MemoryStream();
         using (var writer = new StreamWriter(memoryStream, leaveOpen: true))

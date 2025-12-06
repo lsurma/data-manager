@@ -35,4 +35,23 @@ public static class TranslationMappingExtensions
     {
         return translations.Select(t => t.ToDto()).ToList();
     }
+
+    public static TranslationExportDto ToExportDto(this Translation translation)
+    {
+        return new TranslationExportDto
+        {
+            Id = translation.Id,
+            ResourceName = translation.ResourceName,
+            TranslationName = translation.TranslationName,
+            CultureName = translation.CultureName,
+            Content = translation.Content,
+            InternalGroupName1 = translation.InternalGroupName1,
+            InternalGroupName2 = translation.InternalGroupName2
+        };
+    }
+
+    public static List<TranslationExportDto> ToExportDto(this List<Translation> translations)
+    {
+        return translations.Select(t => t.ToExportDto()).ToList();
+    }
 }
