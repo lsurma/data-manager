@@ -18,7 +18,7 @@
                     Appearance="Appearance.Outline"
                     OnClick="@RefreshAppDataAsync"
                     Title="Refresh cached data"
-                    Loading="@_isRefreshing" />
+                    Loading="@IsRefreshing" />
                 <LoginDisplay />
             </FluentStack>
         </FluentStack>
@@ -53,11 +53,11 @@
 @inject IToastService ToastService
 
 @code {
-    private bool _isRefreshing = false;
+    private bool IsRefreshing { get; set; } = false;
 
     private async Task RefreshAppDataAsync()
     {
-        _isRefreshing = true;
+        IsRefreshing = true;
         StateHasChanged();
 
         try
@@ -71,7 +71,7 @@
         }
         finally
         {
-            _isRefreshing = false;
+            IsRefreshing = false;
             StateHasChanged();
         }
     }

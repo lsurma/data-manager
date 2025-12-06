@@ -11,7 +11,7 @@
             </FluentButton>
             
             <div style="">
-                <FluentPersona ImageSize="32px" Name="@context.User.Identity?.Name" Image="@_photo" />
+                <FluentPersona ImageSize="32px" Name="@context.User.Identity?.Name" Image="@Photo" />
             </div>
         </FluentStack>
     </Authorized>
@@ -35,7 +35,7 @@
     [Inject]
     ILogger<LoginDisplay> Logger { get; set; } = null!;
 
-    private string? _photo;
+    private string? Photo { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,7 +58,7 @@
             var stream = await response.Content.ReadAsStreamAsync();
             var bytes = new byte[stream.Length];
             await stream.ReadExactlyAsync(bytes, 0, (int)stream.Length);
-            _photo = $"data:image/jpeg;base64,{Convert.ToBase64String(bytes)}";
+            Photo = $"data:image/jpeg;base64,{Convert.ToBase64String(bytes)}";
         }
     }
 

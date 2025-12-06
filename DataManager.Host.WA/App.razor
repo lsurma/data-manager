@@ -36,12 +36,12 @@
 @inject ILogger<App> Logger
 
 @code {
-    private bool isRedirecting = true;
+    private bool IsRedirecting { get; set; } = true;
 
     protected override async Task OnInitializedAsync()
     {   if(Configuration.GetValue<bool>("Authentication:RequireAuthentication") == false)
         {
-            isRedirecting = false;
+            IsRedirecting = false;
             
             // Load app data context when not requiring authentication
             if (!AppContext.IsLoaded)
@@ -69,7 +69,7 @@
         }
         else
         {
-            isRedirecting = false;
+            IsRedirecting = false;
             
             // Load app data context after successful authentication
             if (!AppContext.IsLoaded && authState?.User?.Identity?.IsAuthenticated == true)

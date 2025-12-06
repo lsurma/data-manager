@@ -46,19 +46,19 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private List<TranslationDto> AllTranslations { get; set; } = new();
     private List<DataSetDto> AllDataSets => AppContext.DataSets;
     private List<TranslationDto> AllLayouts { get; set; } = new();
-    private IDialogReference? _currentDialog;
+    private IDialogReference? CurrentDialog;
     private string? RefreshToken { get; set; }
-    private IList<TranslationDto> _selectedRows = new List<TranslationDto>();
+    private IList<TranslationDto> SelectedRows = new List<TranslationDto>();
     private GetTranslationsQuery _currentQuery = new GetTranslationsQuery
     {
         Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
     };
 
-    private int _totalItems;
-    private int _pageSize = 20;
-    private string? _searchTerm;
-    private string? _cultureNameFilter;
-    private Guid? _selectedTranslationId;
+    private int TotalItems;
+    private int PageSize = 20;
+    private string? SearchTerm;
+    private string? CultureNameFilter;
+    private Guid? SelectedTranslationId;
 
     protected override void OnInitialized()
     {
@@ -84,7 +84,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
                 {
                     QueryFilters = BuildQueryFilters()
                 },
-                Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
+                Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
             };
             RefreshToken = Guid.NewGuid().ToString();
         }
@@ -135,8 +135,8 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private void HandleDataFetched(DataFetchedEventArgs<PaginatedList<TranslationDto>> eventArgs)
     {
         AllTranslations = eventArgs.Data.Items;
-        _totalItems = eventArgs.Data.TotalItems;
-        _pageSize = eventArgs.Data.PageSize;
+        TotalItems = eventArgs.Data.TotalItems;
+        PageSize = eventArgs.Data.PageSize;
         RestoreDataGridSelection();
 
         if (eventArgs.IsFirstFetch && !eventArgs.IsFromCache)
@@ -149,29 +149,29 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
 
     private Task OnDataGridSelectionChanged(IList<TranslationDto> selectedRows)
     {
-        _selectedRows = selectedRows;
+        SelectedRows = selectedRows;
         if (selectedRows != null && selectedRows.Count > 0)
         {
             var translation = selectedRows[0];
-            _selectedTranslationId = translation.Id;
+            SelectedTranslationId = translation.Id;
             NavigationManager.NavigateTo(NavHelper.BuildUrl("id", translation.Id.ToString()), false);
         }
         else
         {
-            _selectedTranslationId = null;
+            SelectedTranslationId = null;
         }
         return Task.CompletedTask;
     }
 
     private void RestoreDataGridSelection()
     {
-        if (!_selectedTranslationId.HasValue)
+        if (!SelectedTranslationId.HasValue)
         {
-            _selectedRows = new List<TranslationDto>();
+            SelectedRows = new List<TranslationDto>();
             return;
         }
-        var selectedTranslation = AllTranslations.FirstOrDefault(t => t.Id == _selectedTranslationId.Value);
-        _selectedRows = selectedTranslation != null ? new List<TranslationDto> { selectedTranslation } : new List<TranslationDto>();
+        var selectedTranslation = AllTranslations.FirstOrDefault(t => t.Id == SelectedTranslationId.Value);
+        SelectedRows = selectedTranslation != null ? new List<TranslationDto> { selectedTranslation } : new List<TranslationDto>();
     }
 
     private void OnLoadData(LoadDataArgs args)
@@ -210,7 +210,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             {
                 QueryFilters = BuildQueryFilters()
             },
-            Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
+            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
         };
         RefreshToken = Guid.NewGuid().ToString();
     }
@@ -223,7 +223,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             {
                 QueryFilters = BuildQueryFilters()
             },
-            Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
+            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
         };
         RefreshToken = Guid.NewGuid().ToString();
     }
@@ -232,14 +232,14 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     {
         var filters = new List<IQueryFilter>();
         
-        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
         {
-            filters.Add(new SearchFilter { SearchTerm = _searchTerm });
+            filters.Add(new SearchFilter { SearchTerm = SearchTerm });
         }
         
-        if (!string.IsNullOrWhiteSpace(_cultureNameFilter))
+        if (!string.IsNullOrWhiteSpace(CultureNameFilter))
         {
-            filters.Add(new CultureNameFilter { Value = _cultureNameFilter });
+            filters.Add(new CultureNameFilter { Value = CultureNameFilter });
         }
         
         if(DataSetId != null)
@@ -252,7 +252,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
 
     private void ClearCultureFilter()
     {
-        _cultureNameFilter = null;
+        CultureNameFilter = null;
         OnCultureFilterChanged();
     }
 
@@ -270,12 +270,12 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
 
         if (action == "create")
         {
-            _selectedTranslationId = null;
+            SelectedTranslationId = null;
             await OpenTranslationPanelAsync();
         }
         else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var translationId))
         {
-            _selectedTranslationId = translationId;
+            SelectedTranslationId = translationId;
             var translation = AllTranslations.FirstOrDefault(t => t.Id == translationId);
             if (translation != null)
             {
@@ -284,11 +284,11 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         }
         else
         {
-            _selectedTranslationId = null;
-            if (_currentDialog != null)
+            SelectedTranslationId = null;
+            if (CurrentDialog != null)
             {
-                await _currentDialog.CloseAsync();
-                _currentDialog = null;
+                await CurrentDialog.CloseAsync();
+                CurrentDialog = null;
             }
         }
         StateHasChanged();
@@ -318,15 +318,15 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             Id = $"panel-{Guid.NewGuid()}"
         });
         
-        if (_currentDialog != null)
+        if (CurrentDialog != null)
         {
-            await _currentDialog.CloseAsync();
+            await CurrentDialog.CloseAsync();
         }
         
-        _currentDialog = newDialog;
+        CurrentDialog = newDialog;
 
-        var result = await _currentDialog.Result;
-        _currentDialog = null;
+        var result = await CurrentDialog.Result;
+        CurrentDialog = null;
         var currentId = NavHelper.GetQueryParameter("id");
         
         if(result.Cancelled && currentId == translation?.Id.ToString())

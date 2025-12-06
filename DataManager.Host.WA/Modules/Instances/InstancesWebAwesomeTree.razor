@@ -23,7 +23,7 @@
     [Parameter]
     public EventCallback<Guid> OnInstanceSelected { get; set; }
     
-    private HashSet<Guid> _manuallyExpandedItems = new();
+    private HashSet<Guid> ManuallyExpandedItems { get; set; } = new();
     
     private List<ProjectInstanceDto> RootInstances => 
         AllInstances.Where(i => i.ParentProjectId == null).ToList();
@@ -53,7 +53,7 @@
     private RenderFragment RenderTreeItem(ProjectInstanceDto instance) => __builder =>
     {
         var children = AllInstances.Where(i => i.ParentProjectId == instance.Id).ToList();
-        var shouldExpand = HasSelectedDescendant(instance) || _manuallyExpandedItems.Contains(instance.Id);
+        var shouldExpand = HasSelectedDescendant(instance) || ManuallyExpandedItems.Contains(instance.Id);
         
         <wa-tree-item @key="instance.Id" 
                       data-id="@instance.Id"
@@ -86,7 +86,7 @@
     {
         if (!string.IsNullOrEmpty(args.ItemId) && Guid.TryParse(args.ItemId, out var guid))
         {
-            _manuallyExpandedItems.Add(guid);
+            ManuallyExpandedItems.Add(guid);
         }
     }
     
@@ -94,7 +94,7 @@
     {
         if (!string.IsNullOrEmpty(args.ItemId) && Guid.TryParse(args.ItemId, out var guid))
         {
-            _manuallyExpandedItems.Remove(guid);
+            ManuallyExpandedItems.Remove(guid);
         }
     }
 }
