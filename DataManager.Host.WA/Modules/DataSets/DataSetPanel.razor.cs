@@ -1,5 +1,6 @@
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -31,8 +32,10 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
     private string? ErrorMessage { get; set; }
     private HashSet<Guid> SelectedIncludeIds { get; set; } = new();
     private string AllowedIdentityIdsText { get; set; } = string.Empty;
+    private HashSet<string> SelectedCultures { get; set; } = new();
+    private List<string> AvailableCultures { get; set; } = new();
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         // Initialize selected includes from the DataSet
         if (Content?.DataSet?.IncludedDataSetIds != null)
@@ -46,7 +49,22 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
             AllowedIdentityIdsText = string.Join(Environment.NewLine, Content.DataSet.AllowedIdentityIds);
         }
 
-        return Task.CompletedTask;
+        // Load available cultures from the system
+        try
+        {
+            AvailableCultures = await RequestSender.SendAsync<List<string>>(new GetAvailableCulturesQuery());
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load available cultures: {ex.Message}";
+            AvailableCultures = new List<string>();
+        }
+
+        // Initialize selected cultures from the DataSet
+        if (Content?.DataSet?.AvailableCultures != null)
+        {
+            SelectedCultures = new HashSet<string>(Content.DataSet.AvailableCultures);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -90,6 +108,18 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
         }
     }
 
+    private void HandleCultureChanged(string cultureCode, bool isSelected)
+    {
+        if (isSelected)
+        {
+            SelectedCultures.Add(cultureCode);
+        }
+        else
+        {
+            SelectedCultures.Remove(cultureCode);
+        }
+    }
+
     private async Task HandleSubmitAsync(bool closeAfterSave = true)
     {
         if (Content?.DataSet == null) return;
@@ -106,6 +136,7 @@ public partial class DataSetPanel : IDialogContentComponent<DataSetPanelParamete
                 Description = Content.DataSet.Description,
                 Notes = Content.DataSet.Notes,
                 AllowedIdentityIds = ParseAllowedIdentityIds(),
+                AvailableCultures = SelectedCultures.Any() ? SelectedCultures.ToList() : null,
                 IncludedDataSetIds = SelectedIncludeIds.ToList()
             });
             
