@@ -26,15 +26,20 @@ window.interactJs = {
         this.makeResizable(dotNetHelper, handle, panelElement, '--dialog-width');
     },
     
-    makeResizable: function (dotNetHelper, targetElement, propertyElement, cssVarNameToSet) {
+    makeResizableNavMenu: function (dotNetHelper) {
+        var handle = document.querySelector(".navmenu");
+        this.makeResizable(dotNetHelper, handle, handle, '--width', 50, { left: false, right: true, bottom: false, top: false });
+    },
+    
+    makeResizable: function (dotNetHelper, targetElement, propertyElement, cssVarNameToSet, minWidthDefault = 300, edges) {
         const computedStyle = getComputedStyle(targetElement);
         const minWidthVar = computedStyle.getPropertyValue('--min-width');
-        const minWidth = parseInt(minWidthVar, 10) || 300;
+        const minWidth = parseInt(minWidthVar, 10) || minWidthDefault;
         let debounceTimeout;
 
         interactjs(targetElement)
             .resizable({
-                edges: { left: true, right: false, bottom: false, top: false },
+                edges: edges ?? { left: true, right: false, bottom: false, top: false },
 
                 listeners: {
                     move: function (event) {

@@ -135,6 +135,7 @@ fluent-dialog[id^="panel-"][class~="right"] {
         right : 16px;
         top : 16px;
         height: calc(100dvh - 32px);
+        box-shadow: 0 25.6px 57.6px var(--panel-shadow-color,rgba(0, 0, 0, .22)),0 4.8px 14.4px var(--panel-shadow-secondary-color,rgba(0, 0, 0, .18));
     }
 
     &::part(control) {
@@ -211,13 +212,52 @@ fluent-dialog[id^="panel-"][class~="right"] {
     /*hover : #f1f2f3*/
     /*active : #dedfe3*/
     /*blue #1060ff*/
-    --accent-fill-rest : #0c56e9;
+    /* neutral #fafafa */
+    --app-neutral-layer-1 : #fafafa;
+    --accent-fill-rest : #1060ff;
+    --accent-fill-hover: #0c56e9;
+    --accent-fill-active: #0c56e9;
+    --accent-fill-focus: #0c56e9;
+    --control-corner-radius : 5;
+    --panel-shadow-color: rgba(0, 0, 0, .22);
+    --panel-shadow-secondary-color: rgba(0, 0, 0, .18);
+    
+    .header {
+        background-color : var(--app-neutral-layer-1);
+    }
+    
+    fluent-button {
+        &.accent {
+            &:not(:hover) {
+                &::part(control)  {
+                    background: var(--accent-fill-rest);
+                }    
+            }
+            
+            &:hover:not([disabled]) {
+                &::part(control)  {
+                    background: var(--accent-fill-hover);
+                }    
+            }
+              
+        }
+    }
     
     .navmenu {
-        padding: 0 16px;
         --base-height-multiplier: 9;
-        --control-corner-radius: 5;
+        --width: 250px;
+        
+        padding: 0 16px;
         box-shadow: 0 0 0 1px #656a7633;
+        
+        .fluent-nav-menu {
+            max-width: 100%;
+        
+            &:not(.collapsed) {
+                min-width: var(--width);
+            }
+        }
+        
         
         .fluent-nav-link  {
             &.active {
@@ -233,4 +273,8 @@ fluent-dialog[id^="panel-"][class~="right"] {
             }
         }
     }
+}
+
+#dotnet-compile-error {
+    display: none !important;   
 }
