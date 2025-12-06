@@ -1,6 +1,7 @@
 using System.Text.Json;
 using DataManager.Application.Contracts.Common;
 using DataManager.Application.Contracts.Modules.Translations;
+using DataManager.Host.AzFuncAPI.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -113,10 +114,7 @@ public class TranslationsController
                 return new BadRequestObjectResult(new { error = "Request body is empty." });
             }
 
-            var translations = JsonSerializer.Deserialize<List<ImportTranslationDto>>(requestBody, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var translations = JsonSerializer.Deserialize<List<ImportTranslationDto>>(requestBody, JsonSerializerConfig.Default);
 
             if (translations == null || translations.Count == 0)
             {

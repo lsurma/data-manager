@@ -23,10 +23,7 @@ public class LocalStorageService : ILocalStorageService
                 return default;
             }
 
-            return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            return JsonSerializer.Deserialize<T>(json, JsonSerializerConfig.Default);
         }
         catch
         {
