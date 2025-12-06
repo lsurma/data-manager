@@ -14,7 +14,12 @@
       "Bash(/tmp/dotnet-install.sh:*)",
       "Bash(~/.dotnet/dotnet:*)",
       "Bash(export PATH=\"$PATH:/home/lsurma/.dotnet/tools\")",
-      "Bash(git filter-branch:*)"
+      "Bash(git filter-branch:*)",
+      "Bash(git stash:*)",
+      "Bash(git reflog:*)",
+      "Bash(git gc:*)",
+      "Bash(git show-ref:*)",
+      "Bash(git rev-parse:*)"
     ],
     "deny": [],
     "ask": []

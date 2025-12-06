@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataManager.Application.Core.Data.Migrations
 {
     [DbContext(typeof(DataManagerDbContext))]
-    [Migration("20251130113602_init")]
+    [Migration("20251206154502_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -19,69 +19,6 @@ namespace DataManager.Application.Core.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
-
-            modelBuilder.Entity("DataManager.Application.Core.Modules.DataSet.DataSet", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AllowedIdentityIds")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("CreatedAt")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long?>("UpdatedAt")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DataSets");
-                });
-
-            modelBuilder.Entity("DataManager.Application.Core.Modules.DataSet.DataSetInclude", b =>
-                {
-                    b.Property<Guid>("ParentDataSetId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("IncludedDataSetId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("CreatedAt")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("ParentDataSetId", "IncludedDataSetId");
-
-                    b.HasIndex("IncludedDataSetId");
-
-                    b.HasIndex("ParentDataSetId", "IncludedDataSetId")
-                        .IsUnique();
-
-                    b.ToTable("DataSetInclude");
-                });
 
             modelBuilder.Entity("DataManager.Application.Core.Modules.ProjectInstance.ProjectInstance", b =>
                 {
@@ -155,9 +92,6 @@ namespace DataManager.Application.Core.Data.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("DataSetId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("InternalGroupName1")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
@@ -166,7 +100,25 @@ namespace DataManager.Application.Core.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsCurrentVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDraftVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsOldVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<Guid?>("LayoutId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OriginalTranslationId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ResourceName")
@@ -177,9 +129,18 @@ namespace DataManager.Application.Core.Data.Migrations
                     b.Property<Guid?>("SourceId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("SourceTranslationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("SourceTranslationLastSyncedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TranslationName")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TranslationsSetId")
                         .HasColumnType("TEXT");
 
                     b.Property<long?>("UpdatedAt")
@@ -193,34 +154,87 @@ namespace DataManager.Application.Core.Data.Migrations
 
                     b.HasIndex("CultureName");
 
-                    b.HasIndex("DataSetId");
-
                     b.HasIndex("LayoutId");
 
+                    b.HasIndex("OriginalTranslationId");
+
                     b.HasIndex("SourceId");
+
+                    b.HasIndex("SourceTranslationId");
+
+                    b.HasIndex("TranslationsSetId");
+
+                    b.HasIndex("IsCurrentVersion", "IsDraftVersion", "IsOldVersion");
 
                     b.HasIndex("InternalGroupName1", "InternalGroupName2", "ResourceName", "CultureName");
 
                     b.ToTable("Translations");
                 });
 
-            modelBuilder.Entity("DataManager.Application.Core.Modules.DataSet.DataSetInclude", b =>
+            modelBuilder.Entity("DataManager.Application.Core.Modules.TranslationsSet.TranslationsSet", b =>
                 {
-                    b.HasOne("DataManager.Application.Core.Modules.DataSet.DataSet", "IncludedDataSet")
-                        .WithMany("IncludedIn")
-                        .HasForeignKey("IncludedDataSetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
 
-                    b.HasOne("DataManager.Application.Core.Modules.DataSet.DataSet", "ParentDataSet")
-                        .WithMany("Includes")
-                        .HasForeignKey("ParentDataSetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<string>("AllowedIdentityIds")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Navigation("IncludedDataSet");
+                    b.Property<string>("AvailableCultures")
+                        .HasColumnType("TEXT");
 
-                    b.Navigation("ParentDataSet");
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("UpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TranslationsSets", (string)null);
+                });
+
+            modelBuilder.Entity("DataManager.Application.Core.Modules.TranslationsSet.TranslationsSetInclude", b =>
+                {
+                    b.Property<Guid>("ParentTranslationsSetId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("IncludedTranslationsSetId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ParentTranslationsSetId", "IncludedTranslationsSetId");
+
+                    b.HasIndex("IncludedTranslationsSetId");
+
+                    b.HasIndex("ParentTranslationsSetId", "IncludedTranslationsSetId")
+                        .IsUnique();
+
+                    b.ToTable("TranslationsSetsIncludes", (string)null);
                 });
 
             modelBuilder.Entity("DataManager.Application.Core.Modules.ProjectInstance.ProjectInstance", b =>
@@ -235,14 +249,14 @@ namespace DataManager.Application.Core.Data.Migrations
 
             modelBuilder.Entity("DataManager.Application.Core.Modules.Translations.Translation", b =>
                 {
-                    b.HasOne("DataManager.Application.Core.Modules.DataSet.DataSet", "DataSet")
-                        .WithMany()
-                        .HasForeignKey("DataSetId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("DataManager.Application.Core.Modules.Translations.Translation", "Layout")
                         .WithMany()
                         .HasForeignKey("LayoutId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DataManager.Application.Core.Modules.Translations.Translation", "OriginalTranslation")
+                        .WithMany()
+                        .HasForeignKey("OriginalTranslationId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("DataManager.Application.Core.Modules.Translations.Translation", "Source")
@@ -250,23 +264,56 @@ namespace DataManager.Application.Core.Data.Migrations
                         .HasForeignKey("SourceId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("DataSet");
+                    b.HasOne("DataManager.Application.Core.Modules.Translations.Translation", "SourceTranslation")
+                        .WithMany()
+                        .HasForeignKey("SourceTranslationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DataManager.Application.Core.Modules.TranslationsSet.TranslationsSet", "TranslationsSet")
+                        .WithMany()
+                        .HasForeignKey("TranslationsSetId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Layout");
 
+                    b.Navigation("OriginalTranslation");
+
                     b.Navigation("Source");
+
+                    b.Navigation("SourceTranslation");
+
+                    b.Navigation("TranslationsSet");
                 });
 
-            modelBuilder.Entity("DataManager.Application.Core.Modules.DataSet.DataSet", b =>
+            modelBuilder.Entity("DataManager.Application.Core.Modules.TranslationsSet.TranslationsSetInclude", b =>
                 {
-                    b.Navigation("IncludedIn");
+                    b.HasOne("DataManager.Application.Core.Modules.TranslationsSet.TranslationsSet", "IncludedTranslationsSet")
+                        .WithMany("IncludedIn")
+                        .HasForeignKey("IncludedTranslationsSetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Includes");
+                    b.HasOne("DataManager.Application.Core.Modules.TranslationsSet.TranslationsSet", "ParentTranslationsSet")
+                        .WithMany("Includes")
+                        .HasForeignKey("ParentTranslationsSetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IncludedTranslationsSet");
+
+                    b.Navigation("ParentTranslationsSet");
                 });
 
             modelBuilder.Entity("DataManager.Application.Core.Modules.ProjectInstance.ProjectInstance", b =>
                 {
                     b.Navigation("ChildProjects");
+                });
+
+            modelBuilder.Entity("DataManager.Application.Core.Modules.TranslationsSet.TranslationsSet", b =>
+                {
+                    b.Navigation("IncludedIn");
+
+                    b.Navigation("Includes");
                 });
 #pragma warning restore 612, 618
         }
