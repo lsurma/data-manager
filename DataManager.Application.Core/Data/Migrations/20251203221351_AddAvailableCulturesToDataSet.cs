@@ -12,7 +12,7 @@ namespace DataManager.Application.Core.Data.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "AvailableCultures",
-                table: "DataSets",
+                table: "TranslationSets",
                 type: "TEXT",
                 nullable: true);
         }
@@ -22,7 +22,7 @@ namespace DataManager.Application.Core.Data.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "AvailableCultures",
-                table: "DataSets");
+                table: "TranslationSets");
         }
     }
 }

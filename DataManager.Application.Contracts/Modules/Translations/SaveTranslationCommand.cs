@@ -23,7 +23,7 @@ public class SaveTranslationCommand : IRequest<Guid>
     /// </summary>
     public string? ContentTemplate { get; set; }
 
-    public Guid? DataSetId { get; set; }
+    public Guid? TranslationSetId { get; set; }
 
     /// <summary>
     /// Optional reference to a layout Translation (used for email templates)

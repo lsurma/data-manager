@@ -11,7 +11,7 @@ namespace DataManager.Application.Core.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Translations_DataSets_SourceDataSetId",
+                name: "FK_Translations_TranslationSets_SourceTranslationSetId",
                 table: "Translations");
 
             migrationBuilder.RenameColumn(
@@ -20,12 +20,12 @@ namespace DataManager.Application.Core.Data.Migrations
                 newName: "SourceTranslationLastSyncedAt");
 
             migrationBuilder.RenameColumn(
-                name: "SourceDataSetId",
+                name: "SourceTranslationSetId",
                 table: "Translations",
                 newName: "SourceTranslationId");
 
             migrationBuilder.RenameIndex(
-                name: "IX_Translations_SourceDataSetId",
+                name: "IX_Translations_SourceTranslationSetId",
                 table: "Translations",
                 newName: "IX_Translations_SourceTranslationId");
 
@@ -53,18 +53,18 @@ namespace DataManager.Application.Core.Data.Migrations
             migrationBuilder.RenameColumn(
                 name: "SourceTranslationId",
                 table: "Translations",
-                newName: "SourceDataSetId");
+                newName: "SourceTranslationSetId");
 
             migrationBuilder.RenameIndex(
                 name: "IX_Translations_SourceTranslationId",
                 table: "Translations",
-                newName: "IX_Translations_SourceDataSetId");
+                newName: "IX_Translations_SourceTranslationSetId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Translations_DataSets_SourceDataSetId",
+                name: "FK_Translations_TranslationSets_SourceTranslationSetId",
                 table: "Translations",
-                column: "SourceDataSetId",
-                principalTable: "DataSets",
+                column: "SourceTranslationSetId",
+                principalTable: "TranslationSets",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
         }

@@ -7,7 +7,7 @@ namespace DataManager.Application.Contracts.Modules.Translations;
 /// </summary>
 public class ImportTranslationsCommand : IRequest<ImportTranslationsResult>
 {
-    public required Guid DataSetId { get; set; }
+    public required Guid TranslationSetId { get; set; }
     public required List<ImportTranslationDto> Translations { get; set; }
 }
 

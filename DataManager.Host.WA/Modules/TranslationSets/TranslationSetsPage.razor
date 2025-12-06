@@ -1,0 +1,63 @@
+@page "/datasets"
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.TranslationSet
+@using DataManager.Host.WA.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Data Sets</h3>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;"/>
+
+<DataLoader TResponse="PaginatedList<TranslationSetDto>"
+            TQuery="GetTranslationSetsQuery"
+            Query="@CurrentQuery"
+            RefreshToken="@RefreshToken"
+            OnDataFetched="HandleDataFetched"/>
+
+<PaginatedDataGrid TItem="TranslationSetDto"
+                   Items="@AllTranslationSets"
+                   TotalItems="@TotalItems"
+                   PageSize="@PageSize"
+                   SearchPlaceholder="Search datasets..."
+                   @bind-SearchTerm="@SearchTerm"
+                   OnSearchChanged="@OnSearchChanged"
+                   LoadData="@OnLoadData"
+                   SelectedRows="@SelectedRows"
+                   SelectedRowsChanged="@OnDataGridSelectionChanged"
+                   SettingsStorageKey="grid-settings-datasets">
+    <ToolbarTemplate>
+        <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+            <FluentButton Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
+                Create
+            </FluentButton>
+        </FluentNavLink>
+    </ToolbarTemplate>
+
+    <Columns>
+        <RadzenDataGridColumn TItem="TranslationSetDto" Visible="false" Property="Id" Title="Id"/>
+        <RadzenDataGridColumn TItem="TranslationSetDto" Visible="false" Property="Name" Title="Name"/>
+        <RadzenDataGridColumn TItem="TranslationSetDto" Property="Description" Title="Description"/>
+
+        <RadzenDataGridColumn TItem="TranslationSetDto" Property="IncludedTranslationSetIds" Title="Includes">
+            <Template Context="translationSet">
+                @if (translationSet.IncludedTranslationSetIds.Any())
+                {
+                    <text>@translationSet.IncludedTranslationSetIds.Count dataset(s)</text>
+                }
+                else
+                {
+                    <text>-</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="TranslationSetDto" Property="UpdatedAt" Title="Updated At"
+                              FormatString="{0:yyyy-MM-dd HH:mm}"/>
+        <RadzenDataGridColumn TItem="TranslationSetDto" Visible="false" Property="CreatedAt" Title="Created At"
+                              FormatString="{0:yyyy-MM-dd HH:mm}"/>
+
+    </Columns>
+</PaginatedDataGrid>

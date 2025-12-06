@@ -33,18 +33,18 @@ public class TranslationsController
     /// </summary>
     [Function("GetTranslations")]
     public async Task<IActionResult> GetTranslations(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/translations/{dataSetNameOrId}")] HttpRequest req,
-        string dataSetNameOrId)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/translations/{translationSetNameOrId}")] HttpRequest req,
+        string translationSetNameOrId)
     {
-        _logger.LogInformation("Getting translations for dataset: {DataSetNameOrId}", dataSetNameOrId);
+        _logger.LogInformation("Getting translations for dataset: {TranslationSetNameOrId}", translationSetNameOrId);
 
         try
         {
             // Resolve dataset by name or ID
-            var dataSet = await ResolveDataSetAsync(dataSetNameOrId);
-            if (dataSet == null)
+            var translationSet = await ResolveDataSetAsync(translationSetNameOrId);
+            if (translationSet == null)
             {
-                return new NotFoundObjectResult(new { error = $"DataSet '{dataSetNameOrId}' not found." });
+                return new NotFoundObjectResult(new { error = $"TranslationSet '{translationSetNameOrId}' not found." });
             }
 
             // Parse query parameters
@@ -70,7 +70,7 @@ public class TranslationsController
                 {
                     QueryFilters = new List<IQueryFilter>
                     {
-                        new DataSetIdFilter { Value = dataSet.Id }
+                        new TranslationSetIdFilter { Value = translationSet.Id }
                     }
                 }
             };
@@ -81,7 +81,7 @@ public class TranslationsController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting translations for dataset: {DataSetNameOrId}", dataSetNameOrId);
+            _logger.LogError(ex, "Error getting translations for dataset: {TranslationSetNameOrId}", translationSetNameOrId);
             return new ObjectResult(new { error = ex.Message }) { StatusCode = 500 };
         }
     }
@@ -92,18 +92,18 @@ public class TranslationsController
     /// </summary>
     [Function("ImportTranslations")]
     public async Task<IActionResult> ImportTranslations(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/translations/{dataSetNameOrId}")] HttpRequest req,
-        string dataSetNameOrId)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/translations/{translationSetNameOrId}")] HttpRequest req,
+        string translationSetNameOrId)
     {
-        _logger.LogInformation("Importing translations for dataset: {DataSetNameOrId}", dataSetNameOrId);
+        _logger.LogInformation("Importing translations for dataset: {TranslationSetNameOrId}", translationSetNameOrId);
 
         try
         {
             // Resolve dataset by name or ID
-            var dataSet = await ResolveDataSetAsync(dataSetNameOrId);
-            if (dataSet == null)
+            var translationSet = await ResolveDataSetAsync(translationSetNameOrId);
+            if (translationSet == null)
             {
-                return new NotFoundObjectResult(new { error = $"DataSet '{dataSetNameOrId}' not found." });
+                return new NotFoundObjectResult(new { error = $"TranslationSet '{translationSetNameOrId}' not found." });
             }
 
             // Read request body as JSON
@@ -126,7 +126,7 @@ public class TranslationsController
             // Use the ImportTranslationsCommand
             var command = new ImportTranslationsCommand
             {
-                DataSetId = dataSet.Id,
+                TranslationSetId = translationSet.Id,
                 Translations = translations
             };
 
@@ -135,7 +135,7 @@ public class TranslationsController
             return new OkObjectResult(new 
             { 
                 message = "Translations import completed.", 
-                dataSetId = dataSet.Id,
+                translationSetId = translationSet.Id,
                 importedCount = result.ImportedCount,
                 failedCount = result.FailedCount,
                 errors = result.Errors
@@ -143,12 +143,12 @@ public class TranslationsController
         }
         catch (JsonException ex)
         {
-            _logger.LogError(ex, "Failed to deserialize request body for dataset: {DataSetNameOrId}", dataSetNameOrId);
+            _logger.LogError(ex, "Failed to deserialize request body for dataset: {TranslationSetNameOrId}", translationSetNameOrId);
             return new BadRequestObjectResult(new { error = "Invalid JSON format.", details = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error importing translations for dataset: {DataSetNameOrId}", dataSetNameOrId);
+            _logger.LogError(ex, "Error importing translations for dataset: {TranslationSetNameOrId}", translationSetNameOrId);
             return new ObjectResult(new { error = ex.Message }) { StatusCode = 500 };
         }
     }
@@ -156,18 +156,18 @@ public class TranslationsController
     /// <summary>
     /// Helper method to resolve a dataset by name or ID
     /// </summary>
-    private async Task<Application.Core.Modules.DataSet.DataSet?> ResolveDataSetAsync(string nameOrId)
+    private async Task<Application.Core.Modules.TranslationSet.TranslationSet?> ResolveDataSetAsync(string nameOrId)
     {
         // Try parsing as Guid first
-        if (Guid.TryParse(nameOrId, out var dataSetId))
+        if (Guid.TryParse(nameOrId, out var translationSetId))
         {
-            return await _context.DataSets
+            return await _context.TranslationSets
                 .AsNoTracking()
-                .FirstOrDefaultAsync(ds => ds.Id == dataSetId);
+                .FirstOrDefaultAsync(ds => ds.Id == translationSetId);
         }
 
         // Otherwise treat as name
-        return await _context.DataSets
+        return await _context.TranslationSets
             .AsNoTracking()
             .FirstOrDefaultAsync(ds => ds.Name == nameOrId);
     }

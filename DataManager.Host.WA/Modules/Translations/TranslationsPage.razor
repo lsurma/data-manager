@@ -1,4 +1,4 @@
-@page "/translations/{DataSetId:guid?}"
+@page "/translations/{TranslationSetId:guid?}"
 @using DataManager.Application.Contracts.Common
 @using DataManager.Application.Contracts.Modules.Translations
 @using DataManager.Host.WA.Components
@@ -16,24 +16,24 @@
         All
     </FluentButton>
 
-    @foreach (var dataSet in AllDataSets)
+    @foreach (var translationSet in AllTranslationSets)
     {
-        <FluentButton Appearance="@GetAppearanceForDataSet(dataSet.Id)" OnClick="@(() => OnDataSetFilterChanged(dataSet.Id))">
-            @dataSet.Name
+        <FluentButton Appearance="@GetAppearanceForDataSet(translationSet.Id)" OnClick="@(() => OnDataSetFilterChanged(translationSet.Id))">
+            @translationSet.Name
         </FluentButton>
     }
 </FluentStack>
 
-<TranslationsGrid DataSetId="DataSetId">
+<TranslationsGrid TranslationSetId="TranslationSetId">
     <ToolbarTemplate>
         <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
-            <FluentButton Disabled="@(DataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
+            <FluentButton Disabled="@(TranslationSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
                 Create
             </FluentButton>
         </FluentNavLink>
         
         <FluentNavLink Href="@NavHelper.BuildUrl("action", "import")">
-            <FluentButton Disabled="@(DataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.ArrowImport())">
+            <FluentButton Disabled="@(TranslationSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.ArrowImport())">
                 Import
             </FluentButton>
         </FluentNavLink>

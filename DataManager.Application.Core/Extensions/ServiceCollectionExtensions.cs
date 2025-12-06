@@ -1,7 +1,7 @@
 using DataManager.Application.Contracts;
 using DataManager.Application.Core.Common;
 using DataManager.Application.Core.Data;
-using DataManager.Application.Core.Modules.DataSet;
+using DataManager.Application.Core.Modules.TranslationSet;
 using DataManager.Application.Core.Modules.ProjectInstance;
 using DataManager.Application.Core.Modules.Translations;
 using DataManager.Authentication.Core;
@@ -53,12 +53,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICultureService, CultureService>();
 
         // Register entity-specific query services
-        services.AddScoped<IQueryService<DataSet, Guid>, DataSetsQueryService>();
+        services.AddScoped<IQueryService<TranslationSet, Guid>, TranslationSetsQueryService>();
         services.AddScoped<IQueryService<ProjectInstance, Guid>, ProjectInstancesQueryService>();
         services.AddScoped<IQueryService<Translation, Guid>, TranslationsQueryService>();
 
         // Also register specialized query services directly for injection when needed
-        services.AddScoped<DataSetsQueryService>();
+        services.AddScoped<TranslationSetsQueryService>();
         services.AddScoped<TranslationsQueryService>();
         services.AddScoped<ProjectInstancesQueryService>();
 

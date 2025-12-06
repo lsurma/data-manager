@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using DataManager.Host.WA.Modules.Translations.Models;
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Modules.Translations;
-using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Application.Contracts.Modules.TranslationSet;
 using DataManager.Host.WA.Services;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
@@ -47,17 +47,17 @@ namespace DataManager.Host.WA.Modules.Translations
         private DataTable? ExcelDataTable;
         private List<string> TargetColumns = new() { "InternalGroupName1", "InternalGroupName2", "ResourceName", "TranslationName", "CultureName", "Content" };
         private Dictionary<string, string> ColumnMappings = new();
-        private List<DataSetDto> AvailableDataSets => AppContext.DataSets;
-        private Guid? SelectedDataSetId;
-        private DataSetDto? SelectedDataSet;
+        private List<TranslationSetDto> AvailableTranslationSets => AppContext.TranslationSets;
+        private Guid? SelectedTranslationSetId;
+        private TranslationSetDto? SelectedDataSet;
         private string? SelectedDataSetValue
         {
-            get => SelectedDataSetId?.ToString();
+            get => SelectedTranslationSetId?.ToString();
             set
             {
                 if (Guid.TryParse(value, out var id))
                 {
-                    SelectedDataSetId = id;
+                    SelectedTranslationSetId = id;
                 }
                 else if (!string.IsNullOrEmpty(value))
                 {
@@ -77,9 +77,9 @@ namespace DataManager.Host.WA.Modules.Translations
         protected override void OnInitialized()
         {
             // Initialize selected dataset from context
-            if (AvailableDataSets.Any())
+            if (AvailableTranslationSets.Any())
             {
-                SelectedDataSetId = AvailableDataSets.FirstOrDefault()?.Id;
+                SelectedTranslationSetId = AvailableTranslationSets.FirstOrDefault()?.Id;
             }
             
             // Subscribe to context refresh events
@@ -92,9 +92,9 @@ namespace DataManager.Host.WA.Modules.Translations
         private void HandleContextRefreshed()
         {
             // Re-select first dataset if current one is not available anymore
-            if (SelectedDataSetId != null && !AvailableDataSets.Any(ds => ds.Id == SelectedDataSetId))
+            if (SelectedTranslationSetId != null && !AvailableTranslationSets.Any(ds => ds.Id == SelectedTranslationSetId))
             {
-                SelectedDataSetId = AvailableDataSets.FirstOrDefault()?.Id;
+                SelectedTranslationSetId = AvailableTranslationSets.FirstOrDefault()?.Id;
             }
             
             StateHasChanged();
@@ -170,7 +170,7 @@ namespace DataManager.Host.WA.Modules.Translations
                 return dto;
             }).ToList();
             
-            if (ImportedTranslations == null || !ImportedTranslations.Any() || !SelectedDataSetId.HasValue)
+            if (ImportedTranslations == null || !ImportedTranslations.Any() || !SelectedTranslationSetId.HasValue)
             {
                 ToastService.ShowError("Please select a data set and map columns before importing.");
                 return;
@@ -209,7 +209,7 @@ namespace DataManager.Host.WA.Modules.Translations
 
                 var command = new ImportTranslationsCommand
                 {
-                    DataSetId = SelectedDataSetId.Value,
+                    TranslationSetId = SelectedTranslationSetId.Value,
                     Translations = importDtos
                 };
 

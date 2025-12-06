@@ -44,7 +44,7 @@ public class SaveSingleTranslationCommandHandler : IRequestHandler<SaveSingleTra
                 || translation.CultureName != request.CultureName
                 || translation.Content != request.Content
                 || translation.ContentTemplate != request.ContentTemplate
-                || translation.DataSetId != request.DataSetId
+                || translation.TranslationSetId != request.TranslationSetId
                 || translation.LayoutId != request.LayoutId
                 || translation.SourceId != request.SourceId;
 
@@ -69,7 +69,7 @@ public class SaveSingleTranslationCommandHandler : IRequestHandler<SaveSingleTra
                     CultureName = translation.CultureName,
                     Content = translation.Content,
                     ContentTemplate = translation.ContentTemplate,
-                    DataSetId = translation.DataSetId,
+                    TranslationSetId = translation.TranslationSetId,
                     LayoutId = translation.LayoutId,
                     SourceId = translation.SourceId,
                     OriginalTranslationId = translation.Id,
@@ -90,7 +90,7 @@ public class SaveSingleTranslationCommandHandler : IRequestHandler<SaveSingleTra
             translation.CultureName = request.CultureName;
             translation.Content = request.Content;
             translation.ContentTemplate = request.ContentTemplate;
-            translation.DataSetId = request.DataSetId;
+            translation.TranslationSetId = request.TranslationSetId;
             translation.LayoutId = request.LayoutId;
             translation.SourceId = request.SourceId;
 
@@ -124,7 +124,7 @@ public class SaveSingleTranslationCommandHandler : IRequestHandler<SaveSingleTra
                 CultureName = request.CultureName,
                 Content = request.Content,
                 ContentTemplate = request.ContentTemplate,
-                DataSetId = request.DataSetId,
+                TranslationSetId = request.TranslationSetId,
                 LayoutId = request.LayoutId,
                 SourceId = request.SourceId,
                 CreatedBy = string.Empty, // Will be set by DbContext

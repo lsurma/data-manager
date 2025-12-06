@@ -1,15 +1,15 @@
 @page "/translations/import"
 @using System.Data
 @using DataManager.Host.WA.Modules.Translations.Models
-@using DataManager.Application.Contracts.Modules.DataSet
+@using DataManager.Application.Contracts.Modules.TranslationSet
 @using Microsoft.FluentUI.AspNetCore.Components
 
 <h3>Import Translations</h3>
 
 <div style="margin-bottom: 20px;">
     <label>Select Data Set:</label>
-    <FluentSelect TOption="DataSetDto" 
-                  Items="@AvailableDataSets"
+    <FluentSelect TOption="TranslationSetDto" 
+                  Items="@AvailableTranslationSets"
                   OptionValue="@(ds => ds.Id.ToString())"
                   OptionText="@(ds => ds.Name)"
                   @bind-SelectedOption="@SelectedDataSet"

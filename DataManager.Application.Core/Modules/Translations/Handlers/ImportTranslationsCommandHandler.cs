@@ -34,7 +34,7 @@ public class ImportTranslationsCommandHandler : IRequestHandler<ImportTranslatio
                     InternalGroupName1 = translation.InternalGroupName1,
                     InternalGroupName2 = translation.InternalGroupName2,
                     ContentTemplate = translation.ContentTemplate,
-                    DataSetId = request.DataSetId
+                    TranslationSetId = request.TranslationSetId
                 };
 
                 await _mediator.Send(saveCommand, cancellationToken);

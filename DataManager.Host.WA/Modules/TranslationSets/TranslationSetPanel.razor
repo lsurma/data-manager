@@ -1,0 +1,98 @@
+@using DataManager.Host.WA.Components
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<TranslationSetPanelParameters>
+
+<FluentDialogBody>
+    <EditForm Model="Content.TranslationSet" OnSubmit="@(() => HandleSubmitAsync(false))">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            
+            <FluentTextField @bind-Value="Content.TranslationSet.Name"
+                             Label="Name"
+                             Immediate="true"
+                             Required
+                             AutoComplete="off"
+                             Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.TranslationSet.Description"
+                            Label="Description"
+                            Immediate="true"
+                            Rows="3"
+                            Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.TranslationSet.Notes"
+                            Label="Notes"
+                            Immediate="true"
+                            Rows="4"
+                            Style="width: 100%;" />
+
+            @if (AvailableCultures.Any())
+            {
+                <div>
+                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">
+                        Supported Cultures (Optional)
+                        <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                            <br/>Select the cultures/languages supported by this TranslationSet. If none are selected, all system cultures are available.
+                        </span>
+                    </label>
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        @foreach (var culture in AvailableCultures)
+                        {
+                            var isSelected = SelectedCultures.Contains(culture);
+                            <FluentCheckbox 
+                                Label="@culture"
+                                Value="@isSelected"
+                                ValueChanged="@((bool newValue) => HandleCultureChanged(culture, newValue))" />
+                        }
+                    </FluentStack>
+                </div>
+            }
+
+
+            @if (Content.AvailableTranslationSets.Any())
+            {
+                <div>
+                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">Included Data Sets (Optional)</label>
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        @foreach (var availableDataSet in Content.AvailableTranslationSets)
+                        {
+                            var isSelected = SelectedIncludeIds.Contains(availableDataSet.Id);
+                            <FluentCheckbox 
+                                Label="@availableDataSet.Name"
+                                Value="@isSelected"
+                                ValueChanged="@((bool newValue) => HandleIncludeChanged(availableDataSet.Id, newValue))" />
+                        }
+                    </FluentStack>
+                </div>
+            }
+            
+            <FluentTextArea @bind-Value="AllowedIdentityIdsText"
+                            Immediate="true"
+                            Rows="4"
+                            Style="width: 100%;">
+                <FluentLabel>
+                    Allowed Identity IDs (Optional)
+                    <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                        <br/>Enter user/application IDs that can access this TranslationSet. Separate with new lines, commas, or semicolons. Leave empty for public access.
+                    </span>
+                </FluentLabel>
+            </FluentTextArea>
+            
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <FluentMessageBar Intent="MessageIntent.Error">
+                    @ErrorMessage
+                </FluentMessageBar>
+            }
+            
+        </FluentStack>
+    </EditForm>
+</FluentDialogBody>
+
+
+    <EntityPanelFooter IsEditMode="@Content.IsEditMode"
+                       IsSaving="@IsSaving"
+                       IsDeleting="@IsDeleting"
+                       OnSave="@(() => HandleSubmitAsync(closeAfterSave: false))"
+                       OnSaveAndClose="@(() => HandleSubmitAsync(closeAfterSave: true))"
+                       OnCancel="@HandleCancelAsync"
+                       OnDelete="@HandleDeleteClickAsync" />

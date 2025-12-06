@@ -12,7 +12,7 @@ namespace DataManager.Application.Core.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "DataSets",
+                name: "TranslationSets",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -27,7 +27,7 @@ namespace DataManager.Application.Core.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DataSets", x => x.Id);
+                    table.PrimaryKey("PK_TranslationSets", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -57,26 +57,26 @@ namespace DataManager.Application.Core.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DataSetInclude",
+                name: "TranslationSetInclude",
                 columns: table => new
                 {
-                    ParentDataSetId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    IncludedDataSetId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ParentTranslationSetId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    IncludedTranslationSetId = table.Column<Guid>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<long>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DataSetInclude", x => new { x.ParentDataSetId, x.IncludedDataSetId });
+                    table.PrimaryKey("PK_TranslationSetInclude", x => new { x.ParentTranslationSetId, x.IncludedTranslationSetId });
                     table.ForeignKey(
-                        name: "FK_DataSetInclude_DataSets_IncludedDataSetId",
-                        column: x => x.IncludedDataSetId,
-                        principalTable: "DataSets",
+                        name: "FK_TranslationSetInclude_TranslationSets_IncludedTranslationSetId",
+                        column: x => x.IncludedTranslationSetId,
+                        principalTable: "TranslationSets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_DataSetInclude_DataSets_ParentDataSetId",
-                        column: x => x.ParentDataSetId,
-                        principalTable: "DataSets",
+                        name: "FK_TranslationSetInclude_TranslationSets_ParentTranslationSetId",
+                        column: x => x.ParentTranslationSetId,
+                        principalTable: "TranslationSets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -93,7 +93,7 @@ namespace DataManager.Application.Core.Data.Migrations
                     CultureName = table.Column<string>(type: "TEXT", maxLength: 10, nullable: true),
                     Content = table.Column<string>(type: "TEXT", nullable: false),
                     ContentTemplate = table.Column<string>(type: "TEXT", nullable: true),
-                    DataSetId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    TranslationSetId = table.Column<Guid>(type: "TEXT", nullable: true),
                     LayoutId = table.Column<Guid>(type: "TEXT", nullable: true),
                     SourceId = table.Column<Guid>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
@@ -105,9 +105,9 @@ namespace DataManager.Application.Core.Data.Migrations
                 {
                     table.PrimaryKey("PK_Translations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Translations_DataSets_DataSetId",
-                        column: x => x.DataSetId,
-                        principalTable: "DataSets",
+                        name: "FK_Translations_TranslationSets_TranslationSetId",
+                        column: x => x.TranslationSetId,
+                        principalTable: "TranslationSets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
@@ -125,14 +125,14 @@ namespace DataManager.Application.Core.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_DataSetInclude_IncludedDataSetId",
-                table: "DataSetInclude",
-                column: "IncludedDataSetId");
+                name: "IX_TranslationSetInclude_IncludedTranslationSetId",
+                table: "TranslationSetInclude",
+                column: "IncludedTranslationSetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DataSetInclude_ParentDataSetId_IncludedDataSetId",
-                table: "DataSetInclude",
-                columns: new[] { "ParentDataSetId", "IncludedDataSetId" },
+                name: "IX_TranslationSetInclude_ParentTranslationSetId_IncludedTranslationSetId",
+                table: "TranslationSetInclude",
+                columns: new[] { "ParentTranslationSetId", "IncludedTranslationSetId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -146,9 +146,9 @@ namespace DataManager.Application.Core.Data.Migrations
                 column: "CultureName");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Translations_DataSetId",
+                name: "IX_Translations_TranslationSetId",
                 table: "Translations",
-                column: "DataSetId");
+                column: "TranslationSetId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Translations_InternalGroupName1_InternalGroupName2_ResourceName_CultureName",
@@ -170,7 +170,7 @@ namespace DataManager.Application.Core.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "DataSetInclude");
+                name: "TranslationSetInclude");
 
             migrationBuilder.DropTable(
                 name: "ProjectInstances");
@@ -179,7 +179,7 @@ namespace DataManager.Application.Core.Data.Migrations
                 name: "Translations");
 
             migrationBuilder.DropTable(
-                name: "DataSets");
+                name: "TranslationSets");
         }
     }
 }

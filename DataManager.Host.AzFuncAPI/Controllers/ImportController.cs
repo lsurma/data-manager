@@ -1,5 +1,5 @@
 using System.Text.Json;
-using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Application.Contracts.Modules.TranslationSet;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -33,10 +33,10 @@ public class ImportController
                 return new BadRequestObjectResult("No file received.");
             }
 
-            var dataSetId = Guid.Parse(req.Form["dataSetId"]);
+            var translationSetId = Guid.Parse(req.Form["translationSetId"]);
             var command = new UploadTranslationFileCommand
             {
-                DataSetId = dataSetId,
+                TranslationSetId = translationSetId,
                 FileName = file.FileName,
                 Content = file.OpenReadStream()
             };
@@ -74,11 +74,11 @@ public class ImportController
 
     [Function("GetUploadedFiles")]
     public async Task<IActionResult> GetUploadedFiles(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/import/translations/{dataSetId}")] HttpRequest req, Guid dataSetId)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/import/translations/{translationSetId}")] HttpRequest req, Guid translationSetId)
     {
         try
         {
-            var query = new GetUploadedFilesQuery { DataSetId = dataSetId };
+            var query = new GetUploadedFilesQuery { TranslationSetId = translationSetId };
             var result = await _mediator.Send(query);
             return new OkObjectResult(result);
         }

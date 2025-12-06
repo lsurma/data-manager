@@ -8,7 +8,7 @@ namespace DataManager.Application.Core.Modules.Translations.Handlers;
 
 /// <summary>
 /// High-level handler for saving translations.
-/// For new translations, creates entries for all cultures in the DataSet.
+/// For new translations, creates entries for all cultures in the TranslationSet.
 /// For existing translations, delegates to SaveSingleTranslationCommand.
 /// </summary>
 public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationCommand, Guid>
@@ -43,7 +43,7 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 CultureName = request.CultureName ?? throw new ArgumentException("CultureName is required when updating existing translation"),
                 Content = request.Content,
                 ContentTemplate = request.ContentTemplate,
-                DataSetId = request.DataSetId,
+                TranslationSetId = request.TranslationSetId,
                 LayoutId = request.LayoutId,
                 SourceId = request.SourceId,
                 IsDraftVersion = request.IsDraftVersion
@@ -53,30 +53,30 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
         }
         else
         {
-            // Create new - automatically create for all cultures in the DataSet
+            // Create new - automatically create for all cultures in the TranslationSet
 
-            // Get available cultures based on DataSet configuration
+            // Get available cultures based on TranslationSet configuration
             List<string> culturesToCreate;
 
-            if (request.DataSetId.HasValue)
+            if (request.TranslationSetId.HasValue)
             {
-                var dataSet = await _context.DataSets
+                var translationSet = await _context.TranslationSets
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(ds => ds.Id == request.DataSetId.Value, cancellationToken);
+                    .FirstOrDefaultAsync(ds => ds.Id == request.TranslationSetId.Value, cancellationToken);
 
-                if (dataSet == null)
+                if (translationSet == null)
                 {
-                    throw new KeyNotFoundException($"DataSet with Id {request.DataSetId} not found.");
+                    throw new KeyNotFoundException($"TranslationSet with Id {request.TranslationSetId} not found.");
                 }
 
-                // If DataSet has specific cultures configured, use those; otherwise use all system cultures
-                culturesToCreate = dataSet.AvailableCultures != null && dataSet.AvailableCultures.Any()
-                    ? dataSet.AvailableCultures.ToList()
+                // If TranslationSet has specific cultures configured, use those; otherwise use all system cultures
+                culturesToCreate = translationSet.AvailableCultures != null && translationSet.AvailableCultures.Any()
+                    ? translationSet.AvailableCultures.ToList()
                     : _cultureService.GetAvailableCultures();
             }
             else
             {
-                // No DataSet specified - use all system cultures
+                // No TranslationSet specified - use all system cultures
                 culturesToCreate = _cultureService.GetAvailableCultures();
             }
 
@@ -95,7 +95,7 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                     CultureName = culture,
                     Content = request.Content,
                     ContentTemplate = request.ContentTemplate,
-                    DataSetId = request.DataSetId,
+                    TranslationSetId = request.TranslationSetId,
                     LayoutId = request.LayoutId,
                     SourceId = request.SourceId,
                     IsDraftVersion = request.IsDraftVersion

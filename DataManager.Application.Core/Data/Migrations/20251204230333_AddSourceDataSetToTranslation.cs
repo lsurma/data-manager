@@ -12,7 +12,7 @@ namespace DataManager.Application.Core.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<Guid>(
-                name: "SourceDataSetId",
+                name: "SourceTranslationSetId",
                 table: "Translations",
                 type: "TEXT",
                 nullable: true);
@@ -24,15 +24,15 @@ namespace DataManager.Application.Core.Data.Migrations
                 nullable: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Translations_SourceDataSetId",
+                name: "IX_Translations_SourceTranslationSetId",
                 table: "Translations",
-                column: "SourceDataSetId");
+                column: "SourceTranslationSetId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Translations_DataSets_SourceDataSetId",
+                name: "FK_Translations_TranslationSets_SourceTranslationSetId",
                 table: "Translations",
-                column: "SourceDataSetId",
-                principalTable: "DataSets",
+                column: "SourceTranslationSetId",
+                principalTable: "TranslationSets",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
         }
@@ -41,15 +41,15 @@ namespace DataManager.Application.Core.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Translations_DataSets_SourceDataSetId",
+                name: "FK_Translations_TranslationSets_SourceTranslationSetId",
                 table: "Translations");
 
             migrationBuilder.DropIndex(
-                name: "IX_Translations_SourceDataSetId",
+                name: "IX_Translations_SourceTranslationSetId",
                 table: "Translations");
 
             migrationBuilder.DropColumn(
-                name: "SourceDataSetId",
+                name: "SourceTranslationSetId",
                 table: "Translations");
 
             migrationBuilder.DropColumn(

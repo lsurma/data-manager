@@ -1,7 +1,7 @@
 using System.Web;
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Common;
-using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Application.Contracts.Modules.TranslationSet;
 using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Host.WA.Components;
 using DataManager.Host.WA.Services;
@@ -15,7 +15,7 @@ namespace DataManager.Host.WA.Modules.Translations;
 public partial class TranslationsGrid : ComponentBase, IDisposable
 {
     [Parameter]
-    public Guid? DataSetId { get; set; }
+    public Guid? TranslationSetId { get; set; }
     
     [Parameter]
     public RenderFragment ToolbarTemplate { get; set; } = null!;
@@ -44,7 +44,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private IRequestSender RequestSender { get; set; } = null!;
 
     private List<TranslationDto> AllTranslations { get; set; } = new();
-    private List<DataSetDto> AllDataSets => AppContext.DataSets;
+    private List<TranslationSetDto> AllTranslationSets => AppContext.TranslationSets;
     private List<TranslationDto> AllLayouts { get; set; } = new();
     private IDialogReference? CurrentDialog;
     private string? RefreshToken { get; set; }
@@ -74,10 +74,10 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
 
     public override async Task SetParametersAsync(ParameterView parameters)
     {
-        var dataSetIdChanged = parameters.TryGetValue<Guid?>(nameof(DataSetId), out var newDataSetId) && newDataSetId != DataSetId;
-        if (dataSetIdChanged)
+        var translationSetIdChanged = parameters.TryGetValue<Guid?>(nameof(TranslationSetId), out var newTranslationSetId) && newTranslationSetId != TranslationSetId;
+        if (translationSetIdChanged)
         {
-            DataSetId = newDataSetId;
+            TranslationSetId = newTranslationSetId;
             _currentQuery = new GetTranslationsQuery
             {
                 Filtering = new FilteringParameters
@@ -242,9 +242,9 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             filters.Add(new CultureNameFilter { Value = CultureNameFilter });
         }
         
-        if(DataSetId != null)
+        if(TranslationSetId != null)
         {
-            filters.Add(new DataSetIdFilter { Value = DataSetId.Value });
+            filters.Add(new TranslationSetIdFilter { Value = TranslationSetId.Value });
         }
         
         return filters;
@@ -300,7 +300,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         var parameters = new TranslationPanelParameters
         {
             TranslationId = translation?.Id,
-            DataSetId = DataSetId,
+            TranslationSetId = TranslationSetId,
             OnDataChanged = async () =>
             {
                 RefreshToken = Guid.NewGuid().ToString();
@@ -331,7 +331,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         
         if(result.Cancelled && currentId == translation?.Id.ToString())
         {
-            NavigationManager.NavigateTo(DataSetId != null ? "/translations/" + DataSetId : "/translations", false);
+            NavigationManager.NavigateTo(TranslationSetId != null ? "/translations/" + TranslationSetId : "/translations", false);
         }
         
         StateHasChanged();
