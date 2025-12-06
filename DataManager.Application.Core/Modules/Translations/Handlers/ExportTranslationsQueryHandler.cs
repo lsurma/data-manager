@@ -67,7 +67,9 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
             var baseQuery = await _queryService.PrepareQueryAsync(options: baseLanguageQueryOptions, cancellationToken: cancellationToken);
             
             // Filter to only include translations with matching keys using Contains for better SQL performance
-            // Create lists for each component of the key for SQL-compatible filtering
+            // We use separate Contains operations for ResourceName and TranslationName to leverage SQL indexes
+            // This may match more records than needed (e.g., ResourceA+TranslationB when we only want ResourceA+TranslationA)
+            // but we filter precisely in memory afterward, which is acceptable for typical export sizes
             var resourceNames = translationKeys.Select(k => k.ResourceName).Distinct().ToList();
             var translationNames = translationKeys.Select(k => k.TranslationName).Distinct().ToList();
             
