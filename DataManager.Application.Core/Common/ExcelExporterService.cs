@@ -18,9 +18,9 @@ public class ExcelExporterService : ITranslationExporter
             : null;
 
         // Create a lookup for base language translations by key
+        // Base translations are already filtered by culture in the handler, so no need to filter again
         var baseTranslationsLookup = baseTranslations?
-            .Where(t => t.CultureName == baseLanguage)
-            .GroupBy(t => new { t.ResourceName, t.TranslationName })
+            .GroupBy(t => new TranslationKey(t.ResourceName, t.TranslationName))
             .ToDictionary(
                 g => g.Key,
                 g => g.First().Content
@@ -50,7 +50,7 @@ public class ExcelExporterService : ITranslationExporter
             // Add base language translation if available
             if (baseTranslationsLookup != null)
             {
-                var key = new { translation.ResourceName, translation.TranslationName };
+                var key = new TranslationKey(translation.ResourceName, translation.TranslationName);
                 if (baseTranslationsLookup.TryGetValue(key, out var baseContent))
                 {
                     worksheet.Cell(row, 4).Value = baseContent;

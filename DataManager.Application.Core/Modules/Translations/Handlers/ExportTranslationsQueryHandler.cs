@@ -45,9 +45,8 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
         // Fetch base language translations for the same keys
         // Extract unique keys (ResourceName, TranslationName) from the main translations
         var translationKeys = translations
-            .Select(t => new { t.ResourceName, t.TranslationName })
-            .Distinct()
-            .ToList();
+            .Select(t => new TranslationKey(t.ResourceName, t.TranslationName))
+            .ToHashSet();
 
         // Build a query for base language translations
         List<Translation> baseLanguageTranslations = new List<Translation>();
@@ -67,11 +66,21 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
 
             var baseQuery = await _queryService.PrepareQueryAsync(options: baseLanguageQueryOptions, cancellationToken: cancellationToken);
             
-            // Filter to only include translations with matching keys
-            baseQuery = baseQuery.Where(t => 
-                translationKeys.Any(key => key.ResourceName == t.ResourceName && key.TranslationName == t.TranslationName));
+            // Filter to only include translations with matching keys using Contains for better SQL performance
+            // Create lists for each component of the key for SQL-compatible filtering
+            var resourceNames = translationKeys.Select(k => k.ResourceName).Distinct().ToList();
+            var translationNames = translationKeys.Select(k => k.TranslationName).Distinct().ToList();
             
-            baseLanguageTranslations = await baseQuery.ToListAsync(cancellationToken);
+            baseQuery = baseQuery.Where(t => 
+                resourceNames.Contains(t.ResourceName) && 
+                translationNames.Contains(t.TranslationName));
+            
+            var potentialMatches = await baseQuery.ToListAsync(cancellationToken);
+            
+            // Final filtering in memory to ensure exact key matches
+            baseLanguageTranslations = potentialMatches
+                .Where(t => translationKeys.Contains(new TranslationKey(t.ResourceName, t.TranslationName)))
+                .ToList();
         }
 
         var baseLanguageExportDtos = baseLanguageTranslations.ToExportDto();

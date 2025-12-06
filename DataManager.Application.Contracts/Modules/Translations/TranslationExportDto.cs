@@ -41,3 +41,8 @@ public record TranslationExportDto
     /// </summary>
     public string? InternalGroupName2 { get; set; }
 }
+
+/// <summary>
+/// Key used for translation lookups by ResourceName and TranslationName
+/// </summary>
+public record TranslationKey(string ResourceName, string TranslationName);
