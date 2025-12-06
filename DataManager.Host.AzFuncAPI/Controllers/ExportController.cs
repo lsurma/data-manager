@@ -1,6 +1,7 @@
 using System.Text.Json;
 using DataManager.Application.Contracts.Common;
 using DataManager.Application.Contracts.Modules.Translations;
+using DataManager.Host.AzFuncAPI.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -42,11 +43,7 @@ public class ExportController
             if (req.Query.ContainsKey("filtering"))
             {
                 var filtersJson = req.Query["filtering"];
-                query.Filtering = JsonSerializer.Deserialize<FilteringParameters>(filtersJson, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new QueryFilterJsonConverter() }
-                });
+                query.Filtering = JsonSerializer.Deserialize<FilteringParameters>(filtersJson, JsonSerializerConfig.Filtering);
             }
 
             var resultStream = await _mediator.Send(query);

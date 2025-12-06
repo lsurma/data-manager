@@ -25,7 +25,6 @@ Both cases would result in the property being `null`. With `Optional<T>`, you ca
 
 ```csharp
 using DataManager.Application.Contracts.Common;
-using System.Text.Json.Serialization;
 
 public class UpdateUserCommand
 {
@@ -33,18 +32,15 @@ public class UpdateUserCommand
     public Guid Id { get; set; }
     
     // Optional fields - only update if provided
-    [JsonConverter(typeof(OptionalJsonConverterFactory))]
     public Optional<string> Name { get; set; }
     
-    [JsonConverter(typeof(OptionalJsonConverterFactory))]
     public Optional<string?> Email { get; set; }
     
-    [JsonConverter(typeof(OptionalJsonConverterFactory))]
     public Optional<int> Age { get; set; }
 }
 ```
 
-**Important:** You must add the `[JsonConverter(typeof(OptionalJsonConverterFactory))]` attribute to each `Optional<T>` property for JSON serialization/deserialization to work correctly.
+**Note:** The `OptionalJsonConverterFactory` is registered globally in the application, so you **do not need** to add the `[JsonConverter]` attribute to each property. The converter will be applied automatically during JSON serialization/deserialization.
 
 ### 2. Deserialize JSON
 
@@ -131,7 +127,6 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Unit>
 ```csharp
 public class Input
 {
-    [JsonConverter(typeof(OptionalJsonConverterFactory))]
     public Optional<string> Name { get; set; }
 }
 
@@ -152,7 +147,6 @@ Console.WriteLine(obj2.Name.IsSet);   // False
 ```csharp
 public class UserProfile
 {
-    [JsonConverter(typeof(OptionalJsonConverterFactory))]
     public Optional<string?> Bio { get; set; }
 }
 
@@ -175,13 +169,10 @@ public record UpdateTranslationCommand
 {
     public Guid Id { get; set; }
     
-    [JsonConverter(typeof(OptionalJsonConverterFactory))]
     public Optional<string> Content { get; set; }
     
-    [JsonConverter(typeof(OptionalJsonConverterFactory))]
     public Optional<string?> ContentTemplate { get; set; }
     
-    [JsonConverter(typeof(OptionalJsonConverterFactory))]
     public Optional<Guid?> LayoutId { get; set; }
 }
 
@@ -201,7 +192,7 @@ var command = JsonSerializer.Deserialize<UpdateTranslationCommand>(json);
 
 ## Best Practices
 
-1. **Always use the JsonConverter attribute**: Don't forget to add `[JsonConverter(typeof(OptionalJsonConverterFactory))]` to each Optional property.
+1. **The converter is registered globally**: No attributes needed on properties. The `OptionalJsonConverterFactory` is automatically applied during JSON serialization/deserialization.
 
 2. **Check IsSet before accessing Value**: Always check `IsSet` before accessing `Value` to avoid exceptions:
    ```csharp
@@ -219,7 +210,6 @@ var command = JsonSerializer.Deserialize<UpdateTranslationCommand>(json);
 
 4. **Use Optional<T?> for nullable types**: When the actual value can be null, use `Optional<string?>` or `Optional<int?>`:
    ```csharp
-   [JsonConverter(typeof(OptionalJsonConverterFactory))]
    public Optional<string?> OptionalNullableString { get; set; }
    ```
 
@@ -250,10 +240,14 @@ var value = optional.GetValueOrDefault();
 
 **Problem**: Optional properties are always unset after deserialization.
 
-**Solution**: Make sure you added the `[JsonConverter(typeof(OptionalJsonConverterFactory))]` attribute to the property:
+**Solution**: The converter is registered globally. If deserialization doesn't work, check that the JsonSerializerConfig is being used:
+- For backend API controllers: Ensure `JsonSerializerConfig.Default` is used (automatically configured in all controllers)
+- For custom code: Use `JsonSerializer.Deserialize<T>(json, JsonSerializerConfig.Default)`
+- For frontend: Use `JsonSerializerConfig.Default` from `DataManager.Host.WA.Services`
+
 ```csharp
-[JsonConverter(typeof(OptionalJsonConverterFactory))]
-public Optional<string> Name { get; set; }
+// Example usage
+var obj = JsonSerializer.Deserialize<MyClass>(json, JsonSerializerConfig.Default);
 ```
 
 ### All Optional properties serialize as null

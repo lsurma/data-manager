@@ -83,10 +83,7 @@ public class CommandController
             object? request;
             if (!string.IsNullOrWhiteSpace(bodyJson))
             {
-                request = JsonSerializer.Deserialize(bodyJson, requestType, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                request = JsonSerializer.Deserialize(bodyJson, requestType, JsonSerializerConfig.Default);
             }
             else
             {
@@ -101,10 +98,7 @@ public class CommandController
             // Send through MediatR
             var result = await _mediator.Send(request);
 
-            return new JsonResult(result, new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.IgnoreCycles
-            });
+            return new JsonResult(result, JsonSerializerConfig.Response);
         }
         catch (JsonException ex)
         {

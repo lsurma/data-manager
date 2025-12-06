@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using DataManager.Application.Contracts.Common;
+using DataManager.Host.WA.Services;
 
 namespace DataManager.Host.WA.DAL;
 
@@ -11,11 +12,6 @@ namespace DataManager.Host.WA.DAL;
 /// </summary>
 public class DataManagerHttpClient
 {
-    private static readonly JsonSerializerOptions DefaultJsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     public HttpClient Client { get; }
 
     public DataManagerHttpClient(HttpClient httpClient)
@@ -110,7 +106,7 @@ public class DataManagerHttpClient
             if (!string.IsNullOrWhiteSpace(responseBody))
             {
                 // Try to deserialize as ApiErrorResponse
-                var errorResponse = JsonSerializer.Deserialize<ApiErrorResponse>(responseBody, DefaultJsonOptions);
+                var errorResponse = JsonSerializer.Deserialize<ApiErrorResponse>(responseBody, JsonSerializerConfig.Default);
 
                 if (errorResponse != null && !string.IsNullOrWhiteSpace(errorResponse.Error))
                 {
