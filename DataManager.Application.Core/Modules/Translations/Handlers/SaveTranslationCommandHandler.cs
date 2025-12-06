@@ -1,5 +1,7 @@
 using DataManager.Application.Contracts.Modules.Translations;
+using DataManager.Application.Contracts.Modules.TranslationsSet;
 using DataManager.Application.Core.Data;
+using DataManager.Application.Core.Modules.TranslationsSet;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +18,8 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
 
     public SaveTranslationCommandHandler(
         DataManagerDbContext context,
-        ISender mediator)
+        ISender mediator
+    )
     {
         _context = context;
         _mediator = mediator;
@@ -24,15 +27,10 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
 
     public async Task<Guid> Handle(SaveTranslationCommand request, CancellationToken cancellationToken)
     {
-        // Validate request
-        if (request.Translations == null || !request.Translations.Any())
-        {
-            throw new ArgumentException("At least one translation must be provided.");
-        }
-
         // Determine ResourceName and TranslationName
         string resourceName;
         string translationName;
+        Guid? translationsSetId = request.TranslationsSetId;
 
         if (request.Id.HasValue && request.Id.Value != Guid.Empty)
         {
@@ -48,6 +46,7 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
 
             resourceName = existingTranslation.ResourceName;
             translationName = existingTranslation.TranslationName;
+            translationsSetId = existingTranslation.TranslationsSetId;
         }
         else
         {
@@ -61,6 +60,23 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
             translationName = request.TranslationName;
         }
 
+        if (translationsSetId == null)
+        {
+            throw new ArgumentException("TranslationsSetId must be provided either directly or via existing translation.");
+        }
+
+        var translationsSet = await _mediator.Send(
+            new GetTranslationsSetByIdQuery() {
+                Id = translationsSetId.Value
+            },
+            cancellationToken
+        );
+        
+        if (translationsSet == null)
+        {
+            throw new ArgumentException($"TranslationsSet with Id {translationsSetId} not found.");
+        }
+
         // Process each culture in the dictionary
         var processedTranslationIds = new List<Guid>();
 
@@ -70,14 +86,13 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
             var existingTranslation = await _context.Translations
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t =>
-                    t.ResourceName == resourceName &&
-                    t.TranslationName == translationName &&
-                    t.CultureName == cultureName &&
-                    t.IsCurrentVersion,
+                        t.ResourceName == resourceName &&
+                        t.TranslationName == translationName &&
+                        t.CultureName == cultureName &&
+                        t.IsCurrentVersion,
                     cancellationToken);
 
-            var command = new SaveSingleTranslationCommand
-            {
+            var command = new SaveSingleTranslationCommand {
                 Id = existingTranslation?.Id,
                 InternalGroupName1 = null,
                 InternalGroupName2 = null,
@@ -97,6 +112,6 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
         }
 
         // Return the first processed translation ID
-        return processedTranslationIds.First();
+        return Guid.Empty;
     }
 }

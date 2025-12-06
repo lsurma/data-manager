@@ -25,7 +25,7 @@ public class AuthenticationSettings
     /// <summary>
     /// Whether to require authentication (default: true)
     /// </summary>
-    public bool RequireAuthentication { get; set; } = true;
+    public bool RequireAuthentication { get; set; } = false;
 }
 
 /// <summary>
