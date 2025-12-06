@@ -40,24 +40,24 @@ namespace DataManager.Host.WA.Modules.Translations
         [Inject]
         private ILogger<ImportTranslationsPage> Logger { get; set; } = null!;
 
-        private List<ImportedTranslationDto>? _importedTranslations;
-        private bool _isLoading;
-        private bool _isImporting;
-        private string? _errorMessage;
-        private DataTable? _excelDataTable;
-        private readonly List<string> _targetColumns = new() { "InternalGroupName1", "InternalGroupName2", "ResourceName", "TranslationName", "CultureName", "Content" };
-        private Dictionary<string, string> _columnMappings = new();
-        private List<DataSetDto> _availableDataSets => AppContext.DataSets;
-        private Guid? _selectedDataSetId;
-        private DataSetDto? _selectedDataSet;
-        private string? _selectedDataSetValue
+        private List<ImportedTranslationDto>? ImportedTranslations;
+        private bool IsLoadingFile;
+        private bool IsImporting;
+        private string? ErrorMessage;
+        private DataTable? ExcelDataTable;
+        private List<string> TargetColumns = new() { "InternalGroupName1", "InternalGroupName2", "ResourceName", "TranslationName", "CultureName", "Content" };
+        private Dictionary<string, string> ColumnMappings = new();
+        private List<DataSetDto> AvailableDataSets => AppContext.DataSets;
+        private Guid? SelectedDataSetId;
+        private DataSetDto? SelectedDataSet;
+        private string? SelectedDataSetValue
         {
-            get => _selectedDataSetId?.ToString();
+            get => SelectedDataSetId?.ToString();
             set
             {
                 if (Guid.TryParse(value, out var id))
                 {
-                    _selectedDataSetId = id;
+                    SelectedDataSetId = id;
                 }
                 else if (!string.IsNullOrEmpty(value))
                 {
@@ -72,14 +72,14 @@ namespace DataManager.Host.WA.Modules.Translations
                 @"Failed to import translation '([^']+)' \(([^)]+)\):",
                 RegexOptions.Compiled);
 
-        private IEnumerable<DataRow>? ExcelDataRows => _excelDataTable?.Rows.Cast<DataRow>();
+        private IEnumerable<DataRow>? ExcelDataRows => ExcelDataTable?.Rows.Cast<DataRow>();
 
         protected override void OnInitialized()
         {
             // Initialize selected dataset from context
-            if (_availableDataSets.Any())
+            if (AvailableDataSets.Any())
             {
-                _selectedDataSetId = _availableDataSets.FirstOrDefault()?.Id;
+                SelectedDataSetId = AvailableDataSets.FirstOrDefault()?.Id;
             }
             
             // Subscribe to context refresh events
@@ -92,9 +92,9 @@ namespace DataManager.Host.WA.Modules.Translations
         private void HandleContextRefreshed()
         {
             // Re-select first dataset if current one is not available anymore
-            if (_selectedDataSetId != null && !_availableDataSets.Any(ds => ds.Id == _selectedDataSetId))
+            if (SelectedDataSetId != null && !AvailableDataSets.Any(ds => ds.Id == SelectedDataSetId))
             {
-                _selectedDataSetId = _availableDataSets.FirstOrDefault()?.Id;
+                SelectedDataSetId = AvailableDataSets.FirstOrDefault()?.Id;
             }
             
             StateHasChanged();
@@ -102,11 +102,11 @@ namespace DataManager.Host.WA.Modules.Translations
 
         private async Task OnFileChanged(InputFileChangeEventArgs e)
         {
-            _isLoading = true;
-            _errorMessage = null;
-            _importedTranslations = null;
-            _excelDataTable = null;
-            _columnMappings = new();
+            IsLoadingFile = true;
+            ErrorMessage = null;
+            ImportedTranslations = null;
+            ExcelDataTable = null;
+            ColumnMappings = new();
 
             try
             {
@@ -129,10 +129,10 @@ namespace DataManager.Host.WA.Modules.Translations
                                     UseHeaderRow = true
                                 }
                             });
-                            _excelDataTable = result.Tables[0];
-                            foreach (DataColumn col in _excelDataTable.Columns)
+                            ExcelDataTable = result.Tables[0];
+                            foreach (DataColumn col in ExcelDataTable.Columns)
                             {
-                                _columnMappings.Add(col.ColumnName, _targetColumns.FirstOrDefault(t => t.Equals(col.ColumnName, StringComparison.OrdinalIgnoreCase)) ?? "");
+                                ColumnMappings.Add(col.ColumnName, TargetColumns.FirstOrDefault(t => t.Equals(col.ColumnName, StringComparison.OrdinalIgnoreCase)) ?? "");
                             }
                         }
                     }
@@ -140,24 +140,24 @@ namespace DataManager.Host.WA.Modules.Translations
             }
             catch (Exception ex)
             {
-                _errorMessage = $"An error occurred: {ex.Message}";
+                ErrorMessage = $"An error occurred: {ex.Message}";
             }
             finally
             {
-                _isLoading = false;
+                IsLoadingFile = false;
             }
         }
 
         private async Task StartImportAsync()
         {
-             if (_excelDataTable == null) return;
+             if (ExcelDataTable == null) return;
 
-            _importedTranslations = _excelDataTable.Rows.Cast<DataRow>().Select(row =>
+            ImportedTranslations = ExcelDataTable.Rows.Cast<DataRow>().Select(row =>
             {
                 var dto = new ImportedTranslationDto { OriginalRow = row };
-                foreach (var mapping in _columnMappings)
+                foreach (var mapping in ColumnMappings)
                 {
-                    if (!string.IsNullOrEmpty(mapping.Value) && _excelDataTable.Columns.Contains(mapping.Key))
+                    if (!string.IsNullOrEmpty(mapping.Value) && ExcelDataTable.Columns.Contains(mapping.Key))
                     {
                         var cellValue = row[mapping.Key].ToString();
                         var property = typeof(ImportedTranslationDto).GetProperty(mapping.Value);
@@ -170,21 +170,21 @@ namespace DataManager.Host.WA.Modules.Translations
                 return dto;
             }).ToList();
             
-            if (_importedTranslations == null || !_importedTranslations.Any() || !_selectedDataSetId.HasValue)
+            if (ImportedTranslations == null || !ImportedTranslations.Any() || !SelectedDataSetId.HasValue)
             {
                 ToastService.ShowError("Please select a data set and map columns before importing.");
                 return;
             }
 
-            var translationsToImport = _importedTranslations.Where(t => t.ShouldImport).ToList();
+            var translationsToImport = ImportedTranslations.Where(t => t.ShouldImport).ToList();
             if (!translationsToImport.Any())
             {
                 ToastService.ShowWarning("No translations selected for import.");
                 return;
             }
 
-            _isImporting = true;
-            _errorMessage = null;
+            IsImporting = true;
+            ErrorMessage = null;
 
             try
             {
@@ -209,7 +209,7 @@ namespace DataManager.Host.WA.Modules.Translations
 
                 var command = new ImportTranslationsCommand
                 {
-                    DataSetId = _selectedDataSetId.Value,
+                    DataSetId = SelectedDataSetId.Value,
                     Translations = importDtos
                 };
 
@@ -272,7 +272,7 @@ namespace DataManager.Host.WA.Modules.Translations
                 {
                     // Some errors might not have been properly formatted or matched
                     var unmatchedFailures = result.FailedCount - matchedErrorCount;
-                    _errorMessage = $"Warning: {unmatchedFailures} translation(s) failed but could not be matched to specific items.";
+                    ErrorMessage = $"Warning: {unmatchedFailures} translation(s) failed but could not be matched to specific items.";
                     Logger.LogWarning("Import had {UnmatchedFailures} unmatched failures", unmatchedFailures);
                 }
 
@@ -280,8 +280,8 @@ namespace DataManager.Host.WA.Modules.Translations
             }
             catch (Exception ex)
             {
-                _errorMessage = $"Import failed: {ex.Message}";
-                ToastService.ShowError(_errorMessage);
+                ErrorMessage = $"Import failed: {ex.Message}";
+                ToastService.ShowError(ErrorMessage);
 
                 // Mark all in-progress as failed
                 foreach (var translation in translationsToImport.Where(t => t.Status == ImportStatus.InProgress))
@@ -292,16 +292,16 @@ namespace DataManager.Host.WA.Modules.Translations
             }
             finally
             {
-                _isImporting = false;
+                IsImporting = false;
                 StateHasChanged();
             }
         }
 
         private void ToggleSelectAll(bool isChecked)
         {
-            if (_importedTranslations != null)
+            if (ImportedTranslations != null)
             {
-                foreach (var translation in _importedTranslations)
+                foreach (var translation in ImportedTranslations)
                 {
                     translation.ShouldImport = isChecked;
                 }

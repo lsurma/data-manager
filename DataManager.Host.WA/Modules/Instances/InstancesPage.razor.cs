@@ -24,18 +24,19 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private List<ITreeViewItem> Items { get; set; } = new();
     private ITreeViewItem? SelectedItem { get; set; }
     private List<ProjectInstanceDto> AllInstances { get; set; } = new();
-    private IDialogReference? _currentDialog;
-    private string _refreshToken = Guid.NewGuid().ToString();
-    private RenderMode _renderMode = RenderMode.WebAwesomeTree;
-    private IList<ProjectInstanceDto> _selectedRows = new List<ProjectInstanceDto>();
-    private GetProjectInstancesQuery _currentQuery = GetProjectInstancesQuery.AllItems();
+    private IDialogReference? CurrentDialog { get; set; }
+    private string RefreshToken { get; set; } = Guid.NewGuid().ToString();
+    private RenderMode RenderModeValue { get; set; } = RenderMode.WebAwesomeTree;
+    private IList<ProjectInstanceDto> SelectedRows { get; set; } = new List<ProjectInstanceDto>();
+    private GetProjectInstancesQuery CurrentQuery { get; set; } = GetProjectInstancesQuery.AllItems();
 
     // Should stay static - we dont wanna cache all different queries separately
-    private string _cacheKey = "all_project_instances";
+    private string CacheKey { get; set; } = "all_project_instances";
 
-    private int _totalItems;
-    private int _pageSize = 20;
-    private string? _searchTerm;
+    private int TotalItems { get; set; }
+    private int PageSize { get; set; } = 20;
+    private string? SearchTerm { get; set; }
+    private Guid? SelectedInstanceId { get; set; }
 
     protected override void OnInitialized()
     {
@@ -46,11 +47,11 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private void HandleDataFetched(DataFetchedEventArgs<PaginatedList<ProjectInstanceDto>> eventArgs)
     {
         AllInstances = eventArgs.Data.Items;
-        _totalItems = eventArgs.Data.TotalItems;
-        _pageSize = eventArgs.Data.PageSize;
+        TotalItems = eventArgs.Data.TotalItems;
+        PageSize = eventArgs.Data.PageSize;
         
         // Log fetch information for debugging
-        Console.WriteLine($"Data fetched - IsFromCache: {eventArgs.IsFromCache}, IsFirstFetch: {eventArgs.IsFirstFetch}, Total: {_totalItems}, Page: {eventArgs.Data.CurrentPage}");
+        Console.WriteLine($"Data fetched - IsFromCache: {eventArgs.IsFromCache}, IsFirstFetch: {eventArgs.IsFirstFetch}, Total: {TotalItems}, Page: {eventArgs.Data.CurrentPage}");
         
         // Get root instances (no parent) for tree views
         var rootInstances = eventArgs.Data.Items.Where(i => i.ParentProjectId == null).ToList();
@@ -59,7 +60,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
         UpdateTreeItems(Items, rootInstances, eventArgs.Data.Items);
         
         // Restore DataGrid selection if in DataGrid mode
-        if (_renderMode == RenderMode.DataGrid && _selectedInstanceId.HasValue)
+        if (RenderModeValue == RenderMode.DataGrid && SelectedInstanceId.HasValue)
         {
             RestoreDataGridSelection();
         }
@@ -75,30 +76,30 @@ public partial class InstancesPage : ComponentBase, IDisposable
 
     private void SwitchRenderMode(RenderMode newMode)
     {
-        if (_renderMode == newMode)
+        if (RenderModeValue == newMode)
             return;
             
-        _renderMode = newMode;
+        RenderModeValue = newMode;
         UpdateQueryForRenderMode();
-        _refreshToken = Guid.NewGuid().ToString();
+        RefreshToken = Guid.NewGuid().ToString();
     }
     
     private void UpdateQueryForRenderMode()
     {
-        if (_renderMode == RenderMode.DataGrid)
+        if (RenderModeValue == RenderMode.DataGrid)
         {
             // DataGrid uses pagination
-            _currentQuery = new GetProjectInstancesQuery
+            CurrentQuery = new GetProjectInstancesQuery
             {
                 Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
             };
-            _cacheKey = "paginated_project_instances";
+            CacheKey = "paginated_project_instances";
         }
         else
         {
             // Tree views need all items
-            _currentQuery = GetProjectInstancesQuery.AllItems();
-            _cacheKey = "all_project_instances";
+            CurrentQuery = GetProjectInstancesQuery.AllItems();
+            CacheKey = "all_project_instances";
         }
     }
     
@@ -159,7 +160,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
     private void SelectedItemChanged(ITreeViewItem? item)
     {
         // Only process if FluentTree is active
-        if (_renderMode != RenderMode.FluentTree)
+        if (RenderModeValue != RenderMode.FluentTree)
         {
             return;
         }
@@ -180,30 +181,30 @@ public partial class InstancesPage : ComponentBase, IDisposable
     
     private void HandleWebAwesomeItemSelected(Guid instanceId)
     {
-        _selectedInstanceId = instanceId;
+        SelectedInstanceId = instanceId;
         // Update URL with instance ID
         NavigationManager.NavigateTo($"/instances?id={instanceId}", false);
     }
     
     private Task OnDataGridSelectionChanged(IList<ProjectInstanceDto> selectedRows)
     {
-        if (_renderMode != RenderMode.DataGrid)
+        if (RenderModeValue != RenderMode.DataGrid)
         {
             return Task.CompletedTask;
         }
         
-        _selectedRows = selectedRows;
+        SelectedRows = selectedRows;
         
         if (selectedRows != null && selectedRows.Count > 0)
         {
             var instance = selectedRows[0];
-            _selectedInstanceId = instance.Id;
+            SelectedInstanceId = instance.Id;
 
             NavigationManager.NavigateTo($"/instances?id={instance.Id}", false);
         }
         else
         {
-            _selectedInstanceId = null;
+            SelectedInstanceId = null;
         }
         
         return Task.CompletedTask;
@@ -211,24 +212,24 @@ public partial class InstancesPage : ComponentBase, IDisposable
     
     private void RestoreDataGridSelection()
     {
-        if (!_selectedInstanceId.HasValue)
+        if (!SelectedInstanceId.HasValue)
         {
-            _selectedRows = new List<ProjectInstanceDto>();
+            SelectedRows = new List<ProjectInstanceDto>();
             return;
         }
         
         // Find the previously selected instance in the new data
-        var selectedInstance = AllInstances.FirstOrDefault(i => i.Id == _selectedInstanceId.Value);
+        var selectedInstance = AllInstances.FirstOrDefault(i => i.Id == SelectedInstanceId.Value);
         
         if (selectedInstance != null)
         {
             // Restore selection
-            _selectedRows = new List<ProjectInstanceDto> { selectedInstance };
+            SelectedRows = new List<ProjectInstanceDto> { selectedInstance };
         }
         else
         {
             // Selected instance not in current page, clear selection
-            _selectedRows = new List<ProjectInstanceDto>();
+            SelectedRows = new List<ProjectInstanceDto>();
         }
     }
     
@@ -250,13 +251,13 @@ public partial class InstancesPage : ComponentBase, IDisposable
         var pageSize = args.Top ?? 20;
         
         // Update query if parameters changed
-        if (_currentQuery.Ordering.OrderBy != orderBy ||
-            _currentQuery.Ordering.OrderDirection != orderDirection ||
-            _currentQuery.Pagination.Skip != skip ||
-            _currentQuery.Pagination.PageSize != pageSize ||
-            GetCurrentSearchTerm() != _searchTerm)
+        if (CurrentQuery.Ordering.OrderBy != orderBy ||
+            CurrentQuery.Ordering.OrderDirection != orderDirection ||
+            CurrentQuery.Pagination.Skip != skip ||
+            CurrentQuery.Pagination.PageSize != pageSize ||
+            GetCurrentSearchTerm() != SearchTerm)
         {
-            _currentQuery = new GetProjectInstancesQuery
+            CurrentQuery = new GetProjectInstancesQuery
             {
                 Filtering = BuildFilteringParameters(),
                 Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
@@ -264,29 +265,29 @@ public partial class InstancesPage : ComponentBase, IDisposable
             };
 
             // Trigger data refresh
-            _refreshToken = Guid.NewGuid().ToString();
+            RefreshToken = Guid.NewGuid().ToString();
         }
     }
 
     private void OnSearchChanged()
     {
         // Reset to first page when search changes
-        _currentQuery = new GetProjectInstancesQuery
+        CurrentQuery = new GetProjectInstancesQuery
         {
             Filtering = BuildFilteringParameters(),
-            Pagination = new PaginationParameters { Skip = 0, PageSize = _pageSize }
+            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
         };
 
-        _refreshToken = Guid.NewGuid().ToString();
+        RefreshToken = Guid.NewGuid().ToString();
     }
 
     private FilteringParameters BuildFilteringParameters()
     {
         var filters = new List<IQueryFilter>();
 
-        if (!string.IsNullOrWhiteSpace(_searchTerm))
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
         {
-            filters.Add(new SearchFilter { SearchTerm = _searchTerm });
+            filters.Add(new SearchFilter { SearchTerm = SearchTerm });
         }
 
         return new FilteringParameters { QueryFilters = filters };
@@ -294,18 +295,16 @@ public partial class InstancesPage : ComponentBase, IDisposable
 
     private string? GetCurrentSearchTerm()
     {
-        return _currentQuery.Filtering.QueryFilters
+        return CurrentQuery.Filtering.QueryFilters
             .OfType<SearchFilter>()
             .FirstOrDefault()?.SearchTerm;
     }
-
-    private Guid? _selectedInstanceId;
     
     private Guid? GetSelectedInstanceId()
     {
-        if (_selectedInstanceId.HasValue)
+        if (SelectedInstanceId.HasValue)
         {
-            return _selectedInstanceId;
+            return SelectedInstanceId;
         }
         
         if (SelectedItem != null && Guid.TryParse(SelectedItem.Id, out var instanceId))
@@ -332,12 +331,12 @@ public partial class InstancesPage : ComponentBase, IDisposable
             if (action == "create")
             {
                 SelectedItem = null;
-                _selectedInstanceId = null;
+                SelectedInstanceId = null;
                 await OpenInstancePanelAsync();
             }
             else if (!string.IsNullOrEmpty(idParam) && Guid.TryParse(idParam, out var instanceId))
             {
-                _selectedInstanceId = instanceId;
+                SelectedInstanceId = instanceId;
                 var instance = AllInstances.FirstOrDefault(i => i.Id == instanceId);
 
                 if (instance != null)
@@ -349,13 +348,13 @@ public partial class InstancesPage : ComponentBase, IDisposable
             else
             {
                 SelectedItem = null;
-                _selectedInstanceId = null;
+                SelectedInstanceId = null;
                 
-                 if (_currentDialog != null)
+                 if (CurrentDialog != null)
                  {
                     // No query params, close any open dialog
-                    await _currentDialog.CloseAsync();
-                    _currentDialog = null;
+                    await CurrentDialog.CloseAsync();
+                    CurrentDialog = null;
                  }
             }
         }
@@ -395,7 +394,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
             
             OnDataChanged = async () =>
             {
-                _refreshToken = Guid.NewGuid().ToString();
+                RefreshToken = Guid.NewGuid().ToString();
                 await InvokeAsync(StateHasChanged);
             }
         };
@@ -410,15 +409,15 @@ public partial class InstancesPage : ComponentBase, IDisposable
         });
         
         // Close the previous dialog after opening the new one to avoid flickering
-        if (_currentDialog != null)
+        if (CurrentDialog != null)
         {
-            await _currentDialog.CloseAsync();
+            await CurrentDialog.CloseAsync();
         }
         
-        _currentDialog = newDialog;
+        CurrentDialog = newDialog;
 
-        var result = await _currentDialog.Result;
-        _currentDialog = null;
+        var result = await CurrentDialog.Result;
+        CurrentDialog = null;
         var currentId = NavHelper.GetQueryParameter("id");
         
         if(result.Cancelled && currentId == instance?.Id.ToString())

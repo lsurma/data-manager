@@ -7,9 +7,9 @@
         <FluentIcon Value="@(new Size20.Navigation())" Color="Color.Fill" />
     </label>
     <nav class="sitenav" aria-labelledby="main-menu">
-        <FluentNavMenu Id="main-menu" Width="250" Collapsible="true" Title="Navigation menu" @bind-Expanded="expanded" @bind-Expanded:after="OnExpandedChanged" CustomToggle="true">
+        <FluentNavMenu Id="main-menu" Width="250" Collapsible="true" Title="Navigation menu" @bind-Expanded="Expanded" @bind-Expanded:after="OnExpandedChanged" CustomToggle="true">
             <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Size20.Home())" IconColor="Color.Accent">Home</FluentNavLink>
-            @if (_showDevPages)
+            @if (ShowDevPages)
             {
                 <FluentNavLink Href="instances" Icon="@(new Size20.NumberSymbolSquare())" IconColor="Color.Accent">Instances</FluentNavLink>
             }
@@ -19,12 +19,12 @@
             <FluentNavLink Href="emails" Icon="@(new Size20.Mail())" IconColor="Color.Accent">Emails</FluentNavLink>
             <FluentNavLink Href="translations/import" Icon="@(new Size20.ArrowImport())" IconColor="Color.Accent">Import</FluentNavLink>
             
-            @if (_showDevPages)
+            @if (ShowDevPages)
             {
                 <FluentNavLink Href="paneltest" Icon="@(new Size20.SlideLayout())" IconColor="Color.Accent">Panel Test</FluentNavLink>
             }
             <FluentNavLink Href="mjml-editor" Icon="@(new Size20.Mail())" IconColor="Color.Accent">MJML Editor</FluentNavLink>
-            @if (_showDevPages)
+            @if (ShowDevPages)
             {
                 <FluentNavLink Href="resize-test" Icon="@(new Size20.ResizeLarge())" IconColor="Color.Accent">Resize Test</FluentNavLink>
                 <FluentNavLink Href="test-generic-queries" Icon="@(new Size20.BeakerSettings())" IconColor="Color.Accent">Test Generic Queries</FluentNavLink>
@@ -37,19 +37,19 @@
 @inject ICookieService CookieService
 
 @code {
-    private bool expanded = true;
-    private bool _showDevPages;
+    private bool Expanded { get; set; } = true;
+    private bool ShowDevPages { get; set; }
     private const string ExpandedKey = "nav-menu-expanded";
     private const string DevCookieName = "_dev";
 
     protected override async Task OnInitializedAsync()
     {
-        expanded = await LocalStorage.GetItemAsync<bool?>(ExpandedKey) ?? true;
-        _showDevPages = await CookieService.HasCookieAsync(DevCookieName);
+        Expanded = await LocalStorage.GetItemAsync<bool?>(ExpandedKey) ?? true;
+        ShowDevPages = await CookieService.HasCookieAsync(DevCookieName);
     }
 
     private async Task OnExpandedChanged()
     {
-        await LocalStorage.SetItemAsync(ExpandedKey, expanded);
+        await LocalStorage.SetItemAsync(ExpandedKey, Expanded);
     }
 }

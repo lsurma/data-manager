@@ -13,8 +13,8 @@
 
 <DataLoader TResponse="PaginatedList<DataSetDto>"
             TQuery="GetDataSetsQuery"
-            Query="@_currentQuery"
-            RefreshToken="@_refreshToken"
+            Query="@CurrentQuery"
+            RefreshToken="@RefreshToken"
             OnDataFetched="HandleDataFetched"/>
 
 <PaginatedDataGrid TItem="DataSetDto"
@@ -22,10 +22,10 @@
                    TotalItems="@TotalItems"
                    PageSize="@PageSize"
                    SearchPlaceholder="Search datasets..."
-                   @bind-SearchTerm="@_searchTerm"
+                   @bind-SearchTerm="@SearchTerm"
                    OnSearchChanged="@OnSearchChanged"
                    LoadData="@OnLoadData"
-                   SelectedRows="@_selectedRows"
+                   SelectedRows="@SelectedRows"
                    SelectedRowsChanged="@OnDataGridSelectionChanged"
                    SettingsStorageKey="grid-settings-datasets">
     <ToolbarTemplate>

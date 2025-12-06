@@ -16,15 +16,15 @@
 <FluentDivider Style="margin: 16px 0;" />
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalGap="8">
-    <FluentButton Appearance="@(_renderMode == RenderMode.FluentTree ? Appearance.Accent : Appearance.Neutral)"
+    <FluentButton Appearance="@(RenderModeValue == RenderMode.FluentTree ? Appearance.Accent : Appearance.Neutral)"
                   OnClick="@(() => SwitchRenderMode(RenderMode.FluentTree))">
         Fluent - Tree
     </FluentButton>
-    <FluentButton Appearance="@(_renderMode == RenderMode.WebAwesomeTree ? Appearance.Accent : Appearance.Neutral)"
+    <FluentButton Appearance="@(RenderModeValue == RenderMode.WebAwesomeTree ? Appearance.Accent : Appearance.Neutral)"
                   OnClick="@(() => SwitchRenderMode(RenderMode.WebAwesomeTree))">
         WebAwesome - Tree
     </FluentButton>
-    <FluentButton Appearance="@(_renderMode == RenderMode.DataGrid ? Appearance.Accent : Appearance.Neutral)"
+    <FluentButton Appearance="@(RenderModeValue == RenderMode.DataGrid ? Appearance.Accent : Appearance.Neutral)"
                   OnClick="@(() => SwitchRenderMode(RenderMode.DataGrid))">
         Data Grid
     </FluentButton>
@@ -34,31 +34,31 @@
 
 <DataLoader TResponse="PaginatedList<ProjectInstanceDto>"
             TQuery="GetProjectInstancesQuery"
-            Query="@_currentQuery"
-            CacheKey="@_cacheKey"
-            RefreshToken="@_refreshToken"
+            Query="@CurrentQuery"
+            CacheKey="@CacheKey"
+            RefreshToken="@RefreshToken"
             OnDataFetched="HandleDataFetched">
     <ChildContent Context="result">
-        <div style="display: @(_renderMode == RenderMode.FluentTree ? "block" : "none")">
+        <div style="display: @(RenderModeValue == RenderMode.FluentTree ? "block" : "none")">
             <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
         </div>
         
-        <div style="display: @(_renderMode == RenderMode.WebAwesomeTree ? "block" : "none")">
+        <div style="display: @(RenderModeValue == RenderMode.WebAwesomeTree ? "block" : "none")">
             <InstancesWebAwesomeTree AllInstances="AllInstances" 
                                      SelectedInstanceId="GetSelectedInstanceId()" 
                                      OnInstanceSelected="HandleWebAwesomeItemSelected" />
         </div>
         
-        <div style="display: @(_renderMode == RenderMode.DataGrid ? "block" : "none")">
+        <div style="display: @(RenderModeValue == RenderMode.DataGrid ? "block" : "none")">
             <PaginatedDataGrid TItem="ProjectInstanceDto"
                               Items="@AllInstances"
-                              TotalItems="@_totalItems"
-                              PageSize="@_pageSize"
+                              TotalItems="@TotalItems"
+                              PageSize="@PageSize"
                               SearchPlaceholder="Search instances..."
-                              @bind-SearchTerm="@_searchTerm"
+                              @bind-SearchTerm="@SearchTerm"
                               OnSearchChanged="@OnSearchChanged"
                               LoadData="@OnLoadData"
-                              SelectedRows="@_selectedRows"
+                              SelectedRows="@SelectedRows"
                               SelectedRowsChanged="@OnDataGridSelectionChanged"
                               SettingsStorageKey="grid-settings-instances">
                 <Columns>

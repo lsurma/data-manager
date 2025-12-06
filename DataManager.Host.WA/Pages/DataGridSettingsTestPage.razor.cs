@@ -13,20 +13,20 @@ public class DataGridTestItem
 
 public partial class DataGridSettingsTestPage : ComponentBase
 {
-    private List<DataGridTestItem> _items = new();
-    private int _totalItems = 100;
-    private int _pageSize = 10;
-    private List<DataGridTestItem> _allData = new();
+    private List<DataGridTestItem> Items { get; set; } = new();
+    private int TotalItems { get; set; } = 100;
+    private int PageSize { get; set; } = 10;
+    private List<DataGridTestItem> AllData { get; set; } = new();
 
     protected override void OnInitialized()
     {
         GenerateSampleData();
-        _items = _allData.Take(_pageSize).ToList();
+        Items = AllData.Take(PageSize).ToList();
     }
 
     private void GenerateSampleData()
     {
-        _allData = Enumerable.Range(1, _totalItems).Select(i => new DataGridTestItem
+        AllData = Enumerable.Range(1, TotalItems).Select(i => new DataGridTestItem
         {
             Id = i,
             Name = $"Item {i}",
@@ -37,7 +37,7 @@ public partial class DataGridSettingsTestPage : ComponentBase
 
     private void OnLoadData(LoadDataArgs args)
     {
-        var query = _allData.AsQueryable();
+        var query = AllData.AsQueryable();
 
         if (!string.IsNullOrEmpty(args.OrderBy))
         {
@@ -46,7 +46,7 @@ public partial class DataGridSettingsTestPage : ComponentBase
             // For this test, we'll just handle paging.
         }
 
-        _items = query.Skip(args.Skip.Value).Take(args.Top.Value).ToList();
+        Items = query.Skip(args.Skip.Value).Take(args.Top.Value).ToList();
         StateHasChanged();
     }
 }
