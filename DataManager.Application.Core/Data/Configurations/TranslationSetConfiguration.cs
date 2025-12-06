@@ -37,12 +37,12 @@ public class TranslationSetConfiguration : AuditableEntityConfiguration<Translat
 
         // Configure many-to-many relationship through TranslationSetInclude
         builder.HasMany(e => e.Includes)
-            .WithOne(e => e.ParentDataSet)
+            .WithOne(e => e.ParentTranslationSet)
             .HasForeignKey(e => e.ParentTranslationSetId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(e => e.IncludedIn)
-            .WithOne(e => e.IncludedDataSet)
+            .WithOne(e => e.IncludedTranslationSet)
             .HasForeignKey(e => e.IncludedTranslationSetId)
             .OnDelete(DeleteBehavior.Cascade);
     }
