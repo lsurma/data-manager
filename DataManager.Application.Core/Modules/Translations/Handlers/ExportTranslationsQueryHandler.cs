@@ -37,14 +37,50 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
             queryOptions.Filtering = new FilteringParameters();
         }
 
+        // Fetch the main translations to export
         var query = await _queryService.PrepareQueryAsync(options: queryOptions, cancellationToken: cancellationToken);
         var translations = await query.ToListAsync(cancellationToken);
-        var translationDtos = translations.ToDto();
+        var translationExportDtos = translations.ToExportDto();
+
+        // Fetch base language translations for the same keys
+        // Extract unique keys (ResourceName, TranslationName) from the main translations
+        var translationKeys = translations
+            .Select(t => new { t.ResourceName, t.TranslationName })
+            .Distinct()
+            .ToList();
+
+        // Build a query for base language translations
+        List<Translation> baseLanguageTranslations = new List<Translation>();
+        if (translationKeys.Any())
+        {
+            // Create a filter options for base language
+            var baseLanguageQueryOptions = new TranslationsQueryService.Options
+            {
+                Filtering = new FilteringParameters
+                {
+                    QueryFilters = new List<IQueryFilter>
+                    {
+                        new CultureNameFilter { Value = request.BaseLanguage }
+                    }
+                }
+            };
+
+            var baseQuery = await _queryService.PrepareQueryAsync(options: baseLanguageQueryOptions, cancellationToken: cancellationToken);
+            
+            // Filter to only include translations with matching keys
+            baseQuery = baseQuery.Where(t => 
+                translationKeys.Any(key => key.ResourceName == t.ResourceName && key.TranslationName == t.TranslationName));
+            
+            baseLanguageTranslations = await baseQuery.ToListAsync(cancellationToken);
+        }
+
+        var baseLanguageExportDtos = baseLanguageTranslations.ToExportDto();
 
         var exporter = _exporterFactory.GetExporter(request.Format);
-        return await exporter.ExportAsync(translationDtos, new Dictionary<string, object>
+        return await exporter.ExportAsync(translationExportDtos, new Dictionary<string, object>
         {
-            { "BaseLanguage", request.BaseLanguage }
+            { "BaseLanguage", request.BaseLanguage },
+            { "BaseTranslations", baseLanguageExportDtos }
         }, cancellationToken);
     }
 }
