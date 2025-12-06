@@ -2,41 +2,39 @@ using MediatR;
 
 namespace DataManager.Application.Contracts.Modules.Translations;
 
+/// <summary>
+/// High-level command to save translations for multiple cultures.
+/// Simplifies the API by accepting a dictionary of culture-to-content mappings.
+/// </summary>
 public class SaveTranslationCommand : IRequest<Guid>
 {
+    /// <summary>
+    /// Optional ID for updating existing translation group.
+    /// If provided, ResourceName and TranslationName will be ignored.
+    /// </summary>
     public Guid? Id { get; set; }
 
-    public string? InternalGroupName1 { get; set; }
-
-    public string? InternalGroupName2 { get; set; }
-
-    public required string ResourceName { get; set; }
-
-    public required string TranslationName { get; set; }
-
-    public string? CultureName { get; set; }
-
-    public required string Content { get; set; }
+    /// <summary>
+    /// Resource name for identifying the translation.
+    /// Required when creating new translations (when Id is null).
+    /// </summary>
+    public string? ResourceName { get; set; }
 
     /// <summary>
-    /// Optional MJML template content before processing
+    /// Translation key/name for identifying the translation.
+    /// Required when creating new translations (when Id is null).
     /// </summary>
-    public string? ContentTemplate { get; set; }
+    public string? TranslationName { get; set; }
 
+    /// <summary>
+    /// Dictionary mapping culture codes to translation content.
+    /// Key: Culture code (e.g., "en-US", "pl-PL")
+    /// Value: Translation content
+    /// </summary>
+    public required Dictionary<string, string> Translations { get; set; }
+
+    /// <summary>
+    /// Optional DataSet ID to associate translations with a specific data set.
+    /// </summary>
     public Guid? DataSetId { get; set; }
-
-    /// <summary>
-    /// Optional reference to a layout Translation (used for email templates)
-    /// </summary>
-    public Guid? LayoutId { get; set; }
-
-    /// <summary>
-    /// Optional reference to a source Translation (for linking similar/same translations)
-    /// </summary>
-    public Guid? SourceId { get; set; }
-
-    /// <summary>
-    /// Indicates if this is a draft version (not yet published)
-    /// </summary>
-    public bool IsDraftVersion { get; set; }
 }

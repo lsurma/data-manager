@@ -25,16 +25,18 @@ public class ImportTranslationsCommandHandler : IRequestHandler<ImportTranslatio
         {
             try
             {
-                var saveCommand = new SaveTranslationCommand
+                // Use SaveSingleTranslationCommand for imports to preserve all detailed properties
+                var saveCommand = new SaveSingleTranslationCommand
                 {
                     ResourceName = translation.ResourceName,
                     TranslationName = translation.TranslationName,
+                    CultureName = translation.CultureName ?? "en-US", // Default to en-US if not specified
                     Content = translation.Content,
-                    CultureName = translation.CultureName,
                     InternalGroupName1 = translation.InternalGroupName1,
                     InternalGroupName2 = translation.InternalGroupName2,
                     ContentTemplate = translation.ContentTemplate,
-                    DataSetId = request.DataSetId
+                    DataSetId = request.DataSetId,
+                    IsDraftVersion = false
                 };
 
                 await _mediator.Send(saveCommand, cancellationToken);
@@ -44,7 +46,7 @@ public class ImportTranslationsCommandHandler : IRequestHandler<ImportTranslatio
             {
                 result.FailedCount++;
                 result.Errors.Add($"Failed to import translation '{translation.TranslationName}' ({translation.ResourceName}): {ex.Message}");
-                _logger.LogError(ex, "Failed to import translation {TranslationName} ({ResourceName})", 
+                _logger.LogError(ex, "Failed to import translation {TranslationName} ({ResourceName})",
                     translation.TranslationName, translation.ResourceName);
             }
         }

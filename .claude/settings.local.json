@@ -13,7 +13,8 @@
       "Bash(chmod:*)",
       "Bash(/tmp/dotnet-install.sh:*)",
       "Bash(~/.dotnet/dotnet:*)",
-      "Bash(export PATH=\"$PATH:/home/lsurma/.dotnet/tools\")"
+      "Bash(export PATH=\"$PATH:/home/lsurma/.dotnet/tools\")",
+      "Bash(git filter-branch:*)"
     ],
     "deny": [],
     "ask": []
