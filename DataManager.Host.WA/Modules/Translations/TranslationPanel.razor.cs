@@ -164,12 +164,8 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
                 Id = IsEditMode ? Model.Id : null,
                 ResourceName = Model.ResourceName,
                 TranslationName = Model.TranslationName,
-                CultureName = Model.CultureName,
-                Content = Model.Content,
-                ContentTemplate = Model.ContentTemplate,
                 TranslationsSetId = Model.TranslationsSetId,
-                LayoutId = Model.LayoutId,
-                SourceId = Model.SourceId
+                Translations = new Dictionary<string, string>()
             });
             
             var successMessage = IsEditMode
