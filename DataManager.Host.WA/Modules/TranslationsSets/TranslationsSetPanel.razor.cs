@@ -32,7 +32,7 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
     private string? ErrorMessage { get; set; }
     private HashSet<Guid> SelectedIncludeIds { get; set; } = new();
     private string AllowedIdentityIdsText { get; set; } = string.Empty;
-    private HashSet<string> SelectedCultures { get; set; } = new();
+    private IEnumerable<string> SelectedCultures { get; set; } = new List<string>();
     private List<string> AvailableCultures { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
@@ -65,7 +65,7 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
         // Initialize selected cultures from the TranslationsSet
         if (Content?.TranslationsSet?.AvailableCultures != null)
         {
-            SelectedCultures = new HashSet<string>(Content.TranslationsSet.AvailableCultures);
+            SelectedCultures = Content.TranslationsSet.AvailableCultures.ToList();
         }
     }
 
@@ -107,18 +107,6 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
         else
         {
             SelectedIncludeIds.Remove(translationsSetId);
-        }
-    }
-
-    private void HandleCultureChanged(string cultureCode, bool isSelected)
-    {
-        if (isSelected)
-        {
-            SelectedCultures.Add(cultureCode);
-        }
-        else
-        {
-            SelectedCultures.Remove(cultureCode);
         }
     }
 
