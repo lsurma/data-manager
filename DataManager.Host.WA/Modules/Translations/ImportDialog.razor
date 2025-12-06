@@ -1,5 +1,5 @@
 @inject IRequestSender RequestSender
-@using DataManager.Application.Contracts.Modules.DataSet
+@using DataManager.Application.Contracts.Modules.TranslationsSet
 @implements IDialogContentComponent
 
 <RadzenDataGrid @ref="_filesGrid" TItem="UploadedFileDto" Data="@_uploadedFiles" AllowPaging="false" AllowSorting="false">
@@ -15,7 +15,7 @@
 
 @code {
     [Parameter]
-    public Guid DataSetId { get; set; }
+    public Guid TranslationsSetId { get; set; }
 
     [Parameter]
     public object Content { get; set; } = null!;
@@ -30,7 +30,7 @@
 
     private async Task LoadUploadedFiles()
     {
-        _uploadedFiles = await RequestSender.SendAsync(new GetUploadedFilesQuery { DataSetId = DataSetId });
+        _uploadedFiles = await RequestSender.SendAsync(new GetUploadedFilesQuery { TranslationsSetId = TranslationsSetId });
         await _filesGrid.Reload();
     }
 

@@ -182,7 +182,7 @@ GET {{baseUrl}}/query/DeleteProjectInstanceCommand?body={"id":"{{instanceId}}"}
 | `{{jwtToken}}` | `eyJ0eXAi...` | JWT Bearer token |
 | `{{instanceId}}` | `3fa85f64-5717-...` | Sample Project Instance ID |
 | `{{translationId}}` | `8b2c4e6f-...` | Sample Translation ID |
-| `{{dataSetId}}` | `a1b2c3d4-...` | Sample DataSet ID |
+| `{{dataSetId}}` | `a1b2c3d4-...` | Sample TranslationsSet ID |
 
 ---
 
@@ -200,7 +200,7 @@ GET {{baseUrl}}/query/DeleteProjectInstanceCommand?body={"id":"{{instanceId}}"}
 - `SaveTranslationCommand` - Create or update translation
 - `DeleteTranslationCommand` - Delete translation
 
-### DataSets
+### TranslationsSets
 - `GetDataSetsQuery` - List all data sets
 - `GetDataSetByIdQuery` - Get single data set by ID
 - `SaveDataSetCommand` - Create or update data set

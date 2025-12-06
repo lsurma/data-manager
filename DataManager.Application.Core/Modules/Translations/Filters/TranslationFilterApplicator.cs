@@ -5,12 +5,12 @@ using DataManager.Application.Core.Common;
 
 namespace DataManager.Application.Core.Modules.Translations.Filters;
 
-public class DataSetIdFilterHandler : IFilterHandler<Translation, DataSetIdFilter>
+public class TranslationsSetIdFilterHandler : IFilterHandler<Translation, TranslationsSetIdFilter>
 {
-    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(DataSetIdFilter filter, CancellationToken cancellationToken = default)
+    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(TranslationsSetIdFilter filter, CancellationToken cancellationToken = default)
     {
-        var dataSetId = filter.Value!.Value; // We know it has value because IsActive() was checked
-        Expression<Func<Translation, bool>> expression = t => t.DataSetId == dataSetId;
+        var translationsSetId = filter.Value!.Value; // We know it has value because IsActive() was checked
+        Expression<Func<Translation, bool>> expression = t => t.TranslationsSetId == translationsSetId;
         return Task.FromResult(expression);
     }
 }

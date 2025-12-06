@@ -16,7 +16,7 @@ Retrieves translations for a specific dataset with optional filtering, paginatio
 
 #### Route Parameters
 
-- `dataSetNameOrId` - The DataSet identifier (can be either the DataSet name or GUID)
+- `dataSetNameOrId` - The TranslationsSet identifier (can be either the TranslationsSet name or GUID)
 
 #### Query Parameters
 
@@ -49,7 +49,7 @@ GET /api/translations/MyDataSet?limit=10&offset=10
 GET /api/translations/MyDataSet?orderBy=translationName&orderDirection=asc
 ```
 
-**Get translations by DataSet ID:**
+**Get translations by TranslationsSet ID:**
 ```
 GET /api/translations/3fa85f64-5717-4562-b3fc-2c963f66afa6
 ```
@@ -95,7 +95,7 @@ This endpoint returns a **simplified projection** with only essential fields for
 #### Status Codes
 
 - `200 OK` - Success, returns paginated list of translations
-- `404 Not Found` - DataSet with the specified name or ID not found
+- `404 Not Found` - TranslationsSet with the specified name or ID not found
 - `401 Unauthorized` - Authentication required (if authentication is enabled)
 - `500 Internal Server Error` - Server error occurred
 
@@ -109,7 +109,7 @@ Imports translations from a remote source by accepting a JSON array of translati
 
 #### Route Parameters
 
-- `dataSetNameOrId` - The DataSet identifier (can be either the DataSet name or GUID)
+- `dataSetNameOrId` - The TranslationsSet identifier (can be either the TranslationsSet name or GUID)
 
 #### Request Format
 
@@ -163,7 +163,7 @@ curl -X POST http://localhost:7233/api/translations/MyDataSet \
   ]'
 ```
 
-**Using curl with DataSet ID:**
+**Using curl with TranslationsSet ID:**
 ```bash
 curl -X POST http://localhost:7233/api/translations/3fa85f64-5717-4562-b3fc-2c963f66afa6 \
   -H "Content-Type: application/json" \
@@ -251,7 +251,7 @@ console.log(result);
 
 - `200 OK` - Import completed (check importedCount and failedCount in response)
 - `400 Bad Request` - Invalid JSON format, empty request body, or no translations provided
-- `404 Not Found` - DataSet with the specified name or ID not found
+- `404 Not Found` - TranslationsSet with the specified name or ID not found
 - `401 Unauthorized` - Authentication required (if authentication is enabled)
 - `500 Internal Server Error` - Server error occurred
 
@@ -281,16 +281,16 @@ POST /api/translations/MyDataSet (with JSON array of translations)
 The TranslationsController provides:
 - ✅ Cleaner, more intuitive URLs
 - ✅ Simple query parameters instead of JSON encoding
-- ✅ Support for both DataSet names and IDs
+- ✅ Support for both TranslationsSet names and IDs
 - ✅ RESTful design patterns
-- ✅ Automatic DataSet filtering
+- ✅ Automatic TranslationsSet filtering
 - ✅ Direct JSON import for remote data sources
 
 ---
 
 ## Tips and Best Practices
 
-1. **Use DataSet names for readability** - Names are easier to work with than GUIDs in URLs
+1. **Use TranslationsSet names for readability** - Names are easier to work with than GUIDs in URLs
 2. **Pagination** - Use `limit` and `offset` for efficient pagination of large datasets
 3. **Sorting** - Combine `orderBy` and `orderDirection` for custom sorting
 4. **Offset calculation** - For page-based pagination: `offset = (pageNumber - 1) * limit`
@@ -306,12 +306,12 @@ All endpoints return structured error responses:
 
 ```json
 {
-  "error": "DataSet 'NonExistent' not found."
+  "error": "TranslationsSet 'NonExistent' not found."
 }
 ```
 
 Common errors:
-- DataSet not found
+- TranslationsSet not found
 - Invalid query parameters
 - Invalid JSON format in import request
 - Empty request body or no translations provided

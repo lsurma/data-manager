@@ -27,13 +27,13 @@
                                  Style="width: 100%;" />
 
                 <div>
-                    Cultures: @(string.Join(", ", DataSet?.AvailableCultures ?? []))
+                    Cultures: @(string.Join(", ", TranslationsSet?.AvailableCultures ?? []))
                 </div>
                 
                 @if (!IsEditMode)
                 {
                     <FluentMessageBar Intent="MessageIntent.Info">
-                        This translation will be created for all cultures available in the selected DataSet (or all system cultures if no DataSet is selected).
+                        This translation will be created for all cultures available in the selected TranslationsSet (or all system cultures if no TranslationsSet is selected).
                     </FluentMessageBar>
                 }
 

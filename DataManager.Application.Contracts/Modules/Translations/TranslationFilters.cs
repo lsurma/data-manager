@@ -1,9 +1,9 @@
 namespace DataManager.Application.Contracts.Modules.Translations;
 
 /// <summary>
-/// Filter by DataSet ID
+/// Filter by TranslationsSet ID
 /// </summary>
-public class DataSetIdFilter : TranslationFilterBase<DataSetIdFilter>
+public class TranslationsSetIdFilter : TranslationFilterBase<TranslationsSetIdFilter>
 {
     public Guid? Value { get; set; }
     

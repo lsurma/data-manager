@@ -54,7 +54,7 @@ The collection is organized into these folders:
 DataManager API/
 ├── ProjectInstances/          # CRUD operations for project instances
 ├── Translations/              # CRUD operations for translations
-├── DataSets/                  # CRUD operations for data sets
+├── TranslationsSets/                  # CRUD operations for data sets
 ├── With API Key Auth/         # Example requests with API Key headers
 ├── With JWT Auth/             # Example requests with JWT Bearer token
 └── With APIM Simulation/      # Example requests simulating APIM headers
@@ -72,7 +72,7 @@ Choose the scenario that matches your testing needs:
 - No headers needed
 - Perfect for quick API testing
 
-**Use any request in:** ProjectInstances, Translations, DataSets folders
+**Use any request in:** ProjectInstances, Translations, TranslationsSets folders
 
 ---
 
@@ -160,7 +160,7 @@ Pre-configured in `DataManager-Local.postman_environment.json`:
 ### Test Data
 - `instanceId` - Sample Project Instance GUID
 - `translationId` - Sample Translation GUID
-- `dataSetId` - Sample DataSet GUID
+- `dataSetId` - Sample TranslationsSet GUID
 - `paginationBody` - Reusable pagination parameters
 
 ## Common Workflows

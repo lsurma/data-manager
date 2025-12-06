@@ -1,6 +1,6 @@
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Common;
-using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Application.Contracts.Modules.TranslationsSet;
 using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components;
@@ -11,7 +11,7 @@ namespace DataManager.Host.WA.Modules.Translations;
 public partial class TranslationsPage : ComponentBase
 {
     [Parameter]
-    public Guid? DataSetId { get; set; }
+    public Guid? TranslationsSetId { get; set; }
 
     [CascadingParameter]
     public AppDataContext? CascadingAppContext { get; set; }
@@ -33,17 +33,17 @@ public partial class TranslationsPage : ComponentBase
     [Inject]
     private IRequestSender RequestSender { get; set; } = null!;
 
-    private List<DataSetDto> AllDataSets => AppContext.DataSets;
+    private List<TranslationsSetDto> AllTranslationsSets => AppContext.TranslationsSets;
 
-    private void OnDataSetFilterChanged(Guid? dataSetId)
+    private void OnDataSetFilterChanged(Guid? translationsSetId)
     {
-        var url = dataSetId.HasValue ? $"translations/{dataSetId}" : "translations";
+        var url = translationsSetId.HasValue ? $"translations/{translationsSetId}" : "translations";
         NavigationManager.NavigateTo(url);
     }
 
-    private Appearance GetAppearanceForDataSet(Guid? dataSetId)
+    private Appearance GetAppearanceForDataSet(Guid? translationsSetId)
     {
-        var isSelected = DataSetId == dataSetId;
+        var isSelected = TranslationsSetId == translationsSetId;
         return isSelected ? Appearance.Accent : Appearance.Neutral;
     }
 }

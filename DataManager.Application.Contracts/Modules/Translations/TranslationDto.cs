@@ -21,7 +21,7 @@ public record TranslationDto : ITranslationDto
     /// </summary>
     public string? ContentTemplate { get; set; }
 
-    public Guid? DataSetId { get; set; }
+    public Guid? TranslationsSetId { get; set; }
 
     /// <summary>
     /// Optional reference to the source Translation from which this translation was materialized.

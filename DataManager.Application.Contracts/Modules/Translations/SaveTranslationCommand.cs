@@ -34,7 +34,7 @@ public class SaveTranslationCommand : IRequest<Guid>
     public required Dictionary<string, string> Translations { get; set; }
 
     /// <summary>
-    /// Optional DataSet ID to associate translations with a specific data set.
+    /// Optional TranslationsSet ID to associate translations with a specific data set.
     /// </summary>
-    public Guid? DataSetId { get; set; }
+    public Guid? TranslationsSetId { get; set; }
 }

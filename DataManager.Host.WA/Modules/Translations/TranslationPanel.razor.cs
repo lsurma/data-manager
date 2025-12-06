@@ -1,5 +1,5 @@
 using DataManager.Application.Contracts;
-using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Application.Contracts.Modules.TranslationsSet;
 using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Host.WA.Components.ContentEditor;
 using DataManager.Host.WA.Services;
@@ -44,7 +44,7 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
     
     protected bool IsEditMode { get; set; }
     
-    protected DataSetDto DataSet { get; set; } = null!;
+    protected TranslationsSetDto TranslationsSet { get; set; } = null!;
     
     protected override async Task OnInitializedAsync()
     {
@@ -86,9 +86,9 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
             }
             else
             {
-                if(Content.DataSetId == null)
+                if(Content.TranslationsSetId == null)
                 {
-                    throw new InvalidOperationException("DataSetId must be provided when creating a new translation.");
+                    throw new InvalidOperationException("TranslationsSetId must be provided when creating a new translation.");
                 }
                 
                 // Creating a new translation
@@ -96,15 +96,15 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
                 {
                     Id = Guid.NewGuid(),
                     IsCurrentVersion = true,
-                    DataSetId = Content.DataSetId
+                    TranslationsSetId = Content.TranslationsSetId
                 };
             }
             
-            DataSet = CascadingAppDataContext?.DataSets.FirstOrDefault(x => x.Id == Content.DataSetId)!;
+            TranslationsSet = CascadingAppDataContext?.TranslationsSets.FirstOrDefault(x => x.Id == Content.TranslationsSetId)!;
 
-            if(DataSet == null)
+            if(TranslationsSet == null)
             {
-                throw new InvalidOperationException("Related DataSet not found in AppDataContext.");
+                throw new InvalidOperationException("Related TranslationsSet not found in AppDataContext.");
             }
             
         }
@@ -167,7 +167,7 @@ public partial class TranslationPanel : IDialogContentComponent<TranslationPanel
                 CultureName = Model.CultureName,
                 Content = Model.Content,
                 ContentTemplate = Model.ContentTemplate,
-                DataSetId = Model.DataSetId,
+                TranslationsSetId = Model.TranslationsSetId,
                 LayoutId = Model.LayoutId,
                 SourceId = Model.SourceId
             });
@@ -269,7 +269,7 @@ public class TranslationPanelParameters
     /// </summary>
     public Guid? TranslationId { get; set; }
 
-    public Guid? DataSetId { get; set; }
+    public Guid? TranslationsSetId { get; set; }
     
     public Func<Task>? OnDataChanged { get; set; }
 }

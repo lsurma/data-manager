@@ -241,7 +241,7 @@
 			]
 		},
 		{
-			"name": "DataSets",
+			"name": "TranslationsSets",
 			"item": [
 				{
 					"name": "Get All DataSets",
@@ -249,9 +249,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/query/GetDataSetsQuery",
+							"raw": "{{baseUrl}}/query/GetTranslationsSetsQuery",
 							"host": ["{{baseUrl}}"],
-							"path": ["query", "GetDataSetsQuery"]
+							"path": ["query", "GetTranslationsSetsQuery"]
 						},
 						"description": "Retrieves all data sets"
 					},
@@ -263,9 +263,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/query/GetDataSetsQuery?body={\"filtering\":{\"searchTerm\":\"prod\"},\"pagination\":{\"page\":1,\"pageSize\":10},\"ordering\":{\"orderBy\":\"name\",\"orderDirection\":\"asc\"}}",
+							"raw": "{{baseUrl}}/query/GetTranslationsSetsQuery?body={\"filtering\":{\"searchTerm\":\"prod\"},\"pagination\":{\"page\":1,\"pageSize\":10},\"ordering\":{\"orderBy\":\"name\",\"orderDirection\":\"asc\"}}",
 							"host": ["{{baseUrl}}"],
-							"path": ["query", "GetDataSetsQuery"],
+							"path": ["query", "GetTranslationsSetsQuery"],
 							"query": [
 								{
 									"key": "body",
@@ -283,13 +283,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/query/GetDataSetByIdQuery?body={\"id\":\"{{dataSetId}}\"}",
+							"raw": "{{baseUrl}}/query/GetTranslationsSetByIdQuery?body={\"id\":\"{{translationsSetId}}\"}",
 							"host": ["{{baseUrl}}"],
-							"path": ["query", "GetDataSetByIdQuery"],
+							"path": ["query", "GetTranslationsSetByIdQuery"],
 							"query": [
 								{
 									"key": "body",
-									"value": "{\"id\":\"{{dataSetId}}\"}"
+									"value": "{\"id\":\"{{translationsSetId}}\"}"
 								}
 							]
 						},
@@ -303,9 +303,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/query/SaveDataSetCommand?body={\"name\":\"Production Dataset\",\"description\":\"Main production data\"}",
+							"raw": "{{baseUrl}}/query/SaveTranslationsSetCommand?body={\"name\":\"Production Dataset\",\"description\":\"Main production data\"}",
 							"host": ["{{baseUrl}}"],
-							"path": ["query", "SaveDataSetCommand"],
+							"path": ["query", "SaveTranslationsSetCommand"],
 							"query": [
 								{
 									"key": "body",
@@ -323,13 +323,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/query/DeleteDataSetCommand?body={\"id\":\"{{dataSetId}}\"}",
+							"raw": "{{baseUrl}}/query/DeleteTranslationsSetCommand?body={\"id\":\"{{translationsSetId}}\"}",
 							"host": ["{{baseUrl}}"],
-							"path": ["query", "DeleteDataSetCommand"],
+							"path": ["query", "DeleteTranslationsSetCommand"],
 							"query": [
 								{
 									"key": "body",
-									"value": "{\"id\":\"{{dataSetId}}\"}"
+									"value": "{\"id\":\"{{translationsSetId}}\"}"
 								}
 							]
 						},

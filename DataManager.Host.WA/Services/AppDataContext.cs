@@ -1,13 +1,13 @@
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Common;
-using DataManager.Application.Contracts.Modules.DataSet;
+using DataManager.Application.Contracts.Modules.TranslationsSet;
 using Microsoft.Extensions.Logging;
 
 namespace DataManager.Host.WA.Services;
 
 /// <summary>
 /// Application data context that stores reusable data across pages.
-/// This reduces redundant API calls by caching frequently used data like DataSets.
+/// This reduces redundant API calls by caching frequently used data like TranslationsSets.
 /// </summary>
 public class AppDataContext
 {
@@ -22,9 +22,9 @@ public class AppDataContext
     }
     
     /// <summary>
-    /// Cached list of all available DataSets
+    /// Cached list of all available TranslationsSets
     /// </summary>
-    public List<DataSetDto> DataSets { get; private set; } = new();
+    public List<TranslationsSetDto> TranslationsSets { get; private set; } = new();
     
     /// <summary>
     /// Indicates whether data has been loaded at least once
@@ -56,8 +56,8 @@ public class AppDataContext
         
         try
         {
-            var dataSetsResult = await _requestSender.SendAsync(GetDataSetsQuery.AllItems());
-            DataSets = dataSetsResult.Items;
+            var translationsSetsResult = await _requestSender.SendAsync(GetTranslationsSetsQuery.AllItems());
+            TranslationsSets = translationsSetsResult.Items;
             
             IsLoaded = true;
         }
