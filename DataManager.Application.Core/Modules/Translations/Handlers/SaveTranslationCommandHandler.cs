@@ -86,7 +86,7 @@ public class SaveTranslationCommandHandler : IRequestHandler<SaveTranslationComm
                 CultureName = cultureName,
                 Content = content,
                 ContentTemplate = null,
-                DataSetId = request.DataSetId,
+                TranslationsSetId = request.TranslationsSetId,
                 LayoutId = null,
                 SourceId = null,
                 IsDraftVersion = false

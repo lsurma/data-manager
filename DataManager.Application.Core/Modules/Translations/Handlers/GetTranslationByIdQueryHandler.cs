@@ -33,7 +33,7 @@ public class GetTranslationByIdQueryHandler : IRequestHandler<GetTranslationById
                 CultureName = t.CultureName,
                 Content = t.Content,
                 ContentTemplate = t.ContentTemplate,
-                DataSetId = t.DataSetId,
+                TranslationsSetId = t.TranslationsSetId,
                 LayoutId = t.LayoutId,
                 IsCurrentVersion = t.IsCurrentVersion,
                 IsDraftVersion = t.IsDraftVersion,

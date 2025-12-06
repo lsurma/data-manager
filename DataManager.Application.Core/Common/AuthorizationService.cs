@@ -52,9 +52,9 @@ public class AuthorizationService : IAuthorizationService
     }
 
     /// <summary>
-    /// Checks if the current user has access to a specific DataSet
+    /// Checks if the current user has access to a specific TranslationsSet
     /// </summary>
-    public async Task<bool> CanAccessDataSetAsync(Guid dataSetId, CancellationToken cancellationToken = default)
+    public async Task<bool> CanAccessTranslationsSetAsync(Guid translationsSetId, CancellationToken cancellationToken = default)
     {
         // Root users have access to everything
         if (await HasRootAccessAsync(cancellationToken))
@@ -64,35 +64,35 @@ public class AuthorizationService : IAuthorizationService
 
         var currentUser = _currentUserService.GetCurrentUser();
 
-        // Query the DataSet to check if user is in AllowedIdentityIds
+        // Query the TranslationsSet to check if user is in AllowedIdentityIds
         // Pull the collection to do in-memory check (EF Core can't translate Contains on converted collection)
-        var dataSet = await _context.DataSets
-            .Where(ds => ds.Id == dataSetId)
+        var translationsSet = await _context.TranslationsSets
+            .Where(ds => ds.Id == translationsSetId)
             .Select(ds => new { ds.AllowedIdentityIds })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (dataSet == null)
+        if (translationsSet == null)
         {
-            return false; // DataSet not found
+            return false; // TranslationsSet not found
         }
 
         // If AllowedIdentityIds is empty, treat as public access (no restrictions)
-        if (!dataSet.AllowedIdentityIds.Any())
+        if (!translationsSet.AllowedIdentityIds.Any())
         {
             return true;
         }
 
         // Check if current user's ID is in the allowed list (in-memory)
-        return dataSet.AllowedIdentityIds.Contains(currentUser.UserId);
+        return translationsSet.AllowedIdentityIds.Contains(currentUser.UserId);
     }
 
     /// <summary>
-    /// Gets the list of DataSet IDs that the current user has access to.
+    /// Gets the list of TranslationsSet IDs that the current user has access to.
     /// Returns a tuple where:
     /// - AllAccessible: true if user has access to ALL datasets (no filtering needed), false otherwise
     /// - AccessibleIds: list of accessible dataset IDs (empty if AllAccessible is true)
     /// </summary>
-    public async Task<(bool AllAccessible, List<Guid> AccessibleIds)> GetAccessibleDataSetIdsAsync(CancellationToken cancellationToken = default)
+    public async Task<(bool AllAccessible, List<Guid> AccessibleIds)> GetAccessibleTranslationsSetsIdsAsync(CancellationToken cancellationToken = default)
     {
         // Root users have access to all datasets - no need to query
         if (await HasRootAccessAsync(cancellationToken))
@@ -104,20 +104,20 @@ public class AuthorizationService : IAuthorizationService
 
         // Pull all dataset IDs and AllowedIdentityIds from database
         // We need to do this in-memory because EF Core can't translate Contains() on the converted collection
-        var allDataSets = await _context.DataSets
+        var allTranslationsSets = await _context.TranslationsSets
             .Select(ds => new { ds.Id, ds.AllowedIdentityIds })
             .ToListAsync(cancellationToken);
 
         // Filter in memory:
         // 1. AllowedIdentityIds is empty (public access), OR
         // 2. Current user's ID is in AllowedIdentityIds
-        var accessibleDataSetIds = allDataSets
+        var accessibleTranslationsSetsIds = allTranslationsSets
             .Where(ds =>
                 ds.AllowedIdentityIds.Contains(currentUser.UserId))
             .Select(ds => ds.Id)
             .ToList();
 
-        return (AllAccessible: false, AccessibleIds: accessibleDataSetIds);
+        return (AllAccessible: false, AccessibleIds: accessibleTranslationsSetsIds);
     }
 }
 

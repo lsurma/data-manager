@@ -11,18 +11,18 @@ public interface IAuthorizationService
     Task<bool> HasRootAccessAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if the current user has access to a specific DataSet
+    /// Checks if the current user has access to a specific TranslationsSet
     /// </summary>
-    /// <param name="dataSetId">The ID of the DataSet to check access for</param>
+    /// <param name="translationsSetId">The ID of the TranslationsSet to check access for</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if user has access, false otherwise</returns>
-    Task<bool> CanAccessDataSetAsync(Guid dataSetId, CancellationToken cancellationToken = default);
+    Task<bool> CanAccessTranslationsSetAsync(Guid translationsSetId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets the list of DataSet IDs that the current user has access to.
+    /// Gets the list of TranslationsSet IDs that the current user has access to.
     /// Returns a tuple where:
     /// - AllAccessible: true if user has access to ALL datasets (no filtering needed), false otherwise
     /// - AccessibleIds: list of accessible dataset IDs (empty if AllAccessible is true)
     /// </summary>
-    Task<(bool AllAccessible, List<Guid> AccessibleIds)> GetAccessibleDataSetIdsAsync(CancellationToken cancellationToken = default);
+    Task<(bool AllAccessible, List<Guid> AccessibleIds)> GetAccessibleTranslationsSetsIdsAsync(CancellationToken cancellationToken = default);
 }

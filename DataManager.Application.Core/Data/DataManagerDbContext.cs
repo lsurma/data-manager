@@ -1,5 +1,5 @@
 using DataManager.Application.Core.Abstractions;
-using DataManager.Application.Core.Modules.DataSet;
+using DataManager.Application.Core.Modules.TranslationsSet;
 using DataManager.Application.Core.Modules.ProjectInstance;
 using DataManager.Application.Core.Modules.Translations;
 using DataManager.Authentication.Core;
@@ -20,7 +20,7 @@ public class DataManagerDbContext : DbContext
 
     public DbSet<ProjectInstance> ProjectInstances { get; set; }
 
-    public DbSet<DataSet> DataSets { get; set; }
+    public DbSet<TranslationsSet> TranslationsSets { get; set; }
 
     public DbSet<Translation> Translations { get; set; }
 

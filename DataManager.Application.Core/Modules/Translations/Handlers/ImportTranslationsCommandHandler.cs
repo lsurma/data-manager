@@ -35,7 +35,7 @@ public class ImportTranslationsCommandHandler : IRequestHandler<ImportTranslatio
                     InternalGroupName1 = translation.InternalGroupName1,
                     InternalGroupName2 = translation.InternalGroupName2,
                     ContentTemplate = translation.ContentTemplate,
-                    DataSetId = request.DataSetId,
+                    TranslationsSetId = request.TranslationsSetId,
                     IsDraftVersion = false
                 };
 

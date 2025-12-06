@@ -80,12 +80,12 @@ DataManager API/
 │   ├── Get Translation By ID
 │   ├── Create Translation
 │   └── Delete Translation
-├── DataSets/                  # CRUD operations for data sets
-│   ├── Get All DataSets
-│   ├── Get DataSets (Paginated & Searched)
-│   ├── Get DataSet By ID
-│   ├── Create DataSet
-│   └── Delete DataSet
+├── TranslationsSets/                  # CRUD operations for data sets
+│   ├── Get All TranslationsSets
+│   ├── Get TranslationsSets (Paginated & Searched)
+│   ├── Get TranslationsSet By ID
+│   ├── Create TranslationsSet
+│   └── Delete TranslationsSet
 ├── With API Key Auth/         # Example requests with API Key authentication
 │   ├── Get Project Instances (API Key)
 │   └── Get Translations (API Key)
@@ -141,7 +141,7 @@ The **DataManager - Local** environment contains these variables:
 | `jwtToken` | (empty) | JWT Bearer token (set when testing JWT auth) |
 | `instanceId` | (empty) | Sample Project Instance ID for testing |
 | `translationId` | (empty) | Sample Translation ID for testing |
-| `dataSetId` | (empty) | Sample DataSet ID for testing |
+| `dataSetId` | (empty) | Sample TranslationsSet ID for testing |
 | `paginationBody` | (JSON) | Reusable pagination parameters |
 
 ### Using Variables in Requests
@@ -182,7 +182,7 @@ This is the **default configuration** for local development - perfect for quick 
 
 **How to Test:**
 1. Make sure the API is running
-2. Use any request from the **ProjectInstances**, **Translations**, or **DataSets** folders
+2. Use any request from the **ProjectInstances**, **Translations**, or **TranslationsSets** folders
 3. Click **Send**
 4. No authentication headers needed!
 
@@ -190,7 +190,7 @@ This is the **default configuration** for local development - perfect for quick 
 - Get All Project Instances
 - Create Project Instance
 - Get All Translations
-- Create DataSet
+- Create TranslationsSet
 
 ---
 
@@ -471,8 +471,8 @@ JWT tokens expire (typically after 1 hour). If you get 401 Unauthorized:
 
 ### Workflow 3: Search and Filter
 
-**Search DataSets:**
-1. Open **DataSets → Get DataSets (Paginated & Searched)**
+**Search TranslationsSets:**
+1. Open **TranslationsSets → Get TranslationsSets (Paginated & Searched)**
 2. Body contains search term: `{"filtering":{"searchTerm":"prod"}}`
 3. This searches across all text fields
 4. Click **Send**

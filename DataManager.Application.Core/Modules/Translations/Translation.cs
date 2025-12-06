@@ -21,9 +21,9 @@ public class Translation : AuditableEntityBase
     /// </summary>
     public string? ContentTemplate { get; set; }
 
-    public Guid? DataSetId { get; set; }
+    public Guid? TranslationsSetId { get; set; }
 
-    public DataSet.DataSet? DataSet { get; set; }
+    public TranslationsSet.TranslationsSet? TranslationsSet { get; set; }
 
     /// <summary>
     /// Optional reference to the source Translation from which this translation was materialized.

@@ -18,7 +18,7 @@ The Translation entity now supports tracking the source translation for material
 ### 1. GetTranslationsFromHierarchyAsync (Virtual View)
 
 #### Purpose
-Fetches translations from a DataSet hierarchy with automatic deduplication based on priority. This is a "virtual view" - translations are fetched on-demand without being stored in the root dataset.
+Fetches translations from a TranslationsSet hierarchy with automatic deduplication based on priority. This is a "virtual view" - translations are fetched on-demand without being stored in the root dataset.
 
 #### Method Signature
 ```csharp
@@ -166,5 +166,5 @@ Both methods only work with translations where `IsCurrentVersion = true`. Draft 
 ### Migration: 20251205184538_ReplaceSourceDataSetWithSourceTranslation
 - Renamed `SourceDataSetId` to `SourceTranslationId`
 - Renamed `SourceDataSetLastSyncedAt` to `SourceTranslationLastSyncedAt`
-- Changed foreign key from DataSets to Translations (self-referencing)
+- Changed foreign key from TranslationsSets to Translations (self-referencing)
 - Maintains the same index for query performance
