@@ -36,6 +36,40 @@ The solution consists of 4 projects:
 - EF Core migrations in `DataManager.Application.Core/Data/Migrations`
 - Database is **auto-migrated and seeded** on API startup via `InitializeDatabaseAsync()` in `ServiceCollectionExtensions`
 
+### Authorization System
+
+The application uses a sophisticated authorization system to control access to TranslationsSets:
+
+- **`IAuthorizationService`**: Core authorization service with three main methods:
+  - `HasRootAccessAsync()`: Checks if user has root/admin access to all resources
+  - `CanAccessTranslationsSetAsync()`: Checks access to specific TranslationsSet
+  - `GetAccessibleTranslationsSetsIdsAsync()`: Returns list of accessible TranslationsSet IDs
+
+- **Authorization Pre-filtering**: Query services like `TranslationsQueryService` and `TranslationsSetsQueryService` automatically apply authorization filters in their `PrepareQueryAsync()` methods
+
+- **`OmitAuthorizationScope`**: Performance optimization for bypassing redundant authorization checks:
+  ```csharp
+  // Authorization is normally performed
+  var result1 = await _queryService.PrepareQueryAsync(...);
+  
+  // Within this scope, authorization is omitted
+  using (new OmitAuthorizationScope())
+  {
+      var result2 = await _queryService.PrepareQueryAsync(...);
+      // No authorization checks - useful when already validated
+  }
+  ```
+  - Uses `AsyncLocal<bool>` for thread-safe async context tracking
+  - Properly restores previous state when disposed
+  - See `OMIT_AUTHORIZATION_SCOPE.md` for detailed usage examples
+
+**When to use OmitAuthorizationScope:**
+- Authorization already performed in outer query/command
+- Fetching related entities based on already-authorized data
+- Avoid redundant database queries for permission checks
+
+**Security Note:** Only use `OmitAuthorizationScope` when you're certain authorization has already been validated to prevent security vulnerabilities.
+
 ### Pagination and Querying System
 
 The application has a sophisticated pagination/filtering system built around these key components:

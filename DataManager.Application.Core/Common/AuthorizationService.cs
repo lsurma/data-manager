@@ -32,6 +32,12 @@ public class AuthorizationService : IAuthorizationService
     /// </summary>
     public Task<bool> HasRootAccessAsync(CancellationToken cancellationToken = default)
     {
+        // If authorization is omitted in the current scope, treat as root access
+        if (OmitAuthorizationScope.ShouldOmitAuthorization)
+        {
+            return Task.FromResult(true);
+        }
+
         var currentUser = _currentUserService.GetCurrentUser();
 
         // System users always have root access
