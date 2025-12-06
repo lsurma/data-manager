@@ -10,5 +10,6 @@ riderModule.iml
 *.db-wal
 db/
 .claude
+/.claude
 # Generated Blazor output in Azure Functions (regenerated on build)
 DataManager.Host.AzFuncAPI/wwwroot/wa_output.log
