@@ -109,8 +109,9 @@ public partial class TranslationsSetPanel : IDialogContentComponent<Translations
     }
 
     /// <summary>
-    /// Parses the WebhookUrlsText into a list of valid URLs.
+    /// Parses the WebhookUrlsText into a list of trimmed URLs.
     /// Supports newlines, semicolons, and commas as separators.
+    /// Note: URL format validation is performed in the handler.
     /// </summary>
     private List<string> ParseWebhookUrls()
     {

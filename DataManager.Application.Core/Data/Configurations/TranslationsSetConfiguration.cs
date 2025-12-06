@@ -41,10 +41,15 @@ public class TranslationsSetConfiguration : AuditableEntityConfiguration<Transla
             .HasMaxLength(500);
 
         // Store WebhookUrls as comma-separated string in SQLite
+        // Invalid URLs are filtered out at the handler level before storage
         builder.Property(e => e.WebhookUrls)
             .HasConversion(
                 v => !v.Any() ? string.Empty : string.Join(',', v.Select(uri => uri.ToString())),
-                v => string.IsNullOrWhiteSpace(v) ? new List<Uri>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(s => new Uri(s)).ToList()
+                v => string.IsNullOrWhiteSpace(v) 
+                    ? new List<Uri>() 
+                    : v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(s => new Uri(s))
+                        .ToList()
             )
             .HasColumnType("TEXT")
             .IsRequired();
