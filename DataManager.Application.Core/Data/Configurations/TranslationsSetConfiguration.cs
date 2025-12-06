@@ -28,14 +28,14 @@ public class TranslationsSetConfiguration : AuditableEntityConfiguration<Transla
             .HasColumnType("TEXT");
 
         // Store AvailableCultures as comma-separated string in SQLite
-        // Null means all cultures are available
+        // Empty string means all cultures are available
         builder.Property(e => e.AvailableCultures)
             .HasConversion(
-                v => v == null || !v.Any() ? null : string.Join(',', v),
-                v => string.IsNullOrWhiteSpace(v) ? null : v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                v => !v.Any() ? string.Empty : string.Join(',', v),
+                v => string.IsNullOrWhiteSpace(v) ? new List<string>() : v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
             )
             .HasColumnType("TEXT")
-            .IsRequired(false);
+            .IsRequired();
 
         // Configure many-to-many relationship through TranslationsSetInclude
         builder.HasMany(e => e.Includes)
