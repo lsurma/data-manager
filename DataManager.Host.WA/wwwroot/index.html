@@ -58,6 +58,17 @@
             anchorElement.remove();
             URL.revokeObjectURL(url);
         }
+
+        function downloadFile(fileName, contentType, byteArray) {
+            const blob = new Blob([byteArray], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const anchorElement = document.createElement('a');
+            anchorElement.href = url;
+            anchorElement.download = fileName ?? '';
+            anchorElement.click();
+            anchorElement.remove();
+            URL.revokeObjectURL(url);
+        }
     </script>
 
 </body>

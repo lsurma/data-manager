@@ -5,6 +5,7 @@ using DataManager.Application.Contracts.Modules.Translations;
 using DataManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace DataManager.Host.WA.Modules.Translations;
 
@@ -33,7 +34,11 @@ public partial class TranslationsPage : ComponentBase
     [Inject]
     private IRequestSender RequestSender { get; set; } = null!;
 
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = null!;
+
     private List<TranslationsSetDto> AllTranslationsSets => AppContext.TranslationsSets;
+    private bool IsExporting { get; set; }
 
     private void OnDataSetFilterChanged(Guid? translationsSetId)
     {
@@ -45,5 +50,44 @@ public partial class TranslationsPage : ComponentBase
     {
         var isSelected = TranslationsSetId == translationsSetId;
         return isSelected ? Appearance.Accent : Appearance.Neutral;
+    }
+
+    private async Task OnExportToExcelAsync()
+    {
+        if (TranslationsSetId == null)
+        {
+            return;
+        }
+
+        try
+        {
+            IsExporting = true;
+            StateHasChanged();
+
+            var query = new ExportTranslationsQuery
+            {
+                Format = "xlsx",
+                Filtering = new FilteringParameters
+                {
+                    QueryFilters = new List<IQueryFilter>
+                    {
+                        new TranslationsSetIdFilter { Value = TranslationsSetId.Value }
+                    }
+                }
+            };
+
+            var downloadedFile = await RequestSender.DownloadFileAsync(query);
+
+            await JSRuntime.InvokeVoidAsync("downloadFile", downloadedFile.FileName, downloadedFile.ContentType, downloadedFile.Content);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Export failed: {ex.Message}");
+        }
+        finally
+        {
+            IsExporting = false;
+            StateHasChanged();
+        }
     }
 }

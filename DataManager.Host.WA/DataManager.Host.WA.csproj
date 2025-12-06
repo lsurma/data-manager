@@ -24,6 +24,7 @@
     </Target>
 
     <ItemGroup>
+        <PackageReference Include="Blazored.TextEditor" Version="1.1.3" />
         <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.0" PrivateAssets="all" />
@@ -40,6 +41,10 @@
 
     <ItemGroup>
       <Folder Include="Models\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EditorConfigFiles Remove=".editorconfig" />
     </ItemGroup>
 
 </Project>

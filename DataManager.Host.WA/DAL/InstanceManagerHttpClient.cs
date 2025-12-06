@@ -94,6 +94,39 @@ public class DataManagerHttpClient
     }
 
     /// <summary>
+    /// Downloads a file from the API and returns it with metadata (content type, filename)
+    /// </summary>
+    public async Task<DownloadedFile> GetFileAsync(string requestUri, CancellationToken cancellationToken = default)
+    {
+        var response = await Client.GetAsync(requestUri, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowApiErrorExceptionAsync(response, cancellationToken);
+        }
+
+        var content = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+        var fileName = "download.bin";
+
+        // Try to get filename from Content-Disposition header
+        if (response.Content.Headers.ContentDisposition?.FileNameStar != null)
+        {
+            fileName = response.Content.Headers.ContentDisposition.FileNameStar;
+        }
+        else if (response.Content.Headers.ContentDisposition?.FileName != null)
+        {
+            fileName = response.Content.Headers.ContentDisposition.FileName.Trim('"');
+        }
+
+        return new DownloadedFile
+        {
+            Content = content,
+            ContentType = contentType,
+            FileName = fileName
+        };
+    }
+
+    /// <summary>
     /// Reads the error response from the API and throws an ApiErrorException with detailed error information.
     /// </summary>
     private static async Task ThrowApiErrorExceptionAsync(HttpResponseMessage response, CancellationToken cancellationToken)

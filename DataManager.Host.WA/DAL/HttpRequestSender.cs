@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using DataManager.Application.Contracts;
+using DataManager.Application.Contracts.Common;
 using MediatR;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
@@ -81,6 +82,47 @@ public class HttpRequestSender : IRequestSender
     public Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
         return SendAsync<TResponse>((object)request, cancellationToken);
+    }
+
+    public async Task<DownloadedFile> DownloadFileAsync(object request, CancellationToken cancellationToken = default)
+    {
+        var requestName = GetRequestName(request.GetType());
+        var requestType = request.GetType();
+
+        try
+        {
+            // Determine if this is a command or query
+            bool isCommand = IsCommandType(requestType);
+
+            if (isCommand)
+            {
+                throw new InvalidOperationException("File downloads are only supported for queries, not commands.");
+            }
+
+            // Build the URL for file download
+            var requestAsJson = JsonSerializer.Serialize(request);
+            var urlEncodedRequest = WebUtility.UrlEncode(requestAsJson);
+
+            return await _httpClient.GetFileAsync($"query/{requestName}?body={urlEncodedRequest}", cancellationToken);
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            if (_configuration.GetValue<bool>("Authentication:RequireAuthentication") == false)
+            {
+                throw;
+            }
+            else
+            {
+                // Redirect to login if access token is not available
+                exception.Redirect();
+                throw;
+            }
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            // Handle 401 Unauthorized - token might be expired or invalid
+            throw new InvalidOperationException("Authentication failed. Please log in again.", ex);
+        }
     }
 
     /// <summary>

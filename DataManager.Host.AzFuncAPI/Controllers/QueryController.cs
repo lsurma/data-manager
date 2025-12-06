@@ -90,6 +90,12 @@ public class QueryController
             // Send through MediatR
             var result = await _mediator.Send(request);
 
+            // Check if result is a Stream (file download)
+            if (result is Stream stream)
+            {
+                return CreateFileStreamResult(stream, requestType, request);
+            }
+
             return new JsonResult(result, new JsonSerializerOptions
             {
                 ReferenceHandler = ReferenceHandler.IgnoreCycles
@@ -105,6 +111,42 @@ public class QueryController
             _logger.LogError(ex, "Error processing query: {RequestName}", requestName);
             return new BadRequestObjectResult(new { error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Creates a FileStreamResult from a Stream, determining the content type and filename based on the request.
+    /// </summary>
+    private FileStreamResult CreateFileStreamResult(Stream stream, Type requestType, object request)
+    {
+        string contentType = "application/octet-stream";
+        string fileExtension = "bin";
+        string fileName = $"export_{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+        // Try to get format from request if it has a Format property
+        var formatProperty = requestType.GetProperty("Format");
+        if (formatProperty != null)
+        {
+            var format = formatProperty.GetValue(request)?.ToString()?.ToLowerInvariant() ?? "csv";
+
+            switch (format)
+            {
+                case "xlsx":
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    fileExtension = "xlsx";
+                    fileName = "translations";
+                    break;
+                case "csv":
+                    contentType = "text/csv";
+                    fileExtension = "csv";
+                    fileName = "translations";
+                    break;
+            }
+        }
+
+        return new FileStreamResult(stream, contentType)
+        {
+            FileDownloadName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}.{fileExtension}"
+        };
     }
 
 }

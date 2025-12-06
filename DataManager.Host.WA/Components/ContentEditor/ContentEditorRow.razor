@@ -1,3 +1,5 @@
+@implements IDisposable
+
 @if (Item != null)
 {
     <div class="content-editor-row" style="margin-bottom: 16px; width: 100%;">
@@ -30,6 +32,46 @@
                     OnDidChangeModelContent="HandleMonacoContentChanged"
                     @ref="MonacoEditorRef" />
                 break;
+
+            case ContentEditorType.RichTextEditor:
+                <div class="rich-text-editor-wrapper">
+                    <BlazoredTextEditor
+                        @ref="RichTextEditorRef"
+                        Placeholder="Enter content..."
+                        DebounceInterval="300">
+                        <ToolbarContent>
+                            <select class="ql-header">
+                                <option selected=""></option>
+                                <option value="1"></option>
+                                <option value="2"></option>
+                                <option value="3"></option>
+                                <option value="4"></option>
+                                <option value="5"></option>
+                            </select>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                                <button class="ql-strike"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <select class="ql-color"></select>
+                                <select class="ql-background"></select>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-link"></button>
+                            </span>
+                        </ToolbarContent>
+                        <EditorContent>
+                            @((MarkupString)(Item.Content ?? string.Empty))
+                        </EditorContent>
+                    </BlazoredTextEditor>
+                </div>
+                break;
         }
     </div>
 }
@@ -39,6 +81,29 @@
         height: 200px;
         border: 1px solid var(--neutral-stroke-rest);
         border-radius: 4px;
+    }
+
+    .rich-text-editor-wrapper {
+        width: 100%;
+        border: 1px solid var(--neutral-stroke-rest);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .rich-text-editor-wrapper ::deep .ql-toolbar {
+        background-color: var(--neutral-fill-layer-rest);
+        border: none;
+        border-bottom: 1px solid var(--neutral-stroke-rest);
+    }
+
+    .rich-text-editor-wrapper ::deep .ql-container {
+        min-height: 200px;
+        border: none;
+        font-family: var(--body-font);
+    }
+
+    .rich-text-editor-wrapper ::deep .ql-editor {
+        min-height: 200px;
     }
 </style>
 
@@ -50,7 +115,11 @@
     public ContentEditorType EditorType { get; set; } = ContentEditorType.TextInput;
 
     private StandaloneCodeEditor? MonacoEditorRef { get; set; }
+    private BlazoredTextEditor? RichTextEditorRef { get; set; }
     private bool _shouldUpdateMonaco = false;
+    private bool _shouldUpdateRichText = false;
+    private System.Threading.Timer? _richTextChangeTimer;
+    private string? _lastRichTextContent;
 
     public override async Task SetParametersAsync(ParameterView parameters)
     {
@@ -62,6 +131,19 @@
         if (previousEditorType != EditorType && EditorType == ContentEditorType.MonacoEditor)
         {
             _shouldUpdateMonaco = true;
+            StopRichTextChangeTimer();
+        }
+
+        // Detect when EditorType changes to RichTextEditor
+        if (previousEditorType != EditorType && EditorType == ContentEditorType.RichTextEditor)
+        {
+            _shouldUpdateRichText = true;
+            _lastRichTextContent = Item?.Content;
+            StartRichTextChangeTimer();
+        }
+        else if (previousEditorType == ContentEditorType.RichTextEditor && EditorType != ContentEditorType.RichTextEditor)
+        {
+            StopRichTextChangeTimer();
         }
     }
 
@@ -72,6 +154,49 @@
         {
             _shouldUpdateMonaco = false;
             await UpdateMonacoEditorWithRetryAsync(Item.Content ?? string.Empty);
+        }
+
+        // Update Rich Text Editor value when switching to it from another editor type
+        if (_shouldUpdateRichText && RichTextEditorRef != null && Item != null)
+        {
+            _shouldUpdateRichText = false;
+            await UpdateRichTextEditorWithRetryAsync(Item.Content ?? string.Empty);
+        }
+    }
+
+    private void StartRichTextChangeTimer()
+    {
+        _richTextChangeTimer?.Dispose();
+        _richTextChangeTimer = new System.Threading.Timer(async _ =>
+        {
+            await CheckRichTextChanges();
+        }, null, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(500));
+    }
+
+    private void StopRichTextChangeTimer()
+    {
+        _richTextChangeTimer?.Dispose();
+        _richTextChangeTimer = null;
+    }
+
+    private async Task CheckRichTextChanges()
+    {
+        if (RichTextEditorRef != null && Item != null)
+        {
+            try
+            {
+                var currentContent = await RichTextEditorRef.GetHTML();
+                if (currentContent != _lastRichTextContent)
+                {
+                    _lastRichTextContent = currentContent;
+                    Item.Content = currentContent;
+                    await Item.OnContentChanged.InvokeAsync(currentContent);
+                }
+            }
+            catch
+            {
+                // Ignore errors during polling
+            }
         }
     }
 
@@ -90,6 +215,30 @@
             catch (Exception)
             {
                 // Monaco Editor might not be fully rendered in DOM yet
+                if (attempt < maxRetries - 1)
+                {
+                    await Task.Delay(delayMs);
+                }
+            }
+        }
+    }
+
+    private async Task UpdateRichTextEditorWithRetryAsync(string value, int maxRetries = 3, int delayMs = 100)
+    {
+        for (int attempt = 0; attempt < maxRetries; attempt++)
+        {
+            try
+            {
+                if (RichTextEditorRef != null)
+                {
+                    await RichTextEditorRef.LoadHTMLContent(value);
+                    _lastRichTextContent = value;
+                    return; // Success
+                }
+            }
+            catch (Exception)
+            {
+                // Rich Text Editor might not be fully rendered in DOM yet
                 if (attempt < maxRetries - 1)
                 {
                     await Task.Delay(delayMs);
@@ -132,5 +281,10 @@
             Item.Content = newValue;
             await Item.OnContentChanged.InvokeAsync(newValue);
         }
+    }
+
+    public void Dispose()
+    {
+        StopRichTextChangeTimer();
     }
 }

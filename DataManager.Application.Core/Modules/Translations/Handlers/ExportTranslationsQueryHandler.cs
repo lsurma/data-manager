@@ -28,7 +28,7 @@ public class ExportTranslationsQueryHandler : IRequestHandler<ExportTranslations
             },
             Filtering = new FilteringParameters
             {
-                QueryFilters = request.Filtering?.QueryFilters
+                QueryFilters = request.Filtering?.QueryFilters ?? []
             }
         };
 

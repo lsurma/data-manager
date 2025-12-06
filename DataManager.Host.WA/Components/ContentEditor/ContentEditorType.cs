@@ -4,5 +4,6 @@ public enum ContentEditorType
 {
     TextInput = 1,
     TextArea = 2,
-    MonacoEditor = 3
+    MonacoEditor = 3,
+    RichTextEditor = 4
 }
