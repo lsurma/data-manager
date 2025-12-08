@@ -239,31 +239,20 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
 
     private void OnSearchChanged()
     {
-        _currentQuery = new GetTranslationsQuery
-        {
-            Filtering = new FilteringParameters
-            {
-                QueryFilters = BuildQueryFilters()
-            },
-            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
-        };
-        RefreshToken = Guid.NewGuid().ToString();
+        RefreshQueryWithFilters();
     }
 
     private void OnCultureFilterChanged()
     {
-        _currentQuery = new GetTranslationsQuery
-        {
-            Filtering = new FilteringParameters
-            {
-                QueryFilters = BuildQueryFilters()
-            },
-            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
-        };
-        RefreshToken = Guid.NewGuid().ToString();
+        RefreshQueryWithFilters();
     }
 
     private void OnNotFilledFilterChanged()
+    {
+        RefreshQueryWithFilters();
+    }
+
+    private void RefreshQueryWithFilters()
     {
         _currentQuery = new GetTranslationsQuery
         {
