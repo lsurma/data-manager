@@ -1,0 +1,17 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
+  },
+  "ConnectionStrings": {
+    "DataManagerDb": "Data Source=db/DataManager.db"
+  },
+  "OpenRouter": {
+    "ApiKey": "YOUR_OPENROUTER_API_KEY_HERE",
+    "Model": "google/gemma-2-9b-it:free"
+  },
+  "Authorization": {
+    "RootUsers": []
+  }
+}

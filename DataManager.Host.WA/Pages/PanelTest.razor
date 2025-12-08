@@ -1,0 +1,22 @@
+@page "/paneltest"
+
+<h3>Panel Test</h3>
+
+<FluentButton Appearance="Appearance.Accent" OnClick="@(() => _panelHidden = false)">Open Panel</FluentButton>
+
+<FluentDialog  @bind-Hidden="@_panelHidden"
+              Modal="true">
+    <Header>
+        <h2>My Panel</h2>
+    </Header>
+    <Body>
+        <p>This is a panel that is rendered as a component and not through the DialogService.</p>
+    </Body>
+    <Footer>
+        <FluentButton Appearance="Appearance.Accent" OnClick="@(() => _panelHidden = true)">Close</FluentButton>
+    </Footer>
+</FluentDialog>
+
+@code {
+    private bool _panelHidden = true;
+}

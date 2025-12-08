@@ -1,0 +1,35 @@
+﻿<div class="@("progress-container " + (InProgress ? "in-progress" : "") + (LightOverlay ? " light-overlay" : ""))">
+    @if(InProgress && !LightOverlay)
+    {
+        <div class="loading-template">
+            @if (LoadingTemplate != null)
+            {
+                @LoadingTemplate
+            }
+            else
+            {
+                <FluentProgressRing />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="child-content">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = null!;
+    
+    [Parameter]
+    public RenderFragment? LoadingTemplate { get; set; } = null!;
+    
+    [Parameter]
+    public bool InProgress { get; set; }
+    
+    [Parameter]
+    public bool LightOverlay { get; set; } = false;
+}

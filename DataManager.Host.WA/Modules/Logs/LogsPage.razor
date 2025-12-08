@@ -1,0 +1,100 @@
+@page "/logs"
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.Log
+@using DataManager.Host.WA.Components
+
+<h3>System Logs</h3>
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<DataLoader TResponse="PaginatedList<LogDto>"
+            TQuery="GetLogsQuery"
+            Query="@CurrentQuery"
+            RefreshToken="@RefreshToken"
+            OnDataFetched="HandleDataFetched" />
+
+<PaginatedDataGrid TItem="LogDto"
+                   Items="@AllLogs"
+                   TotalItems="@TotalItems"
+                   PageSize="@PageSize"
+                   SearchPlaceholder="Search logs..."
+                   @bind-SearchTerm="@SearchTerm"
+                   OnSearchChanged="@OnSearchChanged"
+                   LoadData="@OnLoadData"
+                   SettingsStorageKey="grid-settings-logs">
+    <Columns>
+        <RadzenDataGridColumn TItem="LogDto" Property="StartedAt" Title="Started At" Width="180px" FormatString="{0:yyyy-MM-dd HH:mm:ss}" />
+        <RadzenDataGridColumn TItem="LogDto" Property="LogType" Title="Type" Width="100px" />
+        <RadzenDataGridColumn TItem="LogDto" Property="Action" Title="Action" Width="100px" />
+        <RadzenDataGridColumn TItem="LogDto" Property="Target" Title="Target" Width="300px">
+            <Template Context="log">
+                @if (!string.IsNullOrEmpty(log.Target))
+                {
+                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@log.Target">
+                        @log.Target
+                    </div>
+                }
+                else
+                {
+                    <text>-</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="LogDto" Property="Status" Title="Status" Width="100px">
+            <Template Context="log">
+                @if (log.Status == "Success")
+                {
+                    <span style="color: green; font-weight: bold;">✓ @log.Status</span>
+                }
+                else if (log.Status == "Failed")
+                {
+                    <span style="color: red; font-weight: bold;">✗ @log.Status</span>
+                }
+                else
+                {
+                    <span style="color: gray;">⏳ @log.Status</span>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="LogDto" Property="EndedAt" Title="Ended At" Width="180px">
+            <Template Context="log">
+                @if (log.EndedAt.HasValue)
+                {
+                    @log.EndedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")
+                }
+                else
+                {
+                    <text>-</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="LogDto" Property="ErrorMessage" Title="Error" Width="300px">
+            <Template Context="log">
+                @if (!string.IsNullOrEmpty(log.ErrorMessage))
+                {
+                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: red;" title="@log.ErrorMessage">
+                        @log.ErrorMessage
+                    </div>
+                }
+                else
+                {
+                    <text>-</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="LogDto" Property="Details" Title="Details" Width="300px">
+            <Template Context="log">
+                @if (!string.IsNullOrEmpty(log.Details))
+                {
+                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@log.Details">
+                        @log.Details
+                    </div>
+                }
+                else
+                {
+                    <text>-</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</PaginatedDataGrid>

@@ -1,0 +1,21 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+
+@if (Visible)
+{
+    <FluentSelect TOption="string"
+                  Items="@Items"
+                  @bind-Value="@InternalValue"
+                  Placeholder="@Placeholder"
+                  Style="@Style">
+        <OptionTemplate Context="option">
+            @if (OptionTemplate != null)
+            {
+                @OptionTemplate(option)
+            }
+            else
+            {
+                @option
+            }
+        </OptionTemplate>
+    </FluentSelect>
+}

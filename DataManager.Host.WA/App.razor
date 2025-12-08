@@ -1,0 +1,106 @@
+﻿@using DataManager.Host.WA.Layout
+@using DataManager.Host.WA.Services
+
+<CascadingAuthenticationState>
+    <CascadingValue Value="AppContext">
+        <Router AppAssembly="@typeof(App).Assembly">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized>
+                        @if (context.User.Identity?.IsAuthenticated != true)
+                        {
+                            <RedirectToLogin />
+                        }
+                        else
+                        {
+                            <p role="alert">You are not authorized to access this resource.</p>
+                        }
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </Found>
+            <NotFound>
+                <PageTitle>Not found</PageTitle>
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <p role="alert">Sorry, there's nothing at this address.</p>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </CascadingValue>
+</CascadingAuthenticationState>
+
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IConfiguration Configuration
+@inject AppDataContext AppContext
+@inject ILogger<App> Logger
+@inject ISettingsService SettingsService
+
+@code {
+    private bool IsRedirecting { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {   
+        // Load and apply theme settings
+        await LoadAndApplyThemeAsync();
+        
+        if(Configuration.GetValue<bool>("Authentication:RequireAuthentication") == false)
+        {
+            IsRedirecting = false;
+            
+            // Load app data context when not requiring authentication
+            if (!AppContext.IsLoaded)
+            {
+                try
+                {
+                    await AppContext.LoadDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to load app data context");
+                }
+            }
+            
+            return;
+        }
+        
+        var currentUri = Navigation.Uri;
+        var isAuthenticationPage = currentUri.Contains("authentication");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState?.User?.Identity?.IsAuthenticated != true && !isAuthenticationPage)
+        {
+            Navigation.NavigateTo("authentication/login", replace: true);
+        }
+        else
+        {
+            IsRedirecting = false;
+            
+            // Load app data context after successful authentication
+            if (!AppContext.IsLoaded && authState?.User?.Identity?.IsAuthenticated == true)
+            {
+                try
+                {
+                    await AppContext.LoadDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to load app data context");
+                }
+            }
+        }
+    }
+    
+    private async Task LoadAndApplyThemeAsync()
+    {
+        try
+        {
+            var settings = await SettingsService.GetSettingsAsync();
+            await SettingsService.ApplyThemeAsync(settings.Theme);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load and apply theme settings");
+        }
+    }
+}

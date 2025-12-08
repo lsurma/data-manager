@@ -1,0 +1,77 @@
+@using System.Data
+@using DataManager.Host.WA.Modules.Translations.Models
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<ImportTranslationsPanelParameters>
+
+<FluentDialogBody>
+    <InputFile OnChange="OnFileChanged" accept=".xls,.xlsx" />
+
+    @if (IsLoadingFile)
+    {
+        <FluentProgressRing />
+        <p>Loading file...</p>
+    }
+    else if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            @ErrorMessage
+        </FluentMessageBar>
+    }
+    else if (ExcelDataTable != null)
+    {
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            <FluentMessageBar Intent="MessageIntent.Info">
+                File loaded successfully. Map the columns and click "Import" to proceed.
+            </FluentMessageBar>
+
+            <RadzenDataGrid
+                Data="@ExcelDataRows"
+                TItem="DataRow"
+                AllowFiltering="true"
+                AllowColumnResize="true"
+                AllowSorting="true"
+                AllowPaging="false"
+                AllowVirtualization="true"
+                Style="height: calc(100vh - 250px);">
+                <Columns>
+                    @foreach (DataColumn col in ExcelDataTable.Columns)
+                    {
+                        <RadzenDataGridColumn TItem="DataRow" Title="@col.ColumnName">
+                            <HeaderTemplate>
+                                @col.ColumnName <br />
+                                <RadzenDropDown @bind-Value="ColumnMappings[col.ColumnName]" Data="@TargetColumns" />
+                            </HeaderTemplate>
+
+                            <Template Context="row">
+                                @row[col.ColumnName]
+                            </Template>
+                        </RadzenDataGridColumn>
+                    }
+                </Columns>
+            </RadzenDataGrid>
+        </FluentStack>
+    }
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    @if (ExcelDataTable != null)
+    {
+        <FluentButton Appearance="Appearance.Accent"
+                      OnClick="@HandleSubmitAsync"
+                      Disabled="@IsImporting"
+                      Loading="@IsImporting">
+            Import
+        </FluentButton>
+        
+        <FluentButton Appearance="Appearance.Neutral" 
+                      OnClick="@HandleResetAsync"
+                      Disabled="@IsImporting">
+            Reset
+        </FluentButton>
+    }
+    
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@HandleCancelAsync">
+        Close
+    </FluentButton>
+</FluentDialogFooter>

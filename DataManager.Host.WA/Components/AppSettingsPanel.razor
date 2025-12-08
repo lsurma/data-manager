@@ -1,0 +1,68 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@using DataManager.Host.WA.Models
+@implements IDialogContentComponent<AppSettingsPanelParameters>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="24">
+        
+        <div style="width: 100%;">
+            <FluentLabel Typo="Typography.H6" Style="margin-bottom: 12px;">Theme</FluentLabel>
+            
+            <FluentSelect 
+                @bind-Value="SelectedThemeName"
+                @bind-Value:after="OnThemeChangedAsync"
+                Items="@ThemeNames"
+                Style="width: 100%; margin-bottom: 16px;"
+                Label="Predefined Themes">
+                <OptionTemplate>@context</OptionTemplate>
+            </FluentSelect>
+            
+            <FluentLabel Style="margin-bottom: 8px; display: block;">Primary Color</FluentLabel>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <input 
+                    type="color" 
+                    value="@PrimaryColor"
+                    @onchange="@(e => OnColorChangedAsync(e.Value?.ToString() ?? PrimaryColor))"
+                    style="width: 80px; height: 40px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;" />
+                <FluentTextField 
+                    Value="@PrimaryColor"
+                    ValueChanged="@OnColorChangedAsync"
+                    Style="flex: 1;"
+                    Placeholder="#1060ff" />
+            </div>
+            
+            <FluentLabel Style="margin-top: 16px; margin-bottom: 8px; display: block; font-size: 14px; color: #666;">
+                Preview
+            </FluentLabel>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <FluentButton Appearance="Appearance.Accent" Disabled>Accent Button</FluentButton>
+                <FluentButton Appearance="Appearance.Neutral">Neutral Button</FluentButton>
+            </div>
+        </div>
+
+    </FluentStack>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" OnClick="HandleSaveAsync" Disabled="@IsSaving">
+        @if (IsSaving)
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size16.ArrowSync())" Color="Color.Neutral" />
+            <span>Saving...</span>
+        }
+        else
+        {
+            <span>Save</span>
+        }
+    </FluentButton>
+    
+    <FluentButton Appearance="Appearance.Neutral" OnClick="HandleRestoreDefaultsAsync" Disabled="@IsSaving">
+        Restore Defaults
+    </FluentButton>
+    
+    <FluentButton Appearance="Appearance.Neutral" OnClick="HandleCancelAsync">
+        Close
+    </FluentButton>
+</FluentDialogFooter>

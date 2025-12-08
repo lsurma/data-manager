@@ -1,0 +1,80 @@
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.Translations
+@using DataManager.Host.WA.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+
+<DataLoader TResponse="PaginatedList<TranslationDto>"
+            TQuery="GetTranslationsQuery"
+            Query="@_currentQuery"
+            RefreshToken="@RefreshToken"
+            OnDataFetched="HandleDataFetched"/>
+
+<PaginatedDataGrid TItem="TranslationDto"
+                   Items="@AllTranslations"
+                   TotalItems="@TotalItems"
+                   PageSize="@PageSize"
+                   SearchPlaceholder="Search translations..."
+                   @bind-SearchTerm="@SearchTerm"
+                   OnSearchChanged="@OnSearchChanged"
+                   LoadData="@OnLoadData"
+                   SelectedRows="@SelectedRows"
+                   SelectedRowsChanged="@OnDataGridSelectionChanged"
+                   SettingsStorageKey="grid-settings-translations">
+    <ToolbarTemplate>
+        @ToolbarTemplate
+    </ToolbarTemplate>
+
+    <AdditionalFilters>
+        <GridSelectFilter Items="@(new List<string> { "" }.Concat(AvailableCultures).ToList())"
+                          @bind-Value="@CultureNameFilter"
+                          OnValueChangedCallback="@OnCultureFilterChanged"
+                          Placeholder="All Cultures"
+                          Visible="@IsFilterVisible("culture")"
+                          Style="width: 250px;">
+            <OptionTemplate Context="culture">
+                @if (string.IsNullOrEmpty(culture))
+                {
+                    <text>All Cultures</text>
+                }
+                else
+                {
+                    @culture
+                }
+            </OptionTemplate>
+        </GridSelectFilter>
+    </AdditionalFilters>
+    <AdditionalToolbar>
+        <FluentButton IconStart="@(new Size20.Filter())" OnClick="@OpenFilterPanelAsync" Title="Filter settings" />
+    </AdditionalToolbar>
+    <Columns>
+        <RadzenDataGridColumn TItem="TranslationDto" Visible="false" Property="Id" Title="Id" Width="120px"/>
+
+        <RadzenDataGridColumn TItem="TranslationDto" Visible="false" Property="InternalGroupName1" Title="Group 1"
+                              Width="120px"/>
+        <RadzenDataGridColumn TItem="TranslationDto" Visible="false" Property="InternalGroupName2" Title="Group 2"
+                              Width="120px"/>
+
+        <RadzenDataGridColumn TItem="TranslationDto" Property="CultureName" Title="Culture" Width="80px"/>
+        <RadzenDataGridColumn TItem="TranslationDto" Property="ResourceName" Title="Resource" Width="150px"/>
+        <RadzenDataGridColumn TItem="TranslationDto" Property="TranslationName" Title="Key" Width="150px"/>
+
+        <RadzenDataGridColumn TItem="TranslationDto" Property="Content" Title="Content">
+            <Template Context="translation">
+                @if (translation.Content.Length > 100)
+                {
+                    <text>@translation.Content.Substring(0, 100)...</text>
+                }
+                else
+                {
+                    <text>@translation.Content</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="TranslationDto" Property="CreatedAt" Title="Created At"
+                              FormatString="{0:yyyy-MM-dd HH:mm}" Width="150px"/>
+        <RadzenDataGridColumn TItem="TranslationDto" Property="UpdatedAt" Title="Updated At"
+                              FormatString="{0:yyyy-MM-dd HH:mm}" Width="150px"/>
+
+    </Columns>
+</PaginatedDataGrid>

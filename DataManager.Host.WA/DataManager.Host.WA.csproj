@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <PublishTrimmed>false</PublishTrimmed>
+        <TrimMode>link</TrimMode>
+        <WasmEnableOptimizations>false</WasmEnableOptimizations>
+        <RunAOTCompilation>false</RunAOTCompilation>
+        <!-- Base href for the Blazor app. Can be overridden at build/publish time.
+             Example: dotnet publish -p:BaseHref=/ui/ -->
+        <BaseHref Condition="'$(BaseHref)' == ''">/</BaseHref>
+    </PropertyGroup>
+
+    <!-- Replace base href in index.html during publish -->
+    <Target Name="ReplaceBaseHref" AfterTargets="Publish" Condition="Exists('$(PublishDir)wwwroot/index.html')">
+        <PropertyGroup>
+            <IndexHtmlPath>$(PublishDir)wwwroot/index.html</IndexHtmlPath>
+        </PropertyGroup>
+        <Message Importance="high" Text="Setting base href to: $(BaseHref)" />
+        <WriteLinesToFile File="$(IndexHtmlPath).tmp" Lines="$([System.IO.File]::ReadAllText('$(IndexHtmlPath)').Replace('&lt;base href=&quot;/&quot; /&gt;', '&lt;base href=&quot;$(BaseHref)&quot; /&gt;'))" Overwrite="true" />
+        <Move SourceFiles="$(IndexHtmlPath).tmp" DestinationFiles="$(IndexHtmlPath)" />
+    </Target>
+
+    <ItemGroup>
+        <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.0" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="10.0.0" />
+        <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.13.1" />
+        <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.13.1" />
+        <PackageReference Include="Radzen.Blazor" Version="8.1.7" />
+        <PackageReference Include="BlazorMonaco" Version="3.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DataManager.Application.Contracts\DataManager.Application.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Models\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EditorConfigFiles Remove=".editorconfig" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,47 @@
+@using DataManager.Host.WA.Components
+@using DataManager.Host.WA.Components.ContentEditor
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<TranslationPanelParameters>
+
+<FluentDialogBody>
+    <Progress InProgress="IsLoading" LightOverlay="@false" >
+        <EditForm Model="Model" OnSubmit="@(() => HandleSubmitAsync(false))">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                <div style="width: 100%;">
+                    <FluentTextField @bind-Value="Model.ResourceName"
+                                     Label="Resource Name"
+                                     Immediate="true"
+                                     Required
+                                     Style="width: 100%;" />
+                </div>
+
+                <div style="width: 100%;">
+                    <FluentTextField @bind-Value="Model.TranslationName"
+                                     Label="Translation Key"
+                                     Immediate="true"
+                                     Required
+                                     Style="width: 100%;" />
+                </div>
+
+                <ContentEditor
+                    Items="ContentItems" />
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <FluentMessageBar Intent="MessageIntent.Error">
+                        @ErrorMessage
+                    </FluentMessageBar>
+                }
+            </FluentStack>
+        </EditForm>
+    </Progress>
+</FluentDialogBody>
+
+<EntityPanelFooter IsEditMode="@IsEditMode"
+                   IsSaving="@IsSaving"
+                   IsDeleting="@IsDeleting"
+                   OnSave="@(() => HandleSubmitAsync(closeAfterSave: false))"
+                   OnSaveAndClose="@(() => HandleSubmitAsync(closeAfterSave: true))"
+                   OnCancel="@HandleCancelAsync"
+                   OnDelete="@HandleDeleteClickAsync" />
+

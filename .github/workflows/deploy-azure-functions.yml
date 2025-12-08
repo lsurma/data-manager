@@ -1,0 +1,44 @@
+name: Build and Deploy to Azure Functions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './publish'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore DataManager.sln
+
+      - name: Build with Blazor UI and publish
+        run: |
+          # Build the Blazor WebAssembly UI and copy to Azure Functions wwwroot
+          dotnet build DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj -c Release -p:BuildBlazorUI=true
+          # Publish the Azure Functions API (includes wwwroot from previous step)
+          dotnet publish DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj -c Release -o ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }} --no-build
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}

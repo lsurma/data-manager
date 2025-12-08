@@ -1,0 +1,240 @@
+@typeparam TResponse
+@using System.Collections
+@using DataManager.Host.WA.Services
+@typeparam TQuery
+@inject IRequestSender RequestSender
+@inject ILocalStorageService LocalStorage
+@implements IDisposable
+
+@if (IsLoading && Data == null)
+{
+    @if (LoadingContent != null)
+    {
+        @LoadingContent
+    }
+}
+else if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    @if (ErrorContent != null)
+    {
+        @ErrorContent(ErrorMessage)
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Error">
+            @ErrorMessage
+        </FluentMessageBar>
+    }
+}
+else if (Data != null)
+{
+    @if (IsEmpty(Data))
+    {
+        @if (NoDataContent != null)
+        {
+            @NoDataContent
+        }
+        else
+        {
+            <FluentMessageBar Intent="MessageIntent.Info">
+                No data available.
+            </FluentMessageBar>
+        }
+    }
+    else
+    {
+        if (ChildContent != null)
+        {
+            @ChildContent(Data)
+        }
+    }
+}
+
+@code {
+    [Parameter]
+    public required TQuery Query { get; set; }
+
+    [Parameter]
+    public string? CacheKey { get; set; }
+    
+    [Parameter]
+    public string? RefreshToken { get; set; }
+    
+    [Parameter]
+    public Func<TQuery, Task<bool>>? ShouldCache { get; set; }
+    
+    [Parameter]
+    public RenderFragment? LoadingContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<string>? ErrorContent { get; set; }
+    
+    [Parameter]
+    public RenderFragment? NoDataContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<TResponse>? ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback<DataFetchedEventArgs<TResponse>> OnDataFetched { get; set; }
+
+    [Parameter]
+    public bool CacheEnabled { get; set; } = false;
+    
+    [Parameter]
+    public bool LoadOnInitialize { get; set; } = true;
+    
+    private TResponse? Data { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+    private string? PreviousRefreshToken { get; set; }
+    private bool HasLoadedOnce { get; set; }
+    private bool IsFirstLiveFetch { get; set; } = true;
+    private CancellationTokenSource? CancellationTokenSource { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreviousRefreshToken = RefreshToken;
+
+        if (LoadOnInitialize)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Refresh data when RefreshToken changes
+        if (RefreshToken != PreviousRefreshToken)
+        {
+            PreviousRefreshToken = RefreshToken;
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        // Cancel any existing request
+        if(CancellationTokenSource != null)
+        {
+            await CancellationTokenSource.CancelAsync();
+            CancellationTokenSource.Dispose();
+        }
+        
+        CancellationTokenSource = new CancellationTokenSource();
+
+        var cancellationToken = CancellationTokenSource.Token;
+
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = null;
+
+            var cacheKey = CacheKey ?? $"query_{Query!.GetType().Name}";
+            var shouldUseCache = CacheEnabled && ( ShouldCache == null || await ShouldCache(Query));
+
+            // Try to load from cache ONLY on the very first load for this component instance
+            if (shouldUseCache && !HasLoadedOnce)
+            {
+                var cachedData = await LocalStorage.GetItemAsync<TResponse>(cacheKey);
+                if (cachedData != null)
+                {
+                    Data = cachedData;
+                    IsLoading = false;
+
+                    // Notify that cached data is available
+                    if (OnDataFetched.HasDelegate)
+                    {
+                        var eventArgs = new DataFetchedEventArgs<TResponse>(
+                            cachedData,
+                            IsFromCache: true,
+                            IsFirstFetch: true
+                        );
+                        await OnDataFetched.InvokeAsync(eventArgs);
+                    }
+
+                    StateHasChanged();
+                }
+            }
+
+            // Check if cancelled before making the API call
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Mark that we've attempted to load at least once
+            HasLoadedOnce = true;
+
+            // Fetch fresh data from API with cancellation token
+            var freshData = await RequestSender.SendAsync<TResponse>(Query!, cancellationToken);
+
+            // Check if cancelled before updating state
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Update cache if caching is enabled
+            if (shouldUseCache)
+            {
+                await LocalStorage.SetItemAsync(cacheKey, freshData);
+            }
+
+            // Update UI with fresh data
+            Data = freshData;
+            ErrorMessage = null;
+
+            // Notify that fresh data is available
+            if (OnDataFetched.HasDelegate)
+            {
+                var eventArgs = new DataFetchedEventArgs<TResponse>(
+                    freshData,
+                    IsFromCache: false,
+                    IsFirstFetch: IsFirstLiveFetch
+                );
+                IsFirstLiveFetch = false;
+                await OnDataFetched.InvokeAsync(eventArgs);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Request was cancelled, this is expected behavior
+            // Don't set error message or change loading state
+        }
+        catch (Exception ex)
+        {
+            // Only set error if the request wasn't cancelled
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                ErrorMessage = $"Error loading data: {ex.Message}";
+            }
+        }
+        finally
+        {
+            // Only set IsLoading to false if this request wasn't cancelled
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                IsLoading = false;
+            }
+        }
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadDataAsync();
+    }
+    
+    private bool IsEmpty(TResponse data)
+    {
+        if (data == null) return true;
+
+        // Check if it's a collection
+        if (data is IEnumerable enumerable)
+        {
+            return !enumerable.Cast<object>().Any();
+        }
+
+        return false;
+    }
+
+    public void Dispose()
+    {
+        CancellationTokenSource?.Cancel();
+        CancellationTokenSource?.Dispose();
+    }
+}

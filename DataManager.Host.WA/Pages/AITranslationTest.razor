@@ -1,0 +1,227 @@
+@page "/ai-translation-test"
+@using DataManager.Application.Contracts
+@using DataManager.Application.Contracts.Modules.AI
+@using Microsoft.FluentUI.AspNetCore.Components
+@using FluentOrientation = Microsoft.FluentUI.AspNetCore.Components.Orientation
+@inject IRequestSender RequestSender
+
+<PageTitle>AI Translation Test</PageTitle>
+
+<FluentStack Orientation="FluentOrientation.Vertical" Style="padding: 20px; max-width: 1200px;">
+    <FluentLabel Typo="Typography.H3">AI Translation Test</FluentLabel>
+    <FluentLabel Typo="Typography.Body">
+        Test OpenRouter AI integration for translating text between cultures.
+    </FluentLabel>
+
+    <FluentDivider />
+
+    <FluentStack Orientation="FluentOrientation.Vertical" Style="gap: 20px;">
+        <!-- Source Text Input -->
+        <FluentStack Orientation="FluentOrientation.Vertical">
+            <FluentLabel Typo="Typography.Subject">Source Text</FluentLabel>
+            <FluentTextArea 
+                @bind-Value="_sourceText" 
+                Rows="5" 
+                Placeholder="Enter text to translate..."
+                Style="width: 100%;" />
+        </FluentStack>
+
+        <!-- Source Culture -->
+        <FluentStack Orientation="FluentOrientation.Horizontal" Style="gap: 20px;">
+            <FluentStack Orientation="FluentOrientation.Vertical" Style="flex: 1;">
+                <FluentLabel Typo="Typography.Subject">Source Culture</FluentLabel>
+                <FluentTextField 
+                    @bind-Value="_sourceCulture" 
+                    Placeholder="e.g., en-US"
+                    Style="width: 100%;" />
+            </FluentStack>
+
+            <!-- Context -->
+            <FluentStack Orientation="FluentOrientation.Vertical" Style="flex: 1;">
+                <FluentLabel Typo="Typography.Subject">Context (optional)</FluentLabel>
+                <FluentTextField 
+                    @bind-Value="_context" 
+                    Placeholder="e.g., ecommerce, technical, casual"
+                    Style="width: 100%;" />
+            </FluentStack>
+        </FluentStack>
+
+        <!-- Target Cultures -->
+        <FluentStack Orientation="FluentOrientation.Vertical">
+            <FluentLabel Typo="Typography.Subject">Target Cultures (comma-separated)</FluentLabel>
+            <FluentTextField 
+                @bind-Value="_targetCulturesInput" 
+                Placeholder="e.g., pl-PL, de-DE, es-ES"
+                Style="width: 100%;" />
+        </FluentStack>
+
+        <!-- Model Selection -->
+        <FluentStack Orientation="FluentOrientation.Horizontal" Style="gap: 20px;">
+            <FluentStack Orientation="FluentOrientation.Vertical" Style="flex: 1;">
+                <FluentLabel Typo="Typography.Subject">Model (select from list)</FluentLabel>
+                <FluentSelect TOption="string"
+                    Items="@_modelValues"
+                    @bind-SelectedOption="_selectedModel"
+                    Style="width: 100%;">
+                    <OptionTemplate>
+                        @_modelLabels[context]
+                    </OptionTemplate>
+                </FluentSelect>
+            </FluentStack>
+
+            <FluentStack Orientation="FluentOrientation.Vertical" Style="flex: 1;">
+                <FluentLabel Typo="Typography.Subject">Custom Model (optional)</FluentLabel>
+                <FluentTextField 
+                    @bind-Value="_customModel" 
+                    Placeholder="e.g., anthropic/claude-3-sonnet"
+                    Style="width: 100%;" />
+                <FluentLabel Typo="Typography.Body" Style="margin-top: 4px; font-size: 12px; color: var(--neutral-foreground-hint);">
+                    If specified, this overrides the dropdown selection
+                </FluentLabel>
+            </FluentStack>
+        </FluentStack>
+
+        <!-- Translate Button -->
+        <FluentButton 
+            Appearance="Appearance.Accent" 
+            OnClick="TranslateAsync"
+            Disabled="_isTranslating">
+            @if (_isTranslating)
+            {
+                <FluentProgressRing Style="width: 16px; height: 16px; margin-right: 8px;" />
+                <span>Translating...</span>
+            }
+            else
+            {
+                <span>Translate</span>
+            }
+        </FluentButton>
+
+        <!-- Error Message -->
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <FluentMessageBar Intent="MessageIntent.Error" Style="margin-top: 10px;">
+                @_errorMessage
+            </FluentMessageBar>
+        }
+
+        <!-- Results -->
+        @if (_translationResult != null && _translationResult.Translations.Any())
+        {
+            <FluentDivider />
+            <FluentLabel Typo="Typography.H5">Translation Results</FluentLabel>
+
+            <FluentStack Orientation="FluentOrientation.Vertical" Style="gap: 15px;">
+                @foreach (var translation in _translationResult.Translations)
+                {
+                    <FluentCard Style="padding: 15px;">
+                        <FluentStack Orientation="FluentOrientation.Vertical" Style="gap: 8px;">
+                            <FluentLabel Typo="Typography.Subject">@translation.Key</FluentLabel>
+                            <FluentLabel Typo="Typography.Body" Style="white-space: pre-wrap;">@translation.Value</FluentLabel>
+                        </FluentStack>
+                    </FluentCard>
+                }
+            </FluentStack>
+        }
+    </FluentStack>
+</FluentStack>
+
+@code {
+    private string _sourceText = "Welcome to our online store! Browse our latest products and enjoy free shipping on orders over $50.";
+    private string _sourceCulture = "en-US";
+    private string _targetCulturesInput = "pl-PL, de-DE";
+    private string _context = "ecommerce";
+    private bool _isTranslating = false;
+    private string? _errorMessage;
+    private TranslateTextResult? _translationResult;
+    
+    // Model selection
+    private string _selectedModel = "google/gemma-2-9b-it:free";
+    private string _customModel = string.Empty;
+    
+    // Available free models from OpenRouter
+    private readonly List<(string Value, string Label)> _availableModels = new()
+    {
+        ("google/gemma-2-9b-it:free", "Google Gemma 2 9B (Free)"),
+        ("meta-llama/llama-3.2-3b-instruct:free", "Meta Llama 3.2 3B (Free)"),
+        ("qwen/qwen-2-7b-instruct:free", "Qwen 2 7B (Free)"),
+        ("microsoft/phi-3-mini-128k-instruct:free", "Microsoft Phi-3 Mini (Free)"),
+        ("google/gemma-7b-it:free", "Google Gemma 7B (Free)")
+    };
+    
+    // Helper properties for dropdown binding
+    private List<string> _modelValues => _availableModels.Select(m => m.Value).ToList();
+    private Dictionary<string, string> _modelLabels => _availableModels.ToDictionary(m => m.Value, m => m.Label);
+
+    /// <summary>
+    /// Determines which model to use: custom model takes precedence over dropdown selection.
+    /// </summary>
+    private string GetSelectedModel()
+    {
+        return !string.IsNullOrWhiteSpace(_customModel) ? _customModel.Trim() : _selectedModel;
+    }
+
+    private async Task TranslateAsync()
+    {
+        _errorMessage = null;
+        _translationResult = null;
+
+        // Validate inputs
+        if (string.IsNullOrWhiteSpace(_sourceText))
+        {
+            _errorMessage = "Please enter text to translate.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_sourceCulture))
+        {
+            _errorMessage = "Please enter a source culture.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_targetCulturesInput))
+        {
+            _errorMessage = "Please enter at least one target culture.";
+            return;
+        }
+
+        // Parse target cultures
+        var targetCultures = _targetCulturesInput
+            .Split(',')
+            .Select(c => c.Trim())
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .ToList();
+
+        if (targetCultures.Count == 0)
+        {
+            _errorMessage = "Please enter at least one valid target culture.";
+            return;
+        }
+
+        _isTranslating = true;
+        StateHasChanged();
+
+        try
+        {
+            var command = new TranslateTextCommand
+            {
+                Text = _sourceText,
+                SourceCulture = _sourceCulture,
+                TargetCultures = targetCultures,
+                Context = string.IsNullOrWhiteSpace(_context) ? null : _context,
+                Model = GetSelectedModel()
+            };
+
+            _translationResult = await RequestSender.SendAsync<TranslateTextResult>(command);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Translation failed: {ex.Message}";
+        }
+        finally
+        {
+            _isTranslating = false;
+            StateHasChanged();
+        }
+    }
+}

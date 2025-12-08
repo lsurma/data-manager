@@ -1,0 +1,236 @@
+@page "/mjml-editor"
+@inject IJSRuntime JSRuntime
+@inject IRequestSender RequestSender
+@using System.Text.Json.Serialization
+@using BlazorMonaco
+@using BlazorMonaco.Editor
+@using DataManager.Application.Contracts
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.Mjml
+@implements IDisposable
+
+<h3>MJML Editor</h3>
+<FluentGrid>
+    
+    <FluentGridItem md="6">
+        <label>MJML</label>
+        <StandaloneCodeEditor Id="my-code-editor" @ref="_mjmlEditor" ConstructionOptions="MjmlEditorConstructionOptions" OnDidChangeModelContent="OnMjmlContentChanged" />
+        <label>Variables</label>
+        <StandaloneCodeEditor Id="my-code-editor2" @ref="_variablesEditor" ConstructionOptions="VariablesEditorConstructionOptions" OnDidChangeModelContent="OnVariablesContentChanged" />
+    </FluentGridItem>
+
+    <FluentGridItem md="6">
+        <div class="btn-group" role="group" aria-label="Preview size">
+              <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("375px")'>Small</button>
+              <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("768px")'>Medium</button>
+              <button type="button" class="btn btn-secondary" @onclick='() => SetPreviewSize("100%")'>Large</button>
+              <button type="button" class="btn @(_showHtmlOutput ? "btn-primary" : "btn-secondary")" @onclick="ToggleHtmlOutput">
+                  @(_showHtmlOutput ? "Hide" : "Show") HTML
+              </button>
+            </div>
+            @if (_showHtmlOutput)
+            {
+                <label>HTML Output</label>
+                <StandaloneCodeEditor Id="html-output-editor" @ref="_htmlOutputEditor" ConstructionOptions="HtmlOutputEditorConstructionOptions" />
+            }
+            else
+            {
+                <iframe srcdoc="@htmlOutput" style="width: @previewWidth; height: calc(100vh - 150px); border: 1px solid #ccc;" />
+            }
+    </FluentGridItem>
+</FluentGrid>
+
+<style>
+    #my-code-editor {
+        min-height: 400px;
+    }
+    
+    #my-code-editor2 {
+        min-height: 400px;
+    }
+
+    #html-output-editor {
+        min-height: calc(100vh - 200px);
+    }
+</style>
+
+@code {
+    private StandaloneCodeEditor? _mjmlEditor = null!;
+    private StandaloneCodeEditor? _variablesEditor = null!;
+    private StandaloneCodeEditor? _htmlOutputEditor = null!;
+
+    private string previewWidth = "100%";
+    private bool _showHtmlOutput = false;
+
+    private void SetPreviewSize(string width)
+    {
+        previewWidth = width;
+        _showHtmlOutput = false;
+    }
+
+    private async Task ToggleHtmlOutput()
+    {
+        _showHtmlOutput = !_showHtmlOutput;
+
+        if (_showHtmlOutput && _htmlOutputEditor != null)
+        {
+            await Task.Delay(100); // Give the editor time to render
+            await _htmlOutputEditor.SetValue(htmlOutput);
+        }
+    }
+
+    private StandaloneEditorConstructionOptions HtmlOutputEditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "html",
+            Value = htmlOutput,
+            ReadOnly = true,
+            AutomaticLayout = true,
+            WordWrap = "on"
+        };
+    }
+
+    private StandaloneEditorConstructionOptions MjmlEditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "html",
+            Value = @"<mjml>
+                  <mj-body>
+                    <mj-section>
+                      <mj-column>
+                        <mj-text>
+                          Hello {{ name }}!
+                        </mj-text>
+                      </mj-column>
+                    </mj-section>
+                  </mj-body>
+                </mjml>",
+            AutomaticLayout = true
+        };
+    }
+
+    private StandaloneEditorConstructionOptions VariablesEditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "json",
+            Value = @"{
+                      ""name"": ""World""
+                    }",
+            AutomaticLayout = true
+        };
+    }
+
+    private string htmlOutput = "";
+    private Timer? _debounceTimer;
+    private const int DebounceTimeMs = 500;
+
+    protected override void OnInitialized()
+    {
+        _debounceTimer = new Timer(async _ => await OnTimerCallback(), null, Timeout.Infinite, Timeout.Infinite);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // await OnTimerCallback();
+        }
+    }
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+    }
+
+    private async Task OnTimerCallback()
+    {
+        if (_mjmlEditor is null || _variablesEditor is null)
+        {
+            return;
+        }        
+        
+        var mjml = await _mjmlEditor.GetValue();
+        var variables = await _variablesEditor.GetValue();
+        await ConvertMjmlToHtml(mjml, variables);
+    }
+
+    private Task OnMjmlContentChanged()
+    {
+        _debounceTimer?.Change(DebounceTimeMs, Timeout.Infinite);
+        return Task.CompletedTask;
+    }
+
+    private Task OnVariablesContentChanged()
+    {
+        _debounceTimer?.Change(DebounceTimeMs, Timeout.Infinite);
+        return Task.CompletedTask;
+    }
+
+    private async Task ConvertMjmlToHtml(string mjml, string variables)
+    {
+        try
+        {
+            var mjmlResult = await JSRuntime.InvokeAsync<MjmlResult>("mjml", mjml);
+
+            if (mjmlResult.Errors.Length > 0)
+            {
+                var errorString = string.Join(", ", mjmlResult.Errors.Select(e => e.ToString()));
+                htmlOutput = $"<p>MJML Errors: {errorString}</p>";
+            }
+            else
+            {
+                var command = new RenderTemplateCommand
+                {
+                    Html = mjmlResult.Html,
+                    Variables = variables
+                };
+                
+                var result = await RequestSender.SendAsync<RenderedTemplateDto>(command);
+                htmlOutput = result.Html;
+            }
+        }
+        catch (ApiErrorException apiEx)
+        {
+            // Display detailed API error information
+            var errorHtml = $"<div style='padding: 20px; background-color: #fee; border: 1px solid #f00; border-radius: 4px;'>";
+            errorHtml += $"<h4 style='color: #c00; margin-top: 0;'>Error</h4>";
+            errorHtml += $"<p><strong>Message:</strong> {System.Net.WebUtility.HtmlEncode(apiEx.Error)}</p>";
+            
+            if (!string.IsNullOrWhiteSpace(apiEx.Details))
+            {
+                errorHtml += $"<p><strong>Details:</strong> {System.Net.WebUtility.HtmlEncode(apiEx.Details)}</p>";
+            }
+            
+            if (apiEx.StatusCode > 0)
+            {
+                errorHtml += $"<p><strong>Status Code:</strong> {apiEx.StatusCode}</p>";
+            }
+            
+            errorHtml += "</div>";
+            htmlOutput = errorHtml;
+        }
+        catch (Exception ex)
+        {
+            htmlOutput = $"<p>Error converting MJML: {ex.Message}</p>";
+        }
+
+        // Update HTML output editor if visible
+        if (_showHtmlOutput && _htmlOutputEditor != null)
+        {
+            await _htmlOutputEditor.SetValue(htmlOutput);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public class MjmlResult
+    {
+        [JsonPropertyName("html")]
+        public string Html { get; set; } = "";
+        [JsonPropertyName("errors")]
+        public object[] Errors { get; set; } = [];
+    }
+}

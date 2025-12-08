@@ -1,0 +1,73 @@
+﻿
+<div class="content-editor" style="width : 100%;">
+    <div class="btn-group" role="group" style="margin-bottom: 16px;">
+        @foreach (var editorType in Enum.GetValues<ContentEditorType>())
+        {
+            <FluentButton
+                IconStart="@(GetIcon(editorType))"
+                Appearance="@(EditorTypeInternal == editorType ? Appearance.Accent : Appearance.Outline)"
+                @onclick="@(() => OnEditorTypeChanged(editorType))">
+                @GetEditorTypeLabel(editorType)
+            </FluentButton>
+        }
+    </div>
+
+    <div class="content-editor-rows">
+        @foreach (var item in Items)
+        {
+            <ContentEditorRow
+                Item="@item"
+                EditorType="@EditorTypeInternal" />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<ContentEditorItem> Items { get; set; } = [];
+
+    [Parameter]
+    public ContentEditorType? EditorType { get; set; }
+
+    [Parameter]
+    public EventCallback<ContentEditorType> EditorTypeChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnItemsChanged { get; set; }
+
+    protected ContentEditorType EditorTypeInternal { get; set; } = ContentEditorType.TextArea;
+
+    protected override void OnParametersSet()
+    {
+        if (EditorType.HasValue)
+        {
+            EditorTypeInternal = EditorType.Value;
+        }
+    }
+
+    private Icon? GetIcon(ContentEditorType type)
+    {
+        // Icons can be added here if needed
+        return null;
+    }
+
+    private string GetEditorTypeLabel(ContentEditorType type)
+    {
+        return type switch
+        {
+            ContentEditorType.TextInput => "Text Input",
+            ContentEditorType.TextArea => "Text Area",
+            ContentEditorType.MonacoEditor => "Code Editor",
+            ContentEditorType.RichTextEditor => "Rich Text",
+            ContentEditorType.BlazoredTextEditor => "Quill Editor",
+            _ => type.ToString()
+        };
+    }
+
+    private async Task OnEditorTypeChanged(ContentEditorType type)
+    {
+        EditorTypeInternal = type;
+        await SaveEditorTypeAsync(type);
+        await EditorTypeChanged.InvokeAsync(type);
+    }
+}

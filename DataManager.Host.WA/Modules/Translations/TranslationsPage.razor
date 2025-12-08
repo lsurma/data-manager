@@ -1,0 +1,69 @@
+@page "/translations/{DataSetId:guid?}"
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.Translations
+@using DataManager.Host.WA.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Translations</h3>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" Wrap="true" Gap="8px">
+    <FluentButton Appearance="@GetAppearanceForDataSet(null)" OnClick="@(() => OnDataSetFilterChanged(null))">
+        All
+    </FluentButton>
+
+    @foreach (var dataSet in AllTranslationSets)
+    {
+        <FluentButton Appearance="@GetAppearanceForDataSet(dataSet.Id)" OnClick="@(() => OnDataSetFilterChanged(dataSet.Id))">
+            @dataSet.Name
+        </FluentButton>
+    }
+</FluentStack>
+
+<TranslationsGrid DataSetId="DataSetId">
+    <ToolbarTemplate>
+        <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+            <FluentButton Disabled="@(DataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
+                Create
+            </FluentButton>
+        </FluentNavLink>
+        
+        <FluentButton 
+            Disabled="@(DataSetId == null)" 
+            Appearance="Appearance.Accent" 
+            IconStart="@(new Size20.ArrowImport())"
+            OnClick="OnImportAsync">
+            Import
+        </FluentButton>
+        
+        <FluentButton
+            Disabled="@(DataSetId == null || IsExporting)"
+            Appearance="Appearance.Accent"
+            IconStart="@(new Size20.ArrowExport())"
+            OnClick="OnExportToExcelAsync"
+            Loading="IsExporting">
+            Export all to Excel (.xlsx)
+        </FluentButton>
+        
+        <FluentButton
+            Disabled="@(DataSetId == null)"
+            Appearance="Appearance.Accent"
+            IconStart="@(new Size20.Delete())"
+            OnClick="OnRemoveDuplicatesAsync">
+            Remove Duplicates
+        </FluentButton>
+        
+        <FluentButton
+            Disabled="@(DataSetId == null)"
+            Appearance="Appearance.Accent"
+            IconStart="@(new Size20.NumberSymbolSquare())"
+            OnClick="OnIndexTranslationsAsync">
+            Index Translations
+        </FluentButton>
+        
+    </ToolbarTemplate>
+</TranslationsGrid>

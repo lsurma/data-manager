@@ -1,0 +1,67 @@
+@using DataManager.Host.WA.Components
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<ExportTranslationsPanelParameters>
+
+<FluentDialogBody>
+    @if (IsLoading)
+    {
+        <FluentProgressRing />
+        <p>Loading export options...</p>
+    }
+    else if (AvailableCultures.Any())
+    {
+        <EditForm Model="Model" OnSubmit="@HandleSubmitAsync">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+
+                <FluentSelect TOption="string"
+                              @bind-Value="Model.TargetCulture"
+                              Label="Target Culture"
+                              Items="@AvailableCultures"
+                              Required
+                              Style="width: 100%;">
+                    <OptionTemplate Context="culture">
+                        @culture
+                    </OptionTemplate>
+                </FluentSelect>
+
+                <FluentSelect TOption="string"
+                              @bind-Value="Model.BaseCulture"
+                              Label="Base Culture"
+                              Items="@AvailableCultures"
+                              Required
+                              Style="width: 100%;">
+                    <OptionTemplate Context="culture">
+                        @culture
+                    </OptionTemplate>
+                </FluentSelect>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <FluentMessageBar Intent="MessageIntent.Error">
+                        @ErrorMessage
+                    </FluentMessageBar>
+                }
+
+            </FluentStack>
+        </EditForm>
+    }
+    else
+    {
+        <FluentMessageBar Intent="MessageIntent.Warning">
+            No cultures available for this DataSet.
+        </FluentMessageBar>
+    }
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent"
+                  OnClick="@HandleSubmitAsync"
+                  Disabled="@(!AvailableCultures.Any() || IsExporting)"
+                  Loading="@IsExporting">
+        Export
+    </FluentButton>
+    
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@HandleCancelAsync">
+        Cancel
+    </FluentButton>
+</FluentDialogFooter>

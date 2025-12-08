@@ -1,0 +1,124 @@
+@using DataManager.Application.Contracts.Modules.DataSets
+@using DataManager.Host.WA.Components
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<DataSetPanelParameters>
+
+<FluentDialogBody>
+    <EditForm Model="Content.DataSet" OnSubmit="@(() => HandleSubmitAsync(false))">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            
+            <FluentTextField @bind-Value="Content.DataSet.Name"
+                             Label="Name"
+                             Immediate="true"
+                             Required
+                             AutoComplete="off"
+                             Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.DataSet.Description"
+                            Label="Description"
+                            Immediate="true"
+                            Rows="3"
+                            Style="width: 100%;" />
+            
+            <FluentTextArea @bind-Value="Content.DataSet.Notes"
+                            Label="Notes"
+                            Immediate="true"
+                            Rows="4"
+                            Style="width: 100%;" />
+
+            @if (AvailableCultures.Any())
+            {
+                <div>
+                    <FluentAutocomplete TOption="string"
+                                        Multiple="true"
+                                        Placeholder="Select cultures..."
+                                        Items="@AvailableCultures"
+                                        @bind-SelectedOptions="@SelectedCultures"
+                                        Style="width: 100%;">
+                        <LabelTemplate>
+                            Supported Cultures (Optional)
+                            <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                                <br/>Select the cultures/languages supported by this DataSet. If none are selected, all system cultures are available.
+                            </span>
+                        </LabelTemplate>
+                    </FluentAutocomplete>
+                </div>
+            }
+
+
+            @if (Content.AvailableDataSets.Any())
+            {
+                <div>
+                    <FluentAutocomplete TOption="DataSetDto"
+                                        Multiple="true"
+                                        Placeholder="Select data sets..."
+                                        Items="@Content.AvailableDataSets"
+                                        OptionText="@(ts => ts.Name)"
+                                        @bind-SelectedOptions="@SelectedIncludedDataSets"
+                                        Style="width: 100%;">
+                        <LabelTemplate>
+                            Included DataSets (Optional)
+                            <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                                <br/>Select other DataSets to include in this one.
+                            </span>
+                        </LabelTemplate>
+                    </FluentAutocomplete>
+                </div>
+            }
+            
+            <FluentTextArea @bind-Value="AllowedIdentityIdsText"
+                            Immediate="true"
+                            Rows="4"
+                            Style="width: 100%;">
+                <FluentLabel>
+                    Allowed Identity IDs (Optional)
+                    <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                        <br/>Enter user/application IDs that can access this DataSet. Separate with new lines, commas, or semicolons. Leave empty for public access.
+                    </span>
+                </FluentLabel>
+            </FluentTextArea>
+
+            <FluentTextField @bind-Value="Content.DataSet.SecretKey"
+                             Label="Webhook Secret Key (Optional)"
+                             Immediate="true"
+                             AutoComplete="off"
+                             Style="width: 100%;">
+                <FluentLabel>
+                    Webhook Secret Key (Optional)
+                    <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                        <br/>Secret key that will be sent in webhook requests for authentication/verification.
+                    </span>
+                </FluentLabel>
+            </FluentTextField>
+
+            <FluentTextArea @bind-Value="WebhookUrlsText"
+                            Immediate="true"
+                            Rows="4"
+                            Style="width: 100%;">
+                <FluentLabel>
+                    Webhook URLs (Optional)
+                    <span style="font-size: 12px; color: var(--neutral-foreground-rest); font-weight: normal;">
+                        <br/>Enter webhook URLs to which events will be sent. Separate with new lines, commas, or semicolons.
+                    </span>
+                </FluentLabel>
+            </FluentTextArea>
+            
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <FluentMessageBar Intent="MessageIntent.Error">
+                    @ErrorMessage
+                </FluentMessageBar>
+            }
+            
+        </FluentStack>
+    </EditForm>
+</FluentDialogBody>
+
+
+    <EntityPanelFooter IsEditMode="@Content.IsEditMode"
+                       IsSaving="@IsSaving"
+                       IsDeleting="@IsDeleting"
+                       OnSave="@(() => HandleSubmitAsync(closeAfterSave: false))"
+                       OnSaveAndClose="@(() => HandleSubmitAsync(closeAfterSave: true))"
+                       OnCancel="@HandleCancelAsync"
+                       OnDelete="@HandleDeleteClickAsync" />

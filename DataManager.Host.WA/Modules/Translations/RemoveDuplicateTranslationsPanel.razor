@@ -1,0 +1,83 @@
+@using DataManager.Host.WA.Components
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<RemoveDuplicateTranslationsPanelParameters>
+
+<FluentDialogBody>
+    @if (IsLoading)
+    {
+        <FluentProgressRing />
+        <p>Loading datasets...</p>
+    }
+    else if (!IsCompleted)
+    {
+        <EditForm Model="Model" OnSubmit="@HandleSubmitAsync">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+
+                <FluentSelect TOption="string"
+                              @bind-Value="Model.BaseDataSetId"
+                              Label="Base DataSet"
+                              Items="@AvailableDataSets.Select(d => d.Id.ToString()).ToList()"
+                              Required
+                              Style="width: 100%;">
+                    <OptionTemplate Context="dataSetId">
+                        @(AvailableDataSets.FirstOrDefault(d => d.Id.ToString() == dataSetId)?.Name ?? "Unknown")
+                    </OptionTemplate>
+                </FluentSelect>
+
+                <FluentMessageBar Intent="MessageIntent.Info">
+                    This will remove duplicate translations from the currently selected dataset (<strong>@CurrentDataSetName</strong>) that also exist in the base dataset.
+                </FluentMessageBar>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <FluentMessageBar Intent="MessageIntent.Error">
+                        @ErrorMessage
+                    </FluentMessageBar>
+                }
+
+            </FluentStack>
+        </EditForm>
+    }
+    else
+    {
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            <FluentMessageBar Intent="MessageIntent.Success">
+                De-duplication completed successfully!
+            </FluentMessageBar>
+
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                <div><strong>Processed:</strong> @Result?.ProcessedCount translations</div>
+                <div><strong>Removed:</strong> @Result?.RemovedCount duplicates</div>
+            </FluentStack>
+
+            @if (Result?.Errors?.Any() == true)
+            {
+                <FluentMessageBar Intent="MessageIntent.Warning">
+                    <strong>Errors encountered:</strong>
+                    <ul style="margin: 4px 0 0 0; padding-left: 20px;">
+                        @foreach (var error in Result.Errors)
+                        {
+                            <li>@error</li>
+                        }
+                    </ul>
+                </FluentMessageBar>
+            }
+        </FluentStack>
+    }
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    @if (!IsCompleted)
+    {
+        <FluentButton Appearance="Appearance.Accent"
+                      OnClick="@HandleSubmitAsync"
+                      Disabled="@(IsLoading || IsProcessing || !AvailableDataSets.Any() || string.IsNullOrEmpty(Model.BaseDataSetId))"
+                      Loading="@IsProcessing">
+            Remove Duplicates
+        </FluentButton>
+    }
+    
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@HandleCancelAsync">
+        @(IsCompleted ? "Close" : "Cancel")
+    </FluentButton>
+</FluentDialogFooter>

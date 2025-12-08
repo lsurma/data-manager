@@ -1,0 +1,10 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+
+@if (Visible)
+{
+    <FluentTextField @bind-Value="@Value"
+                     @bind-Value:after="OnValueChanged"
+                     Placeholder="@Placeholder"
+                     Label="@Label"
+                     Style="@Style" />
+}

@@ -1,0 +1,56 @@
+@using DataManager.Host.WA.Services
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+
+<div class="navmenu">
+    <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
+    <label for="navmenu-toggle" class="navmenu-icon">
+        <FluentIcon Value="@(new Size20.Navigation())" Color="Color.Fill" />
+    </label>
+    <nav class="sitenav" aria-labelledby="main-menu">
+        <FluentNavMenu Id="main-menu" Collapsible="true" Title="Navigation menu" @bind-Expanded="Expanded" @bind-Expanded:after="OnExpandedChanged" CustomToggle="true">
+            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Size20.Home())" IconColor="Color.Accent">Home</FluentNavLink>
+            @if (ShowDevPages)
+            {
+                <FluentNavLink Href="instances" Icon="@(new Size20.NumberSymbolSquare())" IconColor="Color.Accent">Instances</FluentNavLink>
+            }
+            
+            <FluentNavLink Href="data-sets" Icon="@(new Size20.Database())" IconColor="Color.Accent">Data Sets</FluentNavLink>
+            <FluentNavLink Href="translations" Icon="@(new Size20.LocalLanguage())" IconColor="Color.Accent">Translations</FluentNavLink>
+            <FluentNavLink Href="emails" Icon="@(new Size20.Mail())" IconColor="Color.Accent">Emails</FluentNavLink>
+            <FluentNavLink Href="logs" Icon="@(new Size20.ClipboardTextLtr())" IconColor="Color.Accent">Logs</FluentNavLink>
+            
+            @if (ShowDevPages)
+            {
+                <FluentNavLink Href="ai-translation-test" Icon="@(new Size20.Translate())" IconColor="Color.Accent">AI Translation Test</FluentNavLink>
+                <FluentNavLink Href="paneltest" Icon="@(new Size20.SlideLayout())" IconColor="Color.Accent">Panel Test</FluentNavLink>
+            }
+            <FluentNavLink Href="mjml-editor" Icon="@(new Size20.Mail())" IconColor="Color.Accent">MJML Editor</FluentNavLink>
+            @if (ShowDevPages)
+            {
+                <FluentNavLink Href="resize-test" Icon="@(new Size20.ResizeLarge())" IconColor="Color.Accent">Resize Test</FluentNavLink>
+                <FluentNavLink Href="test-generic-queries" Icon="@(new Size20.BeakerSettings())" IconColor="Color.Accent">Test Generic Queries</FluentNavLink>
+                <FluentNavLink Href="datagrid-settings-test" Icon="@(new Size20.Table())" IconColor="Color.Accent">DataGrid Settings Test</FluentNavLink>
+            }
+        </FluentNavMenu>
+    </nav>
+</div>
+@inject ILocalStorageService LocalStorage
+@inject ICookieService CookieService
+
+@code {
+    private bool Expanded { get; set; } = true;
+    private bool ShowDevPages { get; set; }
+    private const string ExpandedKey = "nav-menu-expanded";
+    private const string DevModeKey = "_dev";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Expanded = await LocalStorage.GetItemAsync<bool?>(ExpandedKey) ?? true;
+        ShowDevPages = await LocalStorage.GetItemAsync<bool?>(DevModeKey) ?? false;
+    }
+
+    private async Task OnExpandedChanged()
+    {
+        await LocalStorage.SetItemAsync(ExpandedKey, Expanded);
+    }
+}

@@ -1,0 +1,19 @@
+@page "/emails"
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.Translations
+@using DataManager.Host.WA.Modules.Translations
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using Orientation = Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Emails</h3>
+
+    <FluentNavLink Href="/emails?action=create">
+        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Size20.Add())" />
+    </FluentNavLink>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<TranslationsGrid @ref="_translationsGrid" DisableAutoPanelOpening="true" @key="_refreshToken" />

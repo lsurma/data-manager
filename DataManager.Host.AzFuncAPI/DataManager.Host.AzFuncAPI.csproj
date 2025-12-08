@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AzureFunctionsVersion>V4</AzureFunctionsVersion>
+        <OutputType>Exe</OutputType>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.1.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" Version="1.1.7" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Identity.Web" Version="4.0.1" />
+        <PackageReference Include="Scriban" Version="6.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DataManager.Application.Contracts\DataManager.Application.Contracts.csproj" />
+      <ProjectReference Include="..\DataManager.Application.Core\DataManager.Application.Core.csproj" />
+      <ProjectReference Include="..\DataManager.Authentication.Core\DataManager.Authentication.Core.csproj" />
+      <ProjectReference Include="..\DataManager.AI.Core\DataManager.AI.Core.csproj" />
+    </ItemGroup>
+
+    <!-- Include wwwroot folder in publish output -->
+    <ItemGroup>
+        <None Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <!-- Local build target: Build Blazor WebAssembly and copy to wwwroot -->
+    <PropertyGroup>
+        <BlazorWAProjectPath>$(MSBuildThisFileDirectory)..\DataManager.Host.WA\DataManager.Host.WA.csproj</BlazorWAProjectPath>
+        <BlazorWAPublishDir>$(MSBuildThisFileDirectory)..\DataManager.Host.WA\bin\$(Configuration)\net10.0\publish\wwwroot</BlazorWAPublishDir>
+        <WwwrootSourceDir>$(MSBuildThisFileDirectory)wwwroot</WwwrootSourceDir>
+    </PropertyGroup>
+
+    <!-- Target to build and publish Blazor WebAssembly project -->
+    <Target Name="BuildBlazorWA" BeforeTargets="Build" Condition="'$(BuildBlazorUI)' == 'true'">
+        <Message Importance="high" Text="Building Blazor WebAssembly UI..." />
+        <Exec Command="dotnet publish &quot;$(BlazorWAProjectPath)&quot; -c $(Configuration) -o &quot;$(MSBuildThisFileDirectory)..\DataManager.Host.WA\bin\$(Configuration)\net10.0\publish&quot; -p:BaseHref=/ui/" />
+    </Target>
+
+    <!-- Target to copy Blazor output to Azure Functions wwwroot source folder -->
+    <Target Name="CopyBlazorToWwwroot" AfterTargets="BuildBlazorWA" Condition="'$(BuildBlazorUI)' == 'true'">
+        <Message Importance="high" Text="Copying Blazor WebAssembly output to wwwroot..." />
+        <ItemGroup>
+            <BlazorWAFiles Include="$(BlazorWAPublishDir)\**\*.*" />
+        </ItemGroup>
+        <MakeDir Directories="$(WwwrootSourceDir)" Condition="!Exists('$(WwwrootSourceDir)')" />
+        <Copy SourceFiles="@(BlazorWAFiles)" DestinationFiles="@(BlazorWAFiles->'$(WwwrootSourceDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+        <Message Importance="high" Text="Blazor WebAssembly files copied to $(WwwrootSourceDir)" />
+    </Target>
+
+</Project>

@@ -1,0 +1,145 @@
+@using BlazorMonaco
+@using BlazorMonaco.Editor
+@using DataManager.Application.Contracts.Modules.Translations
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Orientation = Microsoft.FluentUI.AspNetCore.Components.Orientation
+@implements IDialogContentComponent<EmailEditorPanelParameters>
+
+<FluentDialogBody Style="padding: 0; height: calc(100vh - 120px); overflow: hidden;">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="0" Style="height: 100%;">
+
+        @* First row: Template selector and language buttons *@
+        <FluentStack Orientation="Orientation.Horizontal" VerticalGap="8" HorizontalAlignment="HorizontalAlignment.Left" Style="padding: 16px; border-bottom: 1px solid var(--neutral-stroke-divider-rest);">
+
+            @* Template Selector *@
+            <FluentStack Orientation="Orientation.Horizontal" VerticalGap="8">
+                <FluentLabel Style="min-width: 80px; display: flex; align-items: center;">Template:</FluentLabel>
+                <FluentSelect TOption="TranslationDto"
+                              Items="@AvailableTemplates"
+                              OptionValue="@(t => t.Id.ToString())"
+                              OptionText="@(t => t.TranslationName)"
+                              @bind-SelectedOption="@SelectedTemplate"
+                              Style="min-width: 250px;"
+                              Placeholder="Select a template (optional)">
+                </FluentSelect>
+            </FluentStack>
+
+            @* Language Toggle Buttons *@
+            <FluentStack Orientation="Orientation.Horizontal" VerticalGap="4">
+                <FluentLabel Style="min-width: 80px; display: flex; align-items: center;">Language:</FluentLabel>
+                @foreach (var culture in AvailableCultures)
+                {
+                    <FluentButton
+                        Appearance="@(SelectedCulture == culture ? Appearance.Accent : Appearance.Neutral)"
+                        OnClick="@(() => OnCultureChanged(culture))">
+                        @culture
+                    </FluentButton>
+                }
+            </FluentStack>
+        </FluentStack>
+
+        @* Second row: Two columns - Editors and Preview *@
+        <FluentStack Orientation="Orientation.Horizontal" Style="flex: 1; overflow: hidden;">
+
+            @* Left Column: MJML and Variables Editors *@
+            <FluentStack Orientation="Orientation.Vertical" Style="flex: 1; overflow: hidden; border-right: 1px solid var(--neutral-stroke-divider-rest);">
+
+                @* MJML Editor *@
+                <FluentStack Orientation="Orientation.Vertical" Style="flex: 1; overflow: hidden; padding: 8px;">
+                    <FluentLabel Style="font-weight: 600; margin-bottom: 4px;">MJML Template</FluentLabel>
+                    <div style="flex: 1; overflow: hidden;">
+                        <StandaloneCodeEditor
+                            Id="mjml-editor"
+                            @ref="_mjmlEditor"
+                            ConstructionOptions="MjmlEditorConstructionOptions"
+                            OnDidChangeModelContent="OnMjmlContentChanged" />
+                    </div>
+                </FluentStack>
+
+                @* Variables Editor *@
+                <FluentStack Orientation="Orientation.Vertical" Style="flex: 1; overflow: hidden; padding: 8px; border-top: 1px solid var(--neutral-stroke-divider-rest);">
+                    <FluentLabel Style="font-weight: 600; margin-bottom: 4px;">Variables (JSON)</FluentLabel>
+                    <div style="flex: 1; overflow: hidden;">
+                        <StandaloneCodeEditor
+                            Id="variables-editor"
+                            @ref="_variablesEditor"
+                            ConstructionOptions="VariablesEditorConstructionOptions"
+                            OnDidChangeModelContent="OnVariablesContentChanged" />
+                    </div>
+                </FluentStack>
+            </FluentStack>
+
+            @* Right Column: Preview *@
+            <FluentStack Orientation="Orientation.Vertical" Style="flex: 1; overflow: hidden; padding: 8px;">
+
+                @* Preview Controls *@
+                <FluentStack Orientation="Orientation.Horizontal" VerticalGap="4" Style="margin-bottom: 8px;">
+                    <FluentButton
+                        Appearance="@(_previewWidth == "375px" ? Appearance.Accent : Appearance.Neutral)"
+                        OnClick='@(() => SetPreviewSize("375px"))'>
+                        Small
+                    </FluentButton>
+                    <FluentButton
+                        Appearance="@(_previewWidth == "768px" ? Appearance.Accent : Appearance.Neutral)"
+                        OnClick='@(() => SetPreviewSize("768px"))'>
+                        Medium
+                    </FluentButton>
+                    <FluentButton
+                        Appearance="@(_previewWidth == "100%" ? Appearance.Accent : Appearance.Neutral)"
+                        OnClick='@(() => SetPreviewSize("100%"))'>
+                        Large
+                    </FluentButton>
+                    <FluentButton
+                        Appearance="@(_showHtmlOutput ? Appearance.Accent : Appearance.Neutral)"
+                        OnClick="ToggleHtmlOutput">
+                        @(_showHtmlOutput ? "Hide" : "Show") HTML
+                    </FluentButton>
+                </FluentStack>
+
+                @* Preview Area *@
+                <div style="flex: 1; overflow: auto; display: flex; justify-content: center;">
+                    @if (_showHtmlOutput)
+                    {
+                        <div style="width: 100%; height: 100%;">
+                            <StandaloneCodeEditor
+                                Id="html-output-editor"
+                                @ref="_htmlOutputEditor"
+                                ConstructionOptions="HtmlOutputEditorConstructionOptions" />
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(_htmlOutput))
+                    {
+                        <iframe srcdoc="@_htmlOutput" style="width: @_previewWidth; height: 100%; border: 1px solid var(--neutral-stroke-divider-rest);" />
+                    }
+                    else
+                    {
+                        <FluentLabel>Preview will appear here...</FluentLabel>
+                    }
+                </div>
+            </FluentStack>
+        </FluentStack>
+    </FluentStack>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentButton
+        Appearance="Appearance.Accent"
+        OnClick="@HandleSaveAsync"
+        Disabled="@IsSaving"
+        Loading="@IsSaving">
+        Save
+    </FluentButton>
+
+    <FluentButton
+        Appearance="Appearance.Neutral"
+        OnClick="@HandleCancelAsync">
+        Close
+    </FluentButton>
+</FluentDialogFooter>
+
+<style>
+    #mjml-editor, #variables-editor, #html-output-editor {
+        height: 100%;
+        min-height: 300px;
+    }
+</style>

@@ -1,0 +1,86 @@
+@page "/instances"
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.ProjectInstance
+@using DataManager.Host.WA.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Project Instances</h3>
+    
+    <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Size20.Add())" />
+    </FluentNavLink>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalGap="8">
+    <FluentButton Appearance="@(RenderModeValue == RenderMode.FluentTree ? Appearance.Accent : Appearance.Neutral)"
+                  OnClick="@(() => SwitchRenderMode(RenderMode.FluentTree))">
+        Fluent - Tree
+    </FluentButton>
+    <FluentButton Appearance="@(RenderModeValue == RenderMode.WebAwesomeTree ? Appearance.Accent : Appearance.Neutral)"
+                  OnClick="@(() => SwitchRenderMode(RenderMode.WebAwesomeTree))">
+        WebAwesome - Tree
+    </FluentButton>
+    <FluentButton Appearance="@(RenderModeValue == RenderMode.DataGrid ? Appearance.Accent : Appearance.Neutral)"
+                  OnClick="@(() => SwitchRenderMode(RenderMode.DataGrid))">
+        Data Grid
+    </FluentButton>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;" />
+
+<DataLoader TResponse="PaginatedList<ProjectInstanceDto>"
+            TQuery="GetProjectInstancesQuery"
+            Query="@CurrentQuery"
+            CacheKey="@CacheKey"
+            RefreshToken="@RefreshToken"
+            OnDataFetched="HandleDataFetched">
+    <ChildContent Context="result">
+        <div style="display: @(RenderModeValue == RenderMode.FluentTree ? "block" : "none")">
+            <FluentTreeView Items="Items" SelectedItemChanged="SelectedItemChanged" SelectedItem="SelectedItem" />
+        </div>
+        
+        <div style="display: @(RenderModeValue == RenderMode.WebAwesomeTree ? "block" : "none")">
+            <InstancesWebAwesomeTree AllInstances="AllInstances" 
+                                     SelectedInstanceId="GetSelectedInstanceId()" 
+                                     OnInstanceSelected="HandleWebAwesomeItemSelected" />
+        </div>
+        
+        <div style="display: @(RenderModeValue == RenderMode.DataGrid ? "block" : "none")">
+            <PaginatedDataGrid TItem="ProjectInstanceDto"
+                              Items="@AllInstances"
+                              TotalItems="@TotalItems"
+                              PageSize="@PageSize"
+                              SearchPlaceholder="Search instances..."
+                              @bind-SearchTerm="@SearchTerm"
+                              OnSearchChanged="@OnSearchChanged"
+                              LoadData="@OnLoadData"
+                              SelectedRows="@SelectedRows"
+                              SelectedRowsChanged="@OnDataGridSelectionChanged"
+                              SettingsStorageKey="grid-settings-instances">
+                <Columns>
+                    <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="Name" Title="Name" />
+                    <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="Description" Title="Description" />
+                    <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="CreatedAt" Title="Created At" FormatString="{0:yyyy-MM-dd HH:mm}" />
+                    <RadzenDataGridColumn TItem="ProjectInstanceDto" Property="ParentProjectId" Title="Parent">
+                        <Template Context="instance">
+                            @if (instance.ParentProjectId.HasValue)
+                            {
+                                var parent = AllInstances.FirstOrDefault(i => i.Id == instance.ParentProjectId.Value);
+                                @(parent?.Name ?? "Unknown")
+                            }
+                            else
+                            {
+                                <text>-</text>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </PaginatedDataGrid>
+        </div>
+    </ChildContent>
+</DataLoader>
+

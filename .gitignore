@@ -1,0 +1,21 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+db/
+/.claude
+/.idea
+/.run
+# Generated Blazor output in Azure Functions (regenerated on build)
+DataManager.Host.AzFuncAPI/wwwroot/
+wa_output.log
+
+# Azure Functions local settings
+local.settings.json
+/TASK.md

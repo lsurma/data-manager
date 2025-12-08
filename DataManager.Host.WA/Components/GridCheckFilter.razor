@@ -1,0 +1,25 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+
+@if (Visible)
+{
+    <FluentButton Appearance="@(IsChecked ? Appearance.Accent : Appearance.Neutral)"
+                  OnClick="@OnToggleAsync"
+                  Style="@Style">
+        @if (IsChecked && !string.IsNullOrEmpty(CheckedLabel))
+        {
+            @CheckedLabel
+        }
+        else if (!IsChecked && !string.IsNullOrEmpty(UncheckedLabel))
+        {
+            @UncheckedLabel
+        }
+        else if (!string.IsNullOrEmpty(Label))
+        {
+            @Label
+        }
+        else
+        {
+            <text>Filter</text>
+        }
+    </FluentButton>
+}

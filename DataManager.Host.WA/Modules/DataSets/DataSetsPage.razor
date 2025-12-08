@@ -1,0 +1,63 @@
+@page "/data-sets"
+@using DataManager.Application.Contracts.Common
+@using DataManager.Application.Contracts.Modules.DataSets
+@using DataManager.Host.WA.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <h3 style="margin: 0;">Data Sets</h3>
+</FluentStack>
+
+<FluentDivider Style="margin: 16px 0;"/>
+
+<DataLoader TResponse="PaginatedList<DataSetDto>"
+            TQuery="GetDataSetsQuery"
+            Query="@CurrentQuery"
+            RefreshToken="@RefreshToken"
+            OnDataFetched="HandleDataFetched"/>
+
+<PaginatedDataGrid TItem="DataSetDto"
+                   Items="@AllDataSets"
+                   TotalItems="@TotalItems"
+                   PageSize="@PageSize"
+                   SearchPlaceholder="Search data sets..."
+                   @bind-SearchTerm="@SearchTerm"
+                   OnSearchChanged="@OnSearchChanged"
+                   LoadData="@OnLoadData"
+                   SelectedRows="@SelectedRows"
+                   SelectedRowsChanged="@OnDataGridSelectionChanged"
+                   SettingsStorageKey="grid-settings-data-sets">
+    <ToolbarTemplate>
+        <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+            <FluentButton Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
+                Create
+            </FluentButton>
+        </FluentNavLink>
+    </ToolbarTemplate>
+
+    <Columns>
+        <RadzenDataGridColumn TItem="DataSetDto" Visible="false" Property="Id" Title="Id"/>
+        <RadzenDataGridColumn TItem="DataSetDto" Visible="false" Property="Name" Title="Name"/>
+        <RadzenDataGridColumn TItem="DataSetDto" Property="Description" Title="Description"/>
+
+        <RadzenDataGridColumn TItem="DataSetDto" Property="IncludedDataSetIds" Title="Includes">
+            <Template Context="dataSet">
+                @if (dataSet.IncludedDataSetIds.Any())
+                {
+                    <text>@dataSet.IncludedDataSetIds.Count dataset(s)</text>
+                }
+                else
+                {
+                    <text>-</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="DataSetDto" Property="UpdatedAt" Title="Updated At"
+                              FormatString="{0:yyyy-MM-dd HH:mm}"/>
+        <RadzenDataGridColumn TItem="DataSetDto" Visible="false" Property="CreatedAt" Title="Created At"
+                              FormatString="{0:yyyy-MM-dd HH:mm}"/>
+
+    </Columns>
+</PaginatedDataGrid>

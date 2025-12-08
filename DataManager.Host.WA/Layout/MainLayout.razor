@@ -1,0 +1,90 @@
+@using DataManager.Host.WA.Components
+@using DataManager.Host.WA.Services
+@using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@inherits LayoutComponentBase
+
+<HeadContent>
+    <RadzenTheme Theme="material" />
+</HeadContent>
+
+<FluentLayout>
+    <FluentHeader>
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Start">
+            <FluentLabel Typo="Typography.H3">Data Manager</FluentLabel>
+            
+            <FluentButton 
+                IconStart="@(new Size20.Settings())" 
+                Appearance="Appearance.Neutral"
+                OnClick="@OpenSettingsPanelAsync"
+                Title="Settings" />
+            
+            <div style="margin-left: auto;">
+                <LoginDisplay />
+            </div>
+        </FluentStack>
+    </FluentHeader>
+    
+    <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
+        <NavMenu />
+        <FluentBodyContent Class="body-content">
+            <ErrorBoundary>
+                <ChildContent>
+                    <div class="content">
+                        @Body
+                    </div>
+                </ChildContent>
+                <ErrorContent Context="ex">
+                    <div class="blazor-error-boundary">@ex.Message</div>
+                </ErrorContent>
+            </ErrorBoundary>
+        </FluentBodyContent>
+    </FluentStack>
+</FluentLayout>
+
+<CustomDialogProvider />
+<FluentToastProvider RemoveToastsOnNavigation="false" Position="ToastPosition.TopCenter" />
+<RadzenComponents />
+
+@inject AppDataContext AppContext
+@inject IToastService ToastService
+@inject IDialogService DialogService
+
+@code {
+    private bool IsRefreshing { get; set; } = false;
+
+    private async Task RefreshAppDataAsync()
+    {
+        IsRefreshing = true;
+        StateHasChanged();
+
+        try
+        {
+            await AppContext.RefreshAsync();
+            ToastService.ShowSuccess("Data refreshed successfully");
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Failed to refresh data: {ex.Message}");
+        }
+        finally
+        {
+            IsRefreshing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenSettingsPanelAsync()
+    {
+        var parameters = new AppSettingsPanelParameters();
+
+        await DialogService.ShowPanelAsync<AppSettingsPanel>(parameters, new DialogParameters
+        {
+            Title = "Settings",
+            Width = "400px",
+            TrapFocus = false,
+            Modal = false,
+            Id = $"settings-panel-{Guid.NewGuid()}"
+        });
+    }
+}
