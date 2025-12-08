@@ -24,6 +24,9 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     [Parameter]
     public bool DisableAutoPanelOpening { get; set; } = false;
 
+    [Parameter]
+    public List<IQueryFilter> AdditionalFilters { get; set; } = new();
+
     [CascadingParameter]
     public AppDataContext? CascadingAppContext { get; set; }
 
@@ -265,6 +268,12 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private List<IQueryFilter> BuildQueryFilters()
     {
         var filters = new List<IQueryFilter>();
+        
+        // Add additional filters first (e.g., InternalGroupName1Filter from EmailsPage)
+        if (AdditionalFilters != null && AdditionalFilters.Count > 0)
+        {
+            filters.AddRange(AdditionalFilters);
+        }
         
         if (!string.IsNullOrWhiteSpace(SearchTerm))
         {

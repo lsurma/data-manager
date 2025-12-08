@@ -72,3 +72,13 @@ public class VersionStatusFilterHandler : IFilterHandler<Translation, VersionSta
         return Task.FromResult(expression);
     }
 }
+
+public class InternalGroupName1FilterHandler : IFilterHandler<Translation, InternalGroupName1Filter>
+{
+    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(InternalGroupName1Filter filter, CancellationToken cancellationToken = default)
+    {
+        var groupName = filter.Value!; // We know it has value because IsActive() was checked
+        Expression<Func<Translation, bool>> expression = t => t.InternalGroupName1 == groupName;
+        return Task.FromResult(expression);
+    }
+}
