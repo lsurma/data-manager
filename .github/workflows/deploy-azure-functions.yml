@@ -29,11 +29,11 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore DataManager.sln
 
-      - name: Build with Blazor UI and publish
+      - name: Build and publish Azure Functions
         run: |
-          # Build the Blazor WebAssembly UI and copy to Azure Functions wwwroot
-          dotnet build DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj -c Release -p:BuildBlazorUI=true
-          # Publish the Azure Functions API (includes wwwroot from previous step)
+          # Build the Azure Functions API only (without Blazor UI)
+          dotnet build DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj -c Release
+          # Publish the Azure Functions API
           dotnet publish DataManager.Host.AzFuncAPI/DataManager.Host.AzFuncAPI.csproj -c Release -o ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }} --no-build
 
       - name: Deploy to Azure Functions
