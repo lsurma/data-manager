@@ -270,7 +270,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         var filters = new List<IQueryFilter>();
         
         // Add additional filters first (e.g., InternalGroupName1Filter from EmailsPage)
-        if (AdditionalFilters != null && AdditionalFilters.Count > 0)
+        if (AdditionalFilters.Count > 0)
         {
             filters.AddRange(AdditionalFilters);
         }
