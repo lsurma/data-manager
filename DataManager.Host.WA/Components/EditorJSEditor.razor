@@ -1,0 +1,73 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div @ref="editorElement" id="@EditorId" class="editorjs-container"></div>
+
+@code {
+    [Parameter]
+    public string EditorId { get; set; } = $"editorjs-{Guid.NewGuid():N}";
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    private ElementReference editorElement;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<EditorJSEditor>? dotNetReference;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/editorjs-wrapper.js");
+            dotNetReference = DotNetObjectReference.Create(this);
+
+            await module.InvokeVoidAsync("initializeEditorJS", EditorId, dotNetReference, Placeholder ?? "", Value ?? "");
+        }
+    }
+
+    public async Task<string> GetValueAsync()
+    {
+        if (module != null)
+        {
+            return await module.InvokeAsync<string>("getEditorJSContent", EditorId);
+        }
+        return string.Empty;
+    }
+
+    public async Task SetValueAsync(string json)
+    {
+        if (module != null)
+        {
+            await module.InvokeVoidAsync("setEditorJSContent", EditorId, json);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnContentChanged(string json)
+    {
+        Value = json;
+        await ValueChanged.InvokeAsync(json);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module != null)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("destroyEditorJS", EditorId);
+            }
+            catch { }
+
+            await module.DisposeAsync();
+        }
+
+        dotNetReference?.Dispose();
+    }
+}
