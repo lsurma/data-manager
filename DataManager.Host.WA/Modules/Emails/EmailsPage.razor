@@ -1,4 +1,4 @@
-@page "/emails"
+@page "/emails/{DataSetId:guid?}"
 @using DataManager.Application.Contracts.Common
 @using DataManager.Application.Contracts.Modules.Translations
 @using DataManager.Host.WA.Modules.Translations
@@ -9,11 +9,28 @@
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
     <h3 style="margin: 0;">Emails</h3>
 
-    <FluentNavLink Href="/emails?action=create">
-        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Size20.Add())" />
+    <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
+        <FluentButton Disabled="@(DataSetId == null)" Appearance="Appearance.Accent" IconStart="@(new Size20.Add())" />
     </FluentNavLink>
 </FluentStack>
 
 <FluentDivider Style="margin: 16px 0;" />
 
-<TranslationsGrid @ref="_translationsGrid" DisableAutoPanelOpening="true" @key="_refreshToken" />
+<FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" Wrap="true" Gap="8px">
+    <FluentButton Appearance="@GetAppearanceForDataSet(null)" OnClick="@(() => OnDataSetFilterChanged(null))">
+        All
+    </FluentButton>
+
+    @foreach (var dataSet in AllDataSets)
+    {
+        <FluentButton Appearance="@GetAppearanceForDataSet(dataSet.Id)" OnClick="@(() => OnDataSetFilterChanged(dataSet.Id))">
+            @dataSet.Name
+        </FluentButton>
+    }
+</FluentStack>
+
+<TranslationsGrid @ref="_translationsGrid" 
+                  DataSetId="DataSetId" 
+                  AdditionalFilters="Filters"
+                  DisableAutoPanelOpening="true" 
+                  @key="_refreshToken" />

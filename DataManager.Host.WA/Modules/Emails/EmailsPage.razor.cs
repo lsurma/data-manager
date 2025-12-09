@@ -5,7 +5,9 @@ using System.Web;
 using DataManager.Application.Contracts;
 using DataManager.Application.Contracts.Common;
 using DataManager.Application.Contracts.Modules.Translations;
+using DataManager.Application.Contracts.Modules.DataSets;
 using DataManager.Host.WA.Modules.Translations;
+using DataManager.Host.WA.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -14,8 +16,25 @@ namespace DataManager.Host.WA.Modules.Emails
 {
     public partial class EmailsPage : ComponentBase, IDisposable
     {
+        [Parameter]
+        public Guid? DataSetId { get; set; }
+
+        [CascadingParameter]
+        public AppDataContext? CascadingAppContext { get; set; }
+
+        [Inject]
+        private AppDataContext InjectedAppContext { get; set; } = null!;
+
+        /// <summary>
+        /// Gets the AppDataContext from cascading parameter if available, otherwise uses injected service
+        /// </summary>
+        private AppDataContext AppContext => CascadingAppContext ?? InjectedAppContext;
+
         [Inject]
         private NavigationManager NavigationManager { get; set; } = null!;
+
+        [Inject]
+        private NavigationHelper NavHelper { get; set; } = null!;
 
         [Inject]
         private IDialogService DialogService { get; set; } = null!;
@@ -24,6 +43,7 @@ namespace DataManager.Host.WA.Modules.Emails
         private IRequestSender RequestSender { get; set; } = null!;
 
         private List<IQueryFilter> Filters { get; set; } = new();
+        private List<DataSetDto> AllDataSets => AppContext.DataSets;
         private TranslationsGrid? _translationsGrid;
         private IDialogReference? _currentDialog;
         private Guid? _selectedTranslationId;
@@ -48,6 +68,18 @@ namespace DataManager.Host.WA.Modules.Emails
         private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         {
             await ProcessUrlParametersAsync();
+        }
+
+        private void OnDataSetFilterChanged(Guid? dataSetId)
+        {
+            var url = dataSetId.HasValue ? $"emails/{dataSetId}" : "emails";
+            NavigationManager.NavigateTo(url);
+        }
+
+        private Appearance GetAppearanceForDataSet(Guid? dataSetId)
+        {
+            var isSelected = DataSetId == dataSetId;
+            return isSelected ? Appearance.Accent : Appearance.Neutral;
         }
 
         private async Task ProcessUrlParametersAsync()
@@ -114,7 +146,7 @@ namespace DataManager.Host.WA.Modules.Emails
 
             if (result.Cancelled)
             {
-                NavigationManager.NavigateTo("/emails", false);
+                NavigationManager.NavigateTo(DataSetId != null ? $"/emails/{DataSetId}" : "/emails", false);
             }
 
             StateHasChanged();
