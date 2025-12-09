@@ -47,6 +47,60 @@ export async function initializeEditorJS(editorId, dotNetRef, placeholder, initi
     }
 
     // Initialize EditorJS
+    const tools = {};
+    
+    // Add tools only if they are available
+    if (typeof Header !== 'undefined') {
+        tools.header = {
+            class: Header,
+            inlineToolbar: true
+        };
+    }
+    if (typeof List !== 'undefined') {
+        tools.list = {
+            class: List,
+            inlineToolbar: true
+        };
+    }
+    if (typeof Quote !== 'undefined') {
+        tools.quote = {
+            class: Quote,
+            inlineToolbar: true
+        };
+    }
+    if (typeof Delimiter !== 'undefined') {
+        tools.delimiter = Delimiter;
+    }
+    if (typeof Table !== 'undefined') {
+        tools.table = {
+            class: Table,
+            inlineToolbar: true
+        };
+    }
+    if (typeof CodeTool !== 'undefined') {
+        tools.code = {
+            class: CodeTool
+        };
+    }
+    if (typeof Warning !== 'undefined') {
+        tools.warning = {
+            class: Warning,
+            inlineToolbar: true
+        };
+    }
+    if (typeof Marker !== 'undefined') {
+        tools.marker = {
+            class: Marker,
+            shortcut: 'CMD+SHIFT+M'
+        };
+    }
+    if (typeof InlineCode !== 'undefined') {
+        tools.inlineCode = {
+            class: InlineCode,
+            shortcut: 'CMD+SHIFT+C'
+        };
+    }
+
     const editor = new EditorJS({
         holder: editorId,
         placeholder: placeholder || 'Start writing...',
@@ -60,40 +114,7 @@ export async function initializeEditorJS(editorId, dotNetRef, placeholder, initi
                 console.error('EditorJS save error:', error);
             }
         },
-        tools: {
-            header: {
-                class: Header,
-                inlineToolbar: true
-            },
-            list: {
-                class: List,
-                inlineToolbar: true
-            },
-            quote: {
-                class: Quote,
-                inlineToolbar: true
-            },
-            delimiter: Delimiter,
-            table: {
-                class: Table,
-                inlineToolbar: true
-            },
-            code: {
-                class: CodeTool
-            },
-            warning: {
-                class: Warning,
-                inlineToolbar: true
-            },
-            marker: {
-                class: Marker,
-                shortcut: 'CMD+SHIFT+M'
-            },
-            inlineCode: {
-                class: InlineCode,
-                shortcut: 'CMD+SHIFT+C'
-            }
-        }
+        tools: tools
     });
 
     // Store instance
