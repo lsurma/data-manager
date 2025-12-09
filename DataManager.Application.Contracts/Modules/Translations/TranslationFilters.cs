@@ -79,3 +79,17 @@ public class VersionStatusFilter : TranslationFilterBase<VersionStatusFilter>
     
     public override bool IsActive() => IncludeCurrentVersions.HasValue || IncludeDraftVersions.HasValue || IncludeOldVersions.HasValue;
 }
+
+/// <summary>
+/// Filter for translations that are not filled (Content equals TranslationName).
+/// Used to find translations that were auto-created with default content and need to be filled.
+/// </summary>
+public class NotFilledFilter : TranslationFilterBase<NotFilledFilter>
+{
+    /// <summary>
+    /// When true, show only not filled translations (where Content == TranslationName)
+    /// </summary>
+    public bool Value { get; set; }
+    
+    public override bool IsActive() => Value;
+}

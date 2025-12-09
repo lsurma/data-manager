@@ -72,3 +72,14 @@ public class VersionStatusFilterHandler : IFilterHandler<Translation, VersionSta
         return Task.FromResult(expression);
     }
 }
+
+public class NotFilledFilterHandler : IFilterHandler<Translation, NotFilledFilter>
+{
+    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(NotFilledFilter filter, CancellationToken cancellationToken = default)
+    {
+        // Filter for translations where Content equals TranslationName
+        // These are auto-created translations that haven't been filled with actual content yet
+        Expression<Func<Translation, bool>> expression = t => t.Content == t.TranslationName;
+        return Task.FromResult(expression);
+    }
+}

@@ -69,6 +69,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private string? SearchTerm;
     private string? CultureNameFilter;
     private Guid? SelectedTranslationId;
+    private bool ShowNotFilledOnly = false;
     
     // Filter-related properties
     private List<string> AvailableCultures { get; set; } = new();
@@ -238,18 +239,20 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
 
     private void OnSearchChanged()
     {
-        _currentQuery = new GetTranslationsQuery
-        {
-            Filtering = new FilteringParameters
-            {
-                QueryFilters = BuildQueryFilters()
-            },
-            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
-        };
-        RefreshToken = Guid.NewGuid().ToString();
+        RefreshQueryWithFilters();
     }
 
     private void OnCultureFilterChanged()
+    {
+        RefreshQueryWithFilters();
+    }
+
+    private void OnNotFilledFilterChanged()
+    {
+        RefreshQueryWithFilters();
+    }
+
+    private void RefreshQueryWithFilters()
     {
         _currentQuery = new GetTranslationsQuery
         {
@@ -279,6 +282,11 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         if(DataSetId != null)
         {
             filters.Add(new DataSetIdFilter { Value = DataSetId.Value });
+        }
+        
+        if (ShowNotFilledOnly)
+        {
+            filters.Add(new NotFilledFilter { Value = true });
         }
         
         return filters;
@@ -417,7 +425,8 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
                 {
                     Filters = new List<FilterSettings>
                     {
-                        new FilterSettings { Id = "culture", Label = "Culture", Visible = true, OrderIndex = 0 }
+                        new FilterSettings { Id = "culture", Label = "Culture", Visible = true, OrderIndex = 0 },
+                        new FilterSettings { Id = "notFilled", Label = "Not Filled", Visible = true, OrderIndex = 1 }
                     }
                 };
             }
@@ -430,7 +439,8 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             {
                 Filters = new List<FilterSettings>
                 {
-                    new FilterSettings { Id = "culture", Label = "Culture", Visible = true, OrderIndex = 0 }
+                    new FilterSettings { Id = "culture", Label = "Culture", Visible = true, OrderIndex = 0 },
+                    new FilterSettings { Id = "notFilled", Label = "Not Filled", Visible = true, OrderIndex = 1 }
                 }
             };
         }
