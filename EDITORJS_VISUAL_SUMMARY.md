@@ -65,6 +65,7 @@ Click the "+" button to see all available blocks:
 │  ⚠  Warning                    │
 │  🖍  Marker (Highlight)         │
 │  `  Inline Code                │
+│  🖼  Simple Image               │
 └─────────────────────────────────┘
 ```
 

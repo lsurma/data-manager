@@ -60,6 +60,7 @@ var content = item.Content; // Returns JSON string
 - ⚠ **Warning**: Alert/warning blocks
 - 🖍 **Marker**: Text highlighting
 - `code` **Inline Code**: Inline code formatting
+- 🖼 **Simple Image**: Image blocks with URL support
 
 ## Key Features
 

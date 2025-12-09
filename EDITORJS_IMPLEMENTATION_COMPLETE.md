@@ -76,7 +76,7 @@ Successfully integrated EditorJS (https://editorjs.io/) as a new content editor 
 
 ## Features Implemented
 
-### EditorJS Tools (9 total):
+### EditorJS Tools (10 total):
 1. ✅ **Header** (v2.8.8) - H1, H2, H3 headings with inline toolbar
 2. ✅ **List** (v1.10.0) - Ordered and unordered lists
 3. ✅ **Quote** (v2.7.4) - Block quotations
@@ -86,6 +86,7 @@ Successfully integrated EditorJS (https://editorjs.io/) as a new content editor 
 7. ✅ **Warning** (v1.4.0) - Warning/alert blocks
 8. ✅ **Marker** (v1.4.0) - Text highlighting (CMD+SHIFT+M)
 9. ✅ **Inline Code** (v1.5.1) - Inline code formatting (CMD+SHIFT+C)
+10. ✅ **Simple Image** (v1.6.0) - Image blocks with URL support
 
 ### Technical Features:
 - ✅ Block-based content editing

@@ -83,7 +83,8 @@ tools: {
     code: CodeTool,      // Code blocks
     warning: Warning,    // Warning blocks
     marker: Marker,      // Text highlighting
-    inlineCode: InlineCode // Inline code
+    inlineCode: InlineCode, // Inline code
+    image: SimpleImage   // Simple image blocks
 }
 ```
 
@@ -93,7 +94,7 @@ tools: {
 <!-- Core -->
 @editorjs/editorjs@2.30.7
 
-<!-- Tools (9 plugins) -->
+<!-- Tools (10 plugins) -->
 @editorjs/header@2.8.8
 @editorjs/list@1.10.0
 @editorjs/quote@2.7.4
@@ -103,6 +104,7 @@ tools: {
 @editorjs/warning@1.4.0
 @editorjs/marker@1.4.0
 @editorjs/inline-code@1.5.1
+@editorjs/simple-image@1.6.0
 ```
 
 ## Example EditorJS JSON Output

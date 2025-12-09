@@ -100,6 +100,11 @@ export async function initializeEditorJS(editorId, dotNetRef, placeholder, initi
             shortcut: 'CMD+SHIFT+C'
         };
     }
+    if (typeof SimpleImage !== 'undefined') {
+        tools.image = {
+            class: SimpleImage
+        };
+    }
 
     const editor = new EditorJS({
         holder: editorId,

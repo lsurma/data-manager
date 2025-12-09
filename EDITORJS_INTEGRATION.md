@@ -43,7 +43,7 @@ The integration follows the existing editor pattern in the codebase:
 
 4. **DataManager.Host.WA/wwwroot/index.html**
    - Added EditorJS core library (v2.30.7)
-   - Added 9 EditorJS tool plugins (all pinned to specific versions)
+   - Added 10 EditorJS tool plugins (all pinned to specific versions)
 
 5. **DataManager.Application.Core/Modules/Translations/Filters/TranslationFilterApplicator.cs**
    - Fixed pre-existing bug: Added missing return statement in `InternalGroupName1FilterHandler`
@@ -60,6 +60,7 @@ The following tools are available in the editor:
 - **Warning** (v1.4.0) - Warning blocks
 - **Marker** (v1.4.0) - Text highlighting
 - **InlineCode** (v1.5.1) - Inline code formatting
+- **Simple Image** (v1.6.0) - Image blocks with URL support
 
 ### 4. Data Storage Format
 
