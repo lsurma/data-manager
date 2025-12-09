@@ -19,7 +19,7 @@ public partial class PaginatedDataGrid<TItem>
     /// <summary>
     ///     Flag to prevent LoadSettings from triggering grid refresh during column resize
     /// </summary>
-    private bool _isHandlingColumnResize = false;
+    private bool _isHandlingColumnResize;
 
     /// <summary>
     ///     Opens the settings panel for column customization
