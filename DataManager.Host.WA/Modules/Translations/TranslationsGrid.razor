@@ -42,6 +42,12 @@
                 }
             </OptionTemplate>
         </GridSelectFilter>
+        
+        <GridCheckFilter @bind-IsChecked="@ShowNotFilledOnly"
+                         OnValueChangedCallback="@OnNotFilledFilterChanged"
+                         CheckedLabel="Not Filled ✓"
+                         UncheckedLabel="All Translations"
+                         Visible="@IsFilterVisible("notFilled")" />
     </AdditionalFilters>
     <AdditionalToolbar>
         <FluentButton IconStart="@(new Size20.Filter())" OnClick="@OpenFilterPanelAsync" Title="Filter settings" />

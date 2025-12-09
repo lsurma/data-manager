@@ -79,6 +79,16 @@ public class InternalGroupName1FilterHandler : IFilterHandler<Translation, Inter
     {
         var groupName = filter.Value!; // We know it has value because IsActive() was checked
         Expression<Func<Translation, bool>> expression = t => t.InternalGroupName1 == groupName;
+    }
+}
+
+public class NotFilledFilterHandler : IFilterHandler<Translation, NotFilledFilter>
+{
+    public Task<Expression<Func<Translation, bool>>> GetFilterExpressionAsync(NotFilledFilter filter, CancellationToken cancellationToken = default)
+    {
+        // Filter for translations where Content equals TranslationName
+        // These are auto-created translations that haven't been filled with actual content yet
+        Expression<Func<Translation, bool>> expression = t => t.Content == t.TranslationName;
         return Task.FromResult(expression);
     }
 }
