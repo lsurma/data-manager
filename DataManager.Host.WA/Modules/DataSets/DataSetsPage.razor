@@ -28,13 +28,13 @@
                    SelectedRows="@SelectedRows"
                    SelectedRowsChanged="@OnDataGridSelectionChanged"
                    SettingsStorageKey="grid-settings-data-sets">
-    <ToolbarTemplate>
+    <ActionsTemplate>
         <FluentNavLink Href="@NavHelper.BuildUrl("action", "create")">
             <FluentButton Appearance="Appearance.Accent" IconStart="@(new Size20.Add())">
                 Create
             </FluentButton>
         </FluentNavLink>
-    </ToolbarTemplate>
+    </ActionsTemplate>
 
     <Columns>
         <RadzenDataGridColumn TItem="DataSetDto" Visible="false" Property="Id" Title="Id"/>

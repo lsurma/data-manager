@@ -20,11 +20,11 @@
                    SelectedRows="@SelectedRows"
                    SelectedRowsChanged="@OnDataGridSelectionChanged"
                    SettingsStorageKey="grid-settings-translations">
-    <ToolbarTemplate>
+    <ActionsTemplate>
         @ToolbarTemplate
-    </ToolbarTemplate>
+    </ActionsTemplate>
 
-    <AdditionalFilters>
+    <FiltersTemplate>
         <GridSelectFilter Items="@(new List<string> { "" }.Concat(AvailableCultures).ToList())"
                           @bind-Value="@CultureNameFilter"
                           OnValueChangedCallback="@OnCultureFilterChanged"
@@ -48,10 +48,9 @@
                          CheckedLabel="Not Filled ✓"
                          UncheckedLabel="All Translations"
                          Visible="@IsFilterVisible("notFilled")" />
-    </AdditionalFilters>
-    <AdditionalToolbar>
+        
         <FluentButton IconStart="@(new Size20.Filter())" OnClick="@OpenFilterPanelAsync" Title="Filter settings" />
-    </AdditionalToolbar>
+    </FiltersTemplate>
     <Columns>
         <RadzenDataGridColumn TItem="TranslationDto" Visible="false" Property="Id" Title="Id" Width="120px"/>
 
