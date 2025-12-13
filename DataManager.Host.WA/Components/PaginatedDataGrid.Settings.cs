@@ -15,6 +15,11 @@ public partial class PaginatedDataGrid<TItem>
     private AppDataGridSettings? GridSettings { get; set; }
 
     protected DataGridSettings DataGridSettings { get; set; } = new DataGridSettings();
+    
+    /// <summary>
+    ///     Flag to prevent LoadSettings from triggering grid refresh during column resize
+    /// </summary>
+    private bool _isHandlingColumnResize;
 
     /// <summary>
     ///     Opens the settings panel for column customization
@@ -179,6 +184,13 @@ public partial class PaginatedDataGrid<TItem>
         {
             return;
         }
+        
+        // Skip applying settings if we're in the middle of handling a column resize
+        // to prevent triggering LoadData and creating an infinite loop
+        if (_isHandlingColumnResize)
+        {
+            return;
+        }
 
         var columnsToSet = (obj.Settings?.Columns ?? []).ToList();
         
@@ -213,24 +225,35 @@ public partial class PaginatedDataGrid<TItem>
     /// </summary>
     private async Task ColumnResized(DataGridColumnResizedEventArgs<TItem> arg)
     {
-        GridSettings ??= new AppDataGridSettings();
+        // Set flag to prevent LoadSettings from triggering grid refresh
+        _isHandlingColumnResize = true;
         
-        // Update the column width in our settings
-        var columnState = GridSettings.Columns.FirstOrDefault(c => c.UniqueID == arg.Column.UniqueID);
-        
-        if(columnState == null)
+        try
         {
-            columnState = new ColumnSettings
+            GridSettings ??= new AppDataGridSettings();
+            
+            // Update the column width in our settings
+            var columnState = GridSettings.Columns.FirstOrDefault(c => c.UniqueID == arg.Column.UniqueID);
+            
+            if(columnState == null)
             {
-                UniqueID = arg.Column.UniqueID,
-                Visible = arg.Column.Visible,
-                OrderIndex = arg.Column.OrderIndex ?? 0
-            };
-            GridSettings.Columns.Add(columnState);
-        }
+                columnState = new ColumnSettings
+                {
+                    UniqueID = arg.Column.UniqueID,
+                    Visible = arg.Column.Visible,
+                    OrderIndex = arg.Column.OrderIndex ?? 0
+                };
+                GridSettings.Columns.Add(columnState);
+            }
 
-        columnState.Width = $"{(int)(arg.Width)}px";
-        await SaveSettingsAsync();
+            columnState.Width = $"{(int)(arg.Width)}px";
+            await SaveSettingsAsync();
+        }
+        finally
+        {
+            // Always reset the flag, even if an exception occurs
+            _isHandlingColumnResize = false;
+        }
     }
 
     /// <summary>

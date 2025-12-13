@@ -79,6 +79,7 @@ public class InternalGroupName1FilterHandler : IFilterHandler<Translation, Inter
     {
         var groupName = filter.Value!; // We know it has value because IsActive() was checked
         Expression<Func<Translation, bool>> expression = t => t.InternalGroupName1 == groupName;
+        return Task.FromResult(expression);
     }
 }
 
