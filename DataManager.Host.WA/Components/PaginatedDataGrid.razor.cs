@@ -50,10 +50,10 @@ public partial class PaginatedDataGrid<TItem> : ComponentBase
     public RenderFragment? Columns { get; set; }
 
     [Parameter]
-    public RenderFragment? AdditionalFilters { get; set; }
+    public RenderFragment? ActionsTemplate { get; set; }
 
     [Parameter]
-    public RenderFragment? AdditionalToolbar { get; set; }
+    public RenderFragment? FiltersTemplate { get; set; }
 
     [Parameter]
     public bool AllowFiltering { get; set; } = true;
@@ -66,9 +66,6 @@ public partial class PaginatedDataGrid<TItem> : ComponentBase
 
     [Parameter]
     public DataGridSelectionMode SelectionMode { get; set; } = DataGridSelectionMode.Single;
-
-    [Parameter]
-    public RenderFragment? ToolbarTemplate { get; set; } = null!;
     
     protected override async Task OnInitializedAsync()
     {
