@@ -231,3 +231,210 @@ All entities inherit from `AuditableEntityBase` which provides:
 - `UpdatedAt` (stored as UTC ticks in SQLite as long)
 
 Database configuration automatically converts UTC ticks to `DateTimeOffset` via value converters in `AuditableEntityConfiguration`.
+
+### Authentication System
+
+The API supports three authentication methods (see `AUTHENTICATION.md` for full details):
+
+1. **JWT Bearer Tokens** from Entra ID (Azure AD)
+2. **Custom API Keys** via `X-API-Key` header
+3. **Azure API Management (APIM)** with shared secret
+
+**Configuration** in `local.settings.json`:
+```json
+{
+  "Values": {
+    "Authentication__RequireAuthentication": "false",  // Set to "true" for production
+    "Authentication__ApiKeys__Enabled": "true",
+    "Authentication__ApiKeys__Keys__ServiceName": "your-api-key-here"
+  }
+}
+```
+
+**Available Policies:**
+- `ApiKeyPolicy`: Requires API Key authentication only
+- `JwtBearerPolicy`: Requires JWT Bearer authentication only
+- `ApiOrJwtPolicy`: Accepts either authentication method (default)
+
+### User Identity Tracking and Auditing
+
+The application automatically tracks **who** performs **what** actions (see `USER_TRACKING.md` for full details):
+
+**Key Components:**
+- **`UserIdentity`**: Universal user identity model (`DataManager.Application.Contracts/Common/UserIdentity.cs`)
+- **`ICurrentUserService`**: Service to access current authenticated user
+- **`CurrentUserService`**: Extracts user from HTTP context (JWT claims, API Key, or APIM headers)
+- **`LoggingBehavior`**: MediatR pipeline for automatic request logging with user context
+
+**Automatic Audit Fields:**
+- `CreatedBy` - User ID who created the entity (auto-set on SaveChanges)
+- `CreatedAt` - Timestamp when created
+- `UpdatedBy` - User ID who last updated the entity (auto-set on SaveChanges)
+- `UpdatedAt` - Timestamp when last updated
+
+**Usage in Code:**
+```csharp
+// Inject ICurrentUserService
+var user = _currentUserService.GetCurrentUser();
+var userId = _currentUserService.GetUserId();
+var displayName = _currentUserService.GetUserDisplayName();
+```
+
+### Background Jobs and Webhooks
+
+The application provides background job execution with webhook notifications (see `BACKGROUND_JOBS.md` for full details):
+
+**Implementations:**
+- **LocalBackgroundJobService**: In-memory queue for development (default)
+- **DurableFunctionsBackgroundJobService**: Azure Durable Functions for production
+
+**WebhookNotificationHelper Usage:**
+```csharp
+await _webhookHelper.NotifyTranslationsSetChangeAsync(
+    translationsSetId: request.TranslationsSetId,
+    eventType: "translation.updated",
+    additionalData: new Dictionary<string, object>
+    {
+        { "resourceName", request.ResourceName }
+    },
+    cancellationToken: cancellationToken
+);
+```
+
+**Webhook Payload:**
+```json
+{
+  "eventType": "translation.updated",
+  "timestamp": "2024-12-06T22:00:00Z",
+  "translationsSetId": "550e8400-e29b-41d4-a716-446655440000",
+  "data": { "resourceName": "MyApp.Strings" }
+}
+```
+
+### TranslationsSet Hierarchy Helper
+
+Methods for fetching datasets in hierarchical order (see `TRANSLATIONSSET_HIERARCHY_HELPER.md`):
+
+```csharp
+// Get all dataset IDs in hierarchy order
+var hierarchyIds = await _dataSetsQueryService.GetDataSetHierarchyIdsAsync(rootDataSetId, ct);
+
+// Get full dataset entities in hierarchy order
+var datasets = await _dataSetsQueryService.GetDataSetHierarchyAsync(rootDataSetId, ct);
+```
+
+Features: Authorization-aware, circular reference protection, breadth-first traversal.
+
+### Optional<T> Pattern for Partial Updates
+
+The `Optional<T>` type enables PATCH-style operations (see `OPTIONAL_PATTERN.md`):
+
+```csharp
+// Distinguish between: not provided, explicitly null, or has value
+Optional<string>.Unspecified()  // Not provided
+Optional<string>.Null()          // Explicitly set to null
+Optional<string>.Of("value")     // Has a value
+
+// In handlers - only update specified properties
+if (request.Content.IsSpecified)
+    entity.Content = request.Content.Value;
+
+// With default fallback
+var value = request.Content.GetValueOrDefault("default");
+```
+
+### Content Editors
+
+The application supports 6 content editor types (see `EDITORJS_QUICKSTART.md`):
+1. Text Input
+2. Text Area
+3. Monaco Editor (Code Editor)
+4. Radzen Rich Text Editor
+5. Quill Editor
+6. **EditorJS** - Block-based editor outputting clean JSON
+
+**EditorJS Tools Available:**
+- Header, Paragraph, List, Quote, Delimiter, Table, Code, Warning, Marker, Inline Code, Simple Image
+
+### Reusable Grid Filter Components
+
+Three reusable filter components for grids (see `GRID_FILTER_COMPONENTS_GUIDE.md`):
+
+**GridSelectFilter** - Dropdown/select filter:
+```razor
+<GridSelectFilter Items="@Cultures"
+                  @bind-Value="@CultureFilter"
+                  OnValueChangedCallback="@OnFilterChanged"
+                  Placeholder="All Cultures"
+                  Visible="@IsFilterVisible("culture")" />
+```
+
+**GridTextFilter** - Text input filter:
+```razor
+<GridTextFilter @bind-Value="@SearchFilter"
+                OnValueChangedCallback="@OnFilterChanged"
+                Placeholder="Search..."
+                Visible="true" />
+```
+
+**GridCheckFilter** - Toggle button filter:
+```razor
+<GridCheckFilter @bind-IsChecked="@ShowDraftsOnly"
+                 OnValueChangedCallback="@OnFilterChanged"
+                 CheckedLabel="Drafts Only ✓"
+                 UncheckedLabel="All Versions"
+                 Visible="true" />
+```
+
+## Local Testing
+
+For local testing with authentication (see `LOCAL_TESTING.md` for full guide):
+
+**Option A: No Authentication (Development Mode)**
+```json
+{ "Authentication__RequireAuthentication": "false" }
+```
+
+**Option B: API Key Authentication (Easy Local Testing)**
+```json
+{
+  "Authentication__RequireAuthentication": "true",
+  "Authentication__ApiKeys__Enabled": "true",
+  "Authentication__ApiKeys__Keys__Alice": "alice-key-12345"
+}
+```
+
+**Test with curl:**
+```bash
+# Without auth
+curl "http://localhost:7233/api/query/GetProjectInstancesQuery?body=%7B%7D"
+
+# With API Key
+curl -H "X-API-Key: alice-key-12345" "http://localhost:7233/api/query/GetProjectInstancesQuery?body=%7B%7D"
+```
+
+**Check database:**
+```bash
+sqlite3 db/DataManager.db "SELECT Id, Name, CreatedBy FROM ProjectInstances;"
+```
+
+## Documentation References
+
+The following detailed documentation files are available in the repository:
+
+| Topic | File | Description |
+|-------|------|-------------|
+| Authentication | `AUTHENTICATION.md` | Full auth configuration guide |
+| User Tracking | `USER_TRACKING.md` | User identity and auditing details |
+| Background Jobs | `BACKGROUND_JOBS.md` | Webhook notifications setup |
+| Local Testing | `LOCAL_TESTING.md` | Testing all auth methods locally |
+| Pagination | `PAGINATION_IMPLEMENTATION.md` | Pagination system details |
+| Pagination Quick Start | `PAGINATION_QUICKSTART.md` | Quick examples for pagination |
+| Authorization Scope | `OMIT_AUTHORIZATION_SCOPE.md` | OmitAuthorizationScope usage |
+| EditorJS | `EDITORJS_QUICKSTART.md` | EditorJS integration guide |
+| EditorJS Architecture | `EDITORJS_ARCHITECTURE.md` | EditorJS technical details |
+| Grid Filters | `GRID_FILTER_COMPONENTS_GUIDE.md` | Reusable filter components |
+| Optional Pattern | `OPTIONAL_PATTERN.md` | Optional<T> for partial updates |
+| Hierarchy Helper | `TRANSLATIONSSET_HIERARCHY_HELPER.md` | Dataset hierarchy traversal |
+| APIM Policies | `APIM_POLICIES.md` | Azure API Management configuration |
+| Entra ID Setup | `ENTRA_ID_SETUP.md` | Azure AD/Entra ID setup guide |
