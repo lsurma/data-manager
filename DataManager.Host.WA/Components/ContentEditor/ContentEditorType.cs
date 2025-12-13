@@ -6,5 +6,6 @@ public enum ContentEditorType
     TextArea = 2,
     MonacoEditor = 3,
     RichTextEditor = 4,
-    BlazoredTextEditor = 5
+    BlazoredTextEditor = 5,
+    EditorJS = 6
 }

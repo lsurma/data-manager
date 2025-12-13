@@ -53,6 +53,17 @@
                         Height="250px" />
                 </div>
                 break;
+
+            case ContentEditorType.EditorJS:
+                <div class="editorjs-wrapper">
+                    <EditorJSEditor
+                        @ref="EditorJSEditorRef"
+                        EditorId="@($"editorjs-{Item.Key}")"
+                        Value="@Item.Content"
+                        ValueChanged="@HandleEditorJSChanged"
+                        Placeholder="Start writing..." />
+                </div>
+                break;
         }
     </div>
 }
@@ -106,6 +117,25 @@
     .quill-editor-wrapper ::deep .ql-editor {
         font-family: var(--body-font);
     }
+
+    .editorjs-wrapper {
+        width: 100%;
+    }
+
+    .editorjs-wrapper ::deep .codex-editor {
+        border: 1px solid var(--neutral-stroke-rest);
+        border-radius: 4px;
+        padding: 12px;
+    }
+
+    .editorjs-wrapper ::deep .ce-block__content,
+    .editorjs-wrapper ::deep .ce-toolbar__content {
+        max-width: 100%;
+    }
+
+    .editorjs-wrapper ::deep .codex-editor__redactor {
+        padding-bottom: 0 !important;
+    }
 </style>
 
 @code {
@@ -117,6 +147,7 @@
 
     private StandaloneCodeEditor? MonacoEditorRef { get; set; }
     private QuillEditor? QuillEditorRef { get; set; }
+    private EditorJSEditor? EditorJSEditorRef { get; set; }
     private bool _shouldUpdateMonaco = false;
     private string _richTextContent = string.Empty;
 
@@ -223,6 +254,15 @@
         {
             Item.Content = html;
             await Item.OnContentChanged.InvokeAsync(html);
+        }
+    }
+
+    private async Task HandleEditorJSChanged(string json)
+    {
+        if (Item != null)
+        {
+            Item.Content = json;
+            await Item.OnContentChanged.InvokeAsync(json);
         }
     }
 
