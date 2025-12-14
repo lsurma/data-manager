@@ -2,34 +2,31 @@
 @using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using Orientation=Microsoft.FluentUI.AspNetCore.Components.Orientation
 
-<FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" VerticalAlignment="VerticalAlignment.Center">
-    <div style="display: flex; gap: 16px;">
-        @if (ToolbarTemplate != null)
-        {
-            <div style="display: flex; gap: 8px;">
-                @ToolbarTemplate
-            </div>
-        }
-        
+@* Actions Row *@
+@if (ActionsTemplate != null)
+{
+    <FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 8px;" VerticalAlignment="VerticalAlignment.Center">
         <div style="display: flex; gap: 8px;">
-            @if (AdditionalFilters != null)
-            {
-                @AdditionalFilters
-            }
+            @ActionsTemplate
         </div>
-    </div>
-    
+    </FluentStack>
+}
 
-    <div style="display: flex; gap : 8px; margin-left: auto;">
+@* Filters Row *@
+<FluentStack Orientation="Orientation.Horizontal" Style="margin-bottom: 16px;" VerticalAlignment="VerticalAlignment.Center">
+    @if (FiltersTemplate != null)
+    {
+        <div style="display: flex; gap: 8px;">
+            @FiltersTemplate
+        </div>
+    }
+    
+    @* Search and Settings are always visible *@
+    <div style="display: flex; gap: 8px; margin-left: auto;">
         <FluentSearch Placeholder="@SearchPlaceholder"
                       @bind-Value="@SearchTerm"
                       @bind-Value:after="HandleSearchChanged"
-                      Style="width: 300px; " />
-        
-        @if (AdditionalToolbar != null)
-        {
-            @AdditionalToolbar
-        }
+                      Style="width: 300px;" />
         
         <FluentButton IconStart="@(new Size20.Settings())" OnClick="@OpenSettingsPanelAsync" />
     </div>
