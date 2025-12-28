@@ -12,7 +12,7 @@ public partial class PaginatedDataGrid<TItem>
     [Parameter]
     public string? SettingsStorageKey { get; set; }
 
-    private AppDataGridSettings? GridSettings { get; set; }
+    private AppDataGridSettings GridSettings { get; set; } = new();
 
     protected DataGridSettings DataGridSettings { get; set; } = new DataGridSettings();
     
@@ -71,7 +71,7 @@ public partial class PaginatedDataGrid<TItem>
             GridSettings.Columns = updatedColumns;
 
             // Apply changes to DataGrid via settings
-            await HandleSettingsChanged();
+            // await HandleSettingsChanged();
 
             // Save settings to local storage
             await SaveSettingsAsync();
@@ -180,6 +180,8 @@ public partial class PaginatedDataGrid<TItem>
     /// </summary>
     private void LoadRadzenDataGridSettings(DataGridLoadSettingsEventArgs obj)
     {
+        Console.WriteLine("Loading Radzen DataGrid settings");
+
         if (GridSettings == null)
         {
             return;
@@ -192,32 +194,104 @@ public partial class PaginatedDataGrid<TItem>
             return;
         }
 
-        var columnsToSet = (obj.Settings?.Columns ?? []).ToList();
+        var dataGridColumns = (obj.Settings?.Columns ?? []).ToList();
+        var anyChange = false;
         
         foreach (var columnAppSettings in GridSettings.Columns)
         {
-            var gridColumn = columnsToSet.FirstOrDefault(c => c.UniqueID == columnAppSettings.UniqueID);
+            var gridColumn = dataGridColumns.FirstOrDefault(c => c.UniqueID == columnAppSettings.UniqueID);
             var isNewColumn = gridColumn == null;
 
             gridColumn ??= new DataGridColumnSettings();
             gridColumn.UniqueID = columnAppSettings.UniqueID;
-            gridColumn.Width = columnAppSettings.Width;
-            gridColumn.OrderIndex = columnAppSettings.OrderIndex;
-            gridColumn.Visible = columnAppSettings.Visible;
+
+            if (gridColumn.Width != columnAppSettings.Width)
+            {
+                gridColumn.Width = columnAppSettings.Width;
+                anyChange = true;
+            }
+
+            if (gridColumn.OrderIndex != columnAppSettings.OrderIndex)
+            {
+                gridColumn.OrderIndex = columnAppSettings.OrderIndex;
+                anyChange = true;
+            }
+
+            if (gridColumn.Visible != columnAppSettings.Visible)
+            {
+                gridColumn.Visible = columnAppSettings.Visible;
+                anyChange = true;
+            }
             
             if (isNewColumn)
             {
-                columnsToSet.Add(gridColumn);
+                dataGridColumns.Add(gridColumn);
+                anyChange = true;
+            }
+        }
+
+        if (anyChange)
+        {
+            obj.Settings = new DataGridSettings
+            {
+                CurrentPage = obj.Settings?.CurrentPage,
+                PageSize = obj.Settings?.PageSize,
+                Groups = obj.Settings?.Groups,
+                Columns = dataGridColumns
+            };
+        }
+    }
+    
+    private DataGridSettings CreateDataGridSettings()
+    {
+        Console.WriteLine("Loading Radzen DataGrid settings");
+
+        if (GridSettings == null)
+        {
+            return new DataGridSettings();
+        }
+        
+        var obj = new DataGridSettings();
+
+        var dataGridColumns = (obj.Columns ?? []).ToList();
+        var anyChange = false;
+        
+        foreach (var columnAppSettings in GridSettings.Columns)
+        {
+            var gridColumn = dataGridColumns.FirstOrDefault(c => c.UniqueID == columnAppSettings.UniqueID);
+            var isNewColumn = gridColumn == null;
+
+            gridColumn ??= new DataGridColumnSettings();
+            gridColumn.UniqueID = columnAppSettings.UniqueID;
+
+            if (gridColumn.Width != columnAppSettings.Width)
+            {
+                gridColumn.Width = columnAppSettings.Width;
+                anyChange = true;
+            }
+
+            if (gridColumn.OrderIndex != columnAppSettings.OrderIndex)
+            {
+                gridColumn.OrderIndex = columnAppSettings.OrderIndex;
+                anyChange = true;
+            }
+
+            if (gridColumn.Visible != columnAppSettings.Visible)
+            {
+                gridColumn.Visible = columnAppSettings.Visible;
+                anyChange = true;
+            }
+            
+            if (isNewColumn)
+            {
+                dataGridColumns.Add(gridColumn);
+                anyChange = true;
             }
         }
         
-        obj.Settings = new DataGridSettings
-        {
-            CurrentPage = obj.Settings?.CurrentPage,
-            Groups = obj.Settings?.Groups,
-            PageSize = obj.Settings?.PageSize,
-            Columns = columnsToSet
-        };
+        obj.Columns = dataGridColumns;
+
+        return obj;
     }
 
     /// <summary>

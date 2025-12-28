@@ -91,7 +91,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
             // DataGrid uses pagination
             CurrentQuery = new GetProjectInstancesQuery
             {
-                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
+                Pagination = new PaginationParameters(0, PageSize)
             };
             CacheKey = "paginated_project_instances";
         }
@@ -261,7 +261,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
             {
                 Filtering = BuildFilteringParameters(),
                 Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
-                Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
+                Pagination = new PaginationParameters(skip, pageSize)
             };
 
             // Trigger data refresh
@@ -275,7 +275,7 @@ public partial class InstancesPage : ComponentBase, IDisposable
         CurrentQuery = new GetProjectInstancesQuery
         {
             Filtering = BuildFilteringParameters(),
-            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
+            Pagination = new PaginationParameters(0, PageSize)
         };
 
         RefreshToken = Guid.NewGuid().ToString();

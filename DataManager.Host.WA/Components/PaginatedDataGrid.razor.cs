@@ -23,7 +23,7 @@ public partial class PaginatedDataGrid<TItem> : ComponentBase
     public int TotalItems { get; set; }
 
     [Parameter]
-    public int PageSize { get; set; } = 20;
+    public int PageSize { get; set; } = 10;
 
     [Parameter]
     public string SearchPlaceholder { get; set; } = "Search...";
@@ -72,6 +72,7 @@ public partial class PaginatedDataGrid<TItem> : ComponentBase
         await base.OnInitializedAsync();
 
         await LoadSettingsAsync();
+        DataGridSettings = CreateDataGridSettings();
     }
 
     private async Task OnLoadData(LoadDataArgs args)

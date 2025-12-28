@@ -64,11 +64,11 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     private IList<TranslationDto> SelectedRows = new List<TranslationDto>();
     private GetTranslationsQuery _currentQuery = new GetTranslationsQuery
     {
-        Pagination = new PaginationParameters { PageNumber = 1, PageSize = 15 }
+        Pagination = new PaginationParameters(0, 10)
     };
 
     private int TotalItems;
-    private int PageSize = 20;
+    private int PageSize = 10;
     private string? SearchTerm;
     private string? CultureNameFilter;
     private Guid? SelectedTranslationId;
@@ -122,7 +122,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
                 {
                     QueryFilters = BuildQueryFilters()
                 },
-                Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
+                Pagination = new PaginationParameters(0, PageSize)
             };
             RefreshToken = Guid.NewGuid().ToString();
         }
@@ -226,7 +226,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
         }
 
         var skip = args.Skip ?? 0;
-        var pageSize = args.Top ?? 20;
+        var pageSize = args.Top ?? 10;
 
         _currentQuery = new GetTranslationsQuery
         {
@@ -235,7 +235,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
                 QueryFilters = BuildQueryFilters()
             },
             Ordering = new OrderingParameters { OrderBy = orderBy, OrderDirection = orderDirection },
-            Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
+            Pagination = new PaginationParameters(skip, pageSize)
         };
         RefreshToken = Guid.NewGuid().ToString();
     }
@@ -263,7 +263,7 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
             {
                 QueryFilters = BuildQueryFilters()
             },
-            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
+            Pagination = new PaginationParameters(0, PageSize)
         };
         RefreshToken = Guid.NewGuid().ToString();
     }

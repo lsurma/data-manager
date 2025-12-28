@@ -19,7 +19,7 @@ public partial class LogsPage : ComponentBase
     
     private GetLogsQuery CurrentQuery { get; set; } = new GetLogsQuery
     {
-        Pagination = new PaginationParameters { PageNumber = 1, PageSize = 30 },
+        Pagination = new PaginationParameters(0, 30),
         Ordering = new OrderingParameters { OrderBy = "StartedAt", OrderDirection = "desc" }
     };
     
@@ -58,7 +58,7 @@ public partial class LogsPage : ComponentBase
             {
                 Filtering = BuildFilteringParameters(),
                 Ordering = new OrderingParameters { OrderBy = orderBy ?? "StartedAt", OrderDirection = orderDirection ?? "desc" },
-                Pagination = new PaginationParameters { Skip = skip, PageSize = pageSize }
+                Pagination = new PaginationParameters(skip, pageSize)
             };
 
             RefreshToken = Guid.NewGuid().ToString();
@@ -71,7 +71,7 @@ public partial class LogsPage : ComponentBase
         {
             Filtering = BuildFilteringParameters(),
             Ordering = new OrderingParameters { OrderBy = "StartedAt", OrderDirection = "desc" },
-            Pagination = new PaginationParameters { Skip = 0, PageSize = PageSize }
+            Pagination = new PaginationParameters(0, PageSize)
         };
 
         RefreshToken = Guid.NewGuid().ToString();

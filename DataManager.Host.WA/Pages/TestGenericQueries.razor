@@ -50,7 +50,7 @@
             // Query with full TranslationDto projection
             var query = new GetTranslationsQuery<TranslationDto>
             {
-                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 10 },
+                Pagination = new PaginationParameters(0, 10),
                 Ordering = new OrderingParameters { OrderBy = "TranslationName" }
             };
 
@@ -74,7 +74,7 @@
             // Query with lightweight SimpleTranslationDto projection
             var query = new GetTranslationsQuery<SimpleTranslationDto>
             {
-                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 10 },
+                Pagination = new PaginationParameters(0, 10),
                 Ordering = new OrderingParameters { OrderBy = "TranslationName" }
             };
 
