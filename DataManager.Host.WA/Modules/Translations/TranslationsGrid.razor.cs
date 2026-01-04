@@ -174,7 +174,6 @@ public partial class TranslationsGrid : ComponentBase, IDisposable
     {
         AllTranslations = eventArgs.Data.Items;
         TotalItems = eventArgs.Data.TotalItems;
-        PageSize = eventArgs.Data.PageSize;
         RestoreDataGridSelection();
 
         if (eventArgs.IsFirstFetch && !eventArgs.IsFromCache)

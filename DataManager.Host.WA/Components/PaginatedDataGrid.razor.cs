@@ -67,12 +67,14 @@ public partial class PaginatedDataGrid<TItem> : ComponentBase
     [Parameter]
     public DataGridSelectionMode SelectionMode { get; set; } = DataGridSelectionMode.Single;
     
+    protected bool IsInitialized { get; set; } = false;
+    
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
         await LoadSettingsAsync();
-        DataGridSettings = CreateDataGridSettings();
+        RadzenDataGridSettings = CreateDataGridSettings();
+        IsInitialized = true;
     }
 
     private async Task OnLoadData(LoadDataArgs args)

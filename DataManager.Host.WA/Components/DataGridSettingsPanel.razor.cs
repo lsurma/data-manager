@@ -33,7 +33,7 @@ public partial class DataGridSettingsPanel : IDialogContentComponent<DataGridSet
         {
             IsSaving = true;
 
-            await Dialog!.CloseAsync(DialogResult.Ok(Content.Columns));
+            await Dialog!.CloseAsync(DialogResult.Ok(Content));
         }
         finally
         {
