@@ -109,6 +109,33 @@ See [LAYER_MANAGEMENT.md](./LAYER_MANAGEMENT.md) for full documentation and exam
 
 **Demo:** Visit `/layer-demo` to see the system in action.
 
+### Reusable Drawer Component
+
+The `BaseDrawer` component provides a consistent, easy-to-use drawer (side panel) for forms and custom content:
+
+- Pre-built header, content area, and footer
+- Configurable action buttons with variants (primary, secondary, danger)
+- Multiple size options (sm, md, lg, xl, full)
+- Loading state support
+- Full layer management integration
+
+**Quick Example:**
+```tsx
+<BaseDrawer
+  isOpen={isOpen}
+  onClose={() => setIsOpen(false)}
+  title="Create User"
+  actions={[
+    { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+    { label: 'Save', onClick: handleSave, variant: 'primary' },
+  ]}
+>
+  <form>...</form>
+</BaseDrawer>
+```
+
+See [BASEDRAWER_USAGE.md](./BASEDRAWER_USAGE.md) or [BASEDRAWER_UZYCIE.md](./BASEDRAWER_UZYCIE.md) (Polish) for detailed documentation.
+
 ## Adding shadcn/ui Components
 
 To add new shadcn/ui components:
