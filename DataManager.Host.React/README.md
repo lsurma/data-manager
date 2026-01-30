@@ -33,10 +33,29 @@ Copy `.env.example` to `.env` and configure your environment variables:
 cp .env.example .env
 ```
 
-Update the following variables:
+#### Required Variables
+
+- `VITE_ENABLE_AUTH` - Enable/disable MSAL authentication (default: `false`)
+- `VITE_API_BASE_URL` - Backend API URL (default: http://localhost:7233/api)
+
+#### Authentication Variables (only required if `VITE_ENABLE_AUTH=true`)
+
 - `VITE_AZURE_CLIENT_ID` - Your Azure AD application client ID
 - `VITE_AZURE_TENANT_ID` - Your Azure AD tenant ID
-- `VITE_API_BASE_URL` - Backend API URL (default: http://localhost:7233/api)
+- `VITE_REDIRECT_URI` - Redirect URI after login (default: http://localhost:5173)
+- `VITE_POST_LOGOUT_REDIRECT_URI` - Redirect URI after logout (default: http://localhost:5173)
+- `VITE_API_SCOPE` - API scope for token acquisition (default: api://your-api-id/.default)
+
+#### Running Without Authentication
+
+To run the application without authentication (useful for development or internal deployments):
+
+```bash
+# In .env file
+VITE_ENABLE_AUTH=false
+```
+
+When authentication is disabled, the app will run without MSAL integration, and no Azure AD configuration is required.
 
 ### Development
 
@@ -87,9 +106,20 @@ npx shadcn@latest add card
 
 ## Authentication
 
-The app uses MSAL.js for Azure AD authentication. Configure your Azure AD app registration with:
+The app supports optional MSAL.js authentication for Azure AD. You can enable or disable authentication based on your deployment needs.
+
+### Enabling Authentication
+
+Set `VITE_ENABLE_AUTH=true` in your `.env` file and configure your Azure AD app registration with:
 - Redirect URI: http://localhost:5173
 - Front-channel logout URL: http://localhost:5173
+
+### Disabling Authentication
+
+Set `VITE_ENABLE_AUTH=false` in your `.env` file to run the application without authentication. This is useful for:
+- Local development without Azure AD setup
+- Internal deployments where authentication is handled by other means
+- Testing scenarios
 
 ## API Integration
 
