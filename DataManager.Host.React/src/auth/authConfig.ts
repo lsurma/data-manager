@@ -1,5 +1,17 @@
 import { type Configuration, LogLevel } from "@azure/msal-browser";
 
+// Validate required environment variables
+const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
+const tenantId = import.meta.env.VITE_AZURE_TENANT_ID;
+
+if (!clientId || clientId === "your-client-id") {
+  console.warn("⚠️ MSAL: VITE_AZURE_CLIENT_ID is not configured. Please set it in your .env file.");
+}
+
+if (!tenantId || tenantId === "your-tenant-id") {
+  console.warn("⚠️ MSAL: VITE_AZURE_TENANT_ID is not configured. Please set it in your .env file.");
+}
+
 /**
  * Configuration object to be passed to MSAL instance on creation. 
  * For a full list of MSAL.js configuration parameters, visit:
@@ -7,8 +19,8 @@ import { type Configuration, LogLevel } from "@azure/msal-browser";
  */
 export const msalConfig: Configuration = {
   auth: {
-    clientId: import.meta.env.VITE_AZURE_CLIENT_ID || "your-client-id",
-    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID || "your-tenant-id"}`,
+    clientId: clientId || "your-client-id",
+    authority: `https://login.microsoftonline.com/${tenantId || "your-tenant-id"}`,
     redirectUri: import.meta.env.VITE_REDIRECT_URI || window.location.origin,
     postLogoutRedirectUri: import.meta.env.VITE_POST_LOGOUT_REDIRECT_URI || window.location.origin,
   },
