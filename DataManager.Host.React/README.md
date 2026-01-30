@@ -13,6 +13,7 @@ React-based frontend for DataManager application.
 - **TanStack Router** - Type-safe routing
 - **TanStack Query** - Data fetching and caching
 - **nuqs** - Type-safe URL state management
+- **Zustand** - State management for UI layers
 
 ## Getting Started
 
@@ -85,11 +86,55 @@ src/
 ├── auth/              # MSAL authentication configuration
 ├── components/        # React components
 │   └── ui/           # shadcn/ui components
+├── hooks/            # Custom React hooks
 ├── lib/              # Utility functions
 ├── routes/           # TanStack Router routes
+├── stores/           # Zustand stores
 ├── index.css         # Global styles and Tailwind directives
 └── main.tsx          # Application entry point
 ```
+
+## Key Features
+
+### Layer Management System
+
+The application includes a robust layer management system for handling multiple overlays (modals, drawers, dialogs). Key features:
+
+- Stack-based layer tracking (LIFO)
+- ESC key closes only the topmost layer
+- Easy integration with the `useLayer` hook
+- Automatic cleanup on component unmount
+
+See [LAYER_MANAGEMENT.md](./LAYER_MANAGEMENT.md) for full documentation and examples.
+
+**Demo:** Visit `/layer-demo` to see the system in action.
+
+### Reusable Drawer Component
+
+The `BaseDrawer` component provides a consistent, easy-to-use drawer (side panel) for forms and custom content:
+
+- Pre-built header, content area, and footer
+- Configurable action buttons with variants (primary, secondary, danger)
+- Multiple size options (sm, md, lg, xl, full)
+- Loading state support
+- Full layer management integration
+
+**Quick Example:**
+```tsx
+<BaseDrawer
+  isOpen={isOpen}
+  onClose={() => setIsOpen(false)}
+  title="Create User"
+  actions={[
+    { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+    { label: 'Save', onClick: handleSave, variant: 'primary' },
+  ]}
+>
+  <form>...</form>
+</BaseDrawer>
+```
+
+See [BASEDRAWER_USAGE.md](./BASEDRAWER_USAGE.md) or [BASEDRAWER_UZYCIE.md](./BASEDRAWER_UZYCIE.md) (Polish) for detailed documentation.
 
 ## Adding shadcn/ui Components
 
