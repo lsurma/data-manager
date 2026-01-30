@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLayer } from '../hooks/useLayer';
 import { useLayerStore } from '../stores/useLayerStore';
+import { BaseDrawer } from '../components/BaseDrawer';
 
 /**
  * Demo component showcasing the layer management system.
@@ -13,6 +14,10 @@ export function LayerManagementDemo() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [nonDismissibleModalOpen, setNonDismissibleModalOpen] = useState(false);
   const [focusTrapModalOpen, setFocusTrapModalOpen] = useState(false);
+  const [formDrawerOpen, setFormDrawerOpen] = useState(false);
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [loadingDrawerOpen, setLoadingDrawerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const layers = useLayerStore((state) => state.layers);
   const layerCount = useLayerStore((state) => state.getLayerCount());
@@ -82,6 +87,51 @@ export function LayerManagementDemo() {
             </button>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Try using Tab to navigate - focus stays trapped within the modal.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-6 bg-teal-50 dark:bg-teal-950 rounded-lg border border-teal-200 dark:border-teal-800">
+        <h2 className="text-2xl font-semibold mb-4">🎯 Reusable Drawer Components</h2>
+        <p className="mb-4 text-gray-600 dark:text-gray-400">
+          Use the <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">BaseDrawer</code> component 
+          to quickly create drawers with forms or custom content. No need to recreate the structure every time!
+        </p>
+        <div className="space-y-3">
+          <div>
+            <button
+              onClick={() => setFormDrawerOpen(true)}
+              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-medium"
+            >
+              Open Simple Form Drawer
+            </button>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Example with form inputs and action buttons (Cancel/Save).
+            </p>
+          </div>
+          
+          <div>
+            <button
+              onClick={() => setEditDrawerOpen(true)}
+              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-medium"
+            >
+              Open Large Edit Drawer
+            </button>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Larger drawer with more form fields and validation example.
+            </p>
+          </div>
+          
+          <div>
+            <button
+              onClick={() => setLoadingDrawerOpen(true)}
+              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-medium"
+            >
+              Open Drawer with Loading State
+            </button>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Shows how to handle loading states in action buttons.
             </p>
           </div>
         </div>
@@ -174,6 +224,24 @@ export function LayerManagementDemo() {
       <FocusTrapModal 
         isOpen={focusTrapModalOpen} 
         onClose={() => setFocusTrapModalOpen(false)}
+      />
+      
+      {/* Reusable Drawer Examples */}
+      <SimpleFormDrawer 
+        isOpen={formDrawerOpen} 
+        onClose={() => setFormDrawerOpen(false)}
+      />
+      
+      <EditDrawer 
+        isOpen={editDrawerOpen} 
+        onClose={() => setEditDrawerOpen(false)}
+      />
+      
+      <LoadingDrawer 
+        isOpen={loadingDrawerOpen} 
+        onClose={() => setLoadingDrawerOpen(false)}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
       />
     </div>
   );
@@ -560,5 +628,212 @@ function FocusTrapModal({ isOpen, onClose }: FocusTrapModalProps) {
         </div>
       </div>
     </>
+  );
+}
+
+// Simple Form Drawer using BaseDrawer
+function SimpleFormDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [formData, setFormData] = useState({ name: '', email: '' });
+  
+  const handleSave = () => {
+    console.log('Saving:', formData);
+    alert(`Saved: ${formData.name} - ${formData.email}`);
+    onClose();
+  };
+  
+  return (
+    <BaseDrawer
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create New User"
+      size="md"
+      actions={[
+        { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+        { label: 'Save', onClick: handleSave, variant: 'primary' },
+      ]}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Name</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-teal-500 dark:bg-gray-800"
+            placeholder="Enter name"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Email</label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-teal-500 dark:bg-gray-800"
+            placeholder="Enter email"
+          />
+        </div>
+        
+        <div className="p-4 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+          <p className="text-sm text-teal-800 dark:text-teal-200">
+            💡 This drawer was created with just a few lines of code using <code>BaseDrawer</code>!
+          </p>
+        </div>
+      </div>
+    </BaseDrawer>
+  );
+}
+
+// Large Edit Drawer with more fields
+function EditDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    role: '',
+  });
+  
+  const handleSave = () => {
+    console.log('Saving:', formData);
+    alert('User updated successfully!');
+    onClose();
+  };
+  
+  return (
+    <BaseDrawer
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit User Profile"
+      size="lg"
+      actions={[
+        { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+        { label: 'Delete', onClick: () => alert('Delete user'), variant: 'danger' },
+        { label: 'Update', onClick: handleSave, variant: 'primary' },
+      ]}
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">First Name</label>
+            <input
+              type="text"
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-teal-500 dark:bg-gray-800"
+              placeholder="John"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Last Name</label>
+            <input
+              type="text"
+              value={formData.lastName}
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-teal-500 dark:bg-gray-800"
+              placeholder="Doe"
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Email</label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-teal-500 dark:bg-gray-800"
+            placeholder="john.doe@example.com"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Phone</label>
+          <input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-teal-500 dark:bg-gray-800"
+            placeholder="+1 (555) 123-4567"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Role</label>
+          <select
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-teal-500 dark:bg-gray-800"
+          >
+            <option value="">Select role...</option>
+            <option value="admin">Administrator</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+        
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            ℹ️ This larger drawer has multiple action buttons and a 'lg' size configuration.
+          </p>
+        </div>
+      </div>
+    </BaseDrawer>
+  );
+}
+
+// Loading State Drawer
+function LoadingDrawer({ isOpen, onClose, isLoading, setIsLoading }: { 
+  isOpen: boolean; 
+  onClose: () => void;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+}) {
+  const [data, setData] = useState('');
+  
+  const handleSubmit = () => {
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      alert('Data submitted successfully!');
+      onClose();
+    }, 2000);
+  };
+  
+  return (
+    <BaseDrawer
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Submit Data"
+      size="md"
+      dismissible={!isLoading}
+      actions={[
+        { label: 'Cancel', onClick: onClose, variant: 'secondary', disabled: isLoading },
+        { label: 'Submit', onClick: handleSubmit, variant: 'primary', loading: isLoading },
+      ]}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Data</label>
+          <textarea
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            rows={5}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-teal-500 dark:bg-gray-800"
+            placeholder="Enter some data..."
+            disabled={isLoading}
+          />
+        </div>
+        
+        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+            🔄 Click Submit to see the loading state in action. The drawer becomes non-dismissible while loading.
+          </p>
+        </div>
+      </div>
+    </BaseDrawer>
   );
 }
