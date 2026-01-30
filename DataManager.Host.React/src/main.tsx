@@ -1,10 +1,13 @@
+/* eslint-disable react-refresh/only-export-components */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider, createRouter, createRootRoute, createRoute, Outlet } from '@tanstack/react-router'
+import { RouterProvider, createRouter, createRootRoute, createRoute, Outlet, Link } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { ConditionalAuthProvider } from './auth/ConditionalAuthProvider'
+import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
+import { NuqsDemo } from './routes/NuqsDemo'
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -21,12 +24,28 @@ function RootComponent() {
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-6">
           <h1 className="text-xl font-bold">DataManager</h1>
+          <div className="flex gap-4">
+            <Link 
+              to="/" 
+              className="text-sm hover:text-blue-600 [&.active]:font-bold [&.active]:text-blue-600"
+            >
+              Home
+            </Link>
+            <Link 
+              to="/nuqs-demo" 
+              className="text-sm hover:text-blue-600 [&.active]:font-bold [&.active]:text-blue-600"
+            >
+              nuqs Demo
+            </Link>
+          </div>
         </div>
       </nav>
       <main className="container mx-auto px-4 py-8">
-        <Outlet />
+        <NuqsAdapter>
+          <Outlet />
+        </NuqsAdapter>
       </main>
       <TanStackRouterDevtools />
     </div>
@@ -49,7 +68,21 @@ function IndexComponent() {
             <li>MSAL.JS for Azure AD authentication</li>
             <li>TanStack Router for routing</li>
             <li>TanStack Query for data fetching</li>
+            <li>nuqs for URL state management</li>
           </ul>
+        </div>
+        
+        <div className="p-6 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+          <h2 className="text-2xl font-semibold mb-4">Try nuqs!</h2>
+          <p className="mb-4">
+            Check out the interactive demo to see how nuqs manages state in the URL.
+          </p>
+          <Link 
+            to="/nuqs-demo" 
+            className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
+          >
+            Go to nuqs Demo →
+          </Link>
         </div>
       </div>
     </div>
@@ -67,7 +100,13 @@ const indexRoute = createRoute({
   component: IndexComponent,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute])
+const nuqsDemoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/nuqs-demo',
+  component: NuqsDemo,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, nuqsDemoRoute])
 
 // Create a new router instance
 const router = createRouter({ routeTree })

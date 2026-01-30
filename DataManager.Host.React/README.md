@@ -12,6 +12,7 @@ React-based frontend for DataManager application.
 - **MSAL.JS** - Microsoft Authentication Library for Azure AD
 - **TanStack Router** - Type-safe routing
 - **TanStack Query** - Data fetching and caching
+- **nuqs** - Type-safe URL state management
 
 ## Getting Started
 
@@ -152,3 +153,54 @@ function useData() {
   });
 }
 ```
+
+## URL State Management with nuqs
+
+The application uses [nuqs](https://nuqs.47ng.com) for type-safe URL state management. This allows you to store component state in the URL query parameters, making it easy to share application state via URLs.
+
+### Basic Usage
+
+```typescript
+import { useQueryState, parseAsInteger, parseAsString } from 'nuqs'
+
+function MyComponent() {
+  // String state in URL
+  const [name, setName] = useQueryState('name', parseAsString.withDefault(''))
+  
+  // Integer state in URL
+  const [count, setCount] = useQueryState('count', parseAsInteger.withDefault(0))
+  
+  return (
+    <div>
+      <input value={name} onChange={(e) => setName(e.target.value)} />
+      <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>
+    </div>
+  )
+}
+```
+
+### Available Parsers
+
+- `parseAsString` - String values
+- `parseAsInteger` - Integer numbers
+- `parseAsFloat` - Floating point numbers
+- `parseAsBoolean` - Boolean values
+- `parseAsTimestamp` - Date objects (Unix timestamp)
+- `parseAsIsoDateTime` - Date objects (ISO 8601)
+- `parseAsArrayOf` - Arrays of values
+- `parseAsJson` - JSON objects
+- `parseAsStringEnum` - String enums
+- `parseAsStringLiteral` - String literals
+- `parseAsNumberLiteral` - Number literals
+
+### Demo
+
+Visit `/nuqs-demo` in the application to see an interactive demonstration of nuqs functionality.
+
+### Benefits
+
+- **Type-safe**: Built-in parsers ensure type safety
+- **Simple API**: Works like `useState` but persists in URL
+- **Shareable**: Copy URL to share exact application state
+- **Browser history**: Use back/forward buttons to navigate state
+- **Framework agnostic**: Works with TanStack Router, Next.js, Remix, and more
