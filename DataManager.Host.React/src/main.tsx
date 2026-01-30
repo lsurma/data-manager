@@ -8,6 +8,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { ConditionalAuthProvider } from './auth/ConditionalAuthProvider'
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { NuqsDemo } from './routes/NuqsDemo'
+import { LayerManagementDemo } from './routes/LayerManagementDemo'
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -39,6 +40,12 @@ function RootComponent() {
             >
               nuqs Demo
             </Link>
+            <Link 
+              to="/layer-demo" 
+              className="text-sm hover:text-blue-600 [&.active]:font-bold [&.active]:text-blue-600"
+            >
+              Layer Management
+            </Link>
           </div>
         </div>
       </nav>
@@ -69,6 +76,7 @@ function IndexComponent() {
             <li>TanStack Router for routing</li>
             <li>TanStack Query for data fetching</li>
             <li>nuqs for URL state management</li>
+            <li>Zustand for state management</li>
           </ul>
         </div>
         
@@ -82,6 +90,19 @@ function IndexComponent() {
             className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
           >
             Go to nuqs Demo →
+          </Link>
+        </div>
+        
+        <div className="p-6 bg-purple-50 dark:bg-purple-950 rounded-lg border border-purple-200 dark:border-purple-800">
+          <h2 className="text-2xl font-semibold mb-4">Try Layer Management!</h2>
+          <p className="mb-4">
+            Test the reusable layer management system with drawers, modals, and dialogs. See how ESC key handling works with multiple overlays.
+          </p>
+          <Link 
+            to="/layer-demo" 
+            className="inline-block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium"
+          >
+            Go to Layer Demo →
           </Link>
         </div>
       </div>
@@ -106,7 +127,13 @@ const nuqsDemoRoute = createRoute({
   component: NuqsDemo,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, nuqsDemoRoute])
+const layerDemoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/layer-demo',
+  component: LayerManagementDemo,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, nuqsDemoRoute, layerDemoRoute])
 
 // Create a new router instance
 const router = createRouter({ routeTree })
