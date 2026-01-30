@@ -1,15 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { MsalProvider } from '@azure/msal-react'
-import { PublicClientApplication } from '@azure/msal-browser'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter, createRootRoute, createRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import { msalConfig } from './auth/authConfig'
-
-// Create MSAL instance
-const msalInstance = new PublicClientApplication(msalConfig)
+import { ConditionalAuthProvider } from './auth/ConditionalAuthProvider'
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -86,10 +81,10 @@ declare module '@tanstack/react-router' {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MsalProvider instance={msalInstance}>
+    <ConditionalAuthProvider>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>
-    </MsalProvider>
+    </ConditionalAuthProvider>
   </StrictMode>,
 )

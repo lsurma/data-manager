@@ -1,15 +1,24 @@
 import { type Configuration, LogLevel } from "@azure/msal-browser";
 
-// Validate required environment variables
+// Check if authentication is enabled
+export const isAuthEnabled = import.meta.env.VITE_ENABLE_AUTH === "true";
+
+// Validate required environment variables only if authentication is enabled
 const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
 const tenantId = import.meta.env.VITE_AZURE_TENANT_ID;
 
-if (!clientId || clientId === "your-client-id") {
-  console.warn("⚠️ MSAL: VITE_AZURE_CLIENT_ID is not configured. Please set it in your .env file.");
-}
+if (isAuthEnabled) {
+  if (!clientId || clientId === "your-client-id") {
+    console.warn("⚠️ MSAL: VITE_AZURE_CLIENT_ID is not configured. Please set it in your .env file.");
+  }
 
-if (!tenantId || tenantId === "your-tenant-id") {
-  console.warn("⚠️ MSAL: VITE_AZURE_TENANT_ID is not configured. Please set it in your .env file.");
+  if (!tenantId || tenantId === "your-tenant-id") {
+    console.warn("⚠️ MSAL: VITE_AZURE_TENANT_ID is not configured. Please set it in your .env file.");
+  }
+  
+  console.info("✅ Authentication is ENABLED");
+} else {
+  console.info("ℹ️ Authentication is DISABLED");
 }
 
 /**
